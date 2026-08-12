@@ -246,6 +246,7 @@ type LiveSummoner struct {
 
 type LivePlayer struct {
 	RiotID       string         `json:"riotId"`
+	IsMe         bool           `json:"isMe,omitempty"`
 	Champion     string         `json:"champion"`
 	Key          int            `json:"key"`
 	Icon         string         `json:"icon"`
@@ -648,6 +649,8 @@ func getLiveState() LiveState {
 			haste := itemHasteTable()
 			for _, p := range raw.AllPlayers {
 				lp := buildLivePlayer(p, haste)
+				lp.IsMe = (raw.ActivePlayer.RiotID != "" && strings.EqualFold(p.RiotID, raw.ActivePlayer.RiotID)) ||
+					(raw.ActivePlayer.SummonerName != "" && strings.EqualFold(p.SummonerName, raw.ActivePlayer.SummonerName))
 				if p.Team == myTeam {
 					state.Allies = append(state.Allies, lp)
 				} else {

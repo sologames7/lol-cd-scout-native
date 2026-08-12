@@ -1,0 +1,35 @@
+---
+description: Contexte du projet LoL CD Scout — objectif, architecture, conventions, build
+alwaysApply: true
+---
+
+# LoL CD Scout — contexte projet
+
+## Objectif
+Outil perso de climb LoL (utilisateur : peak D2, actuellement Plat, vise Challenger). C'est son atout n°1 :
+scouting en champ select + HUD de tracking en jeu, affiché sur un écran 21:9 (layout jusqu'à 2160 px, rangées de 5 tuiles).
+
+## Architecture
+Binaire Go unique, zéro dépendance (`go.mod` sans require). Serveur HTTP local `127.0.0.1:27182`, UI monopage embarquée (`//go:embed index.html`), ouvre le navigateur au lancement.
+
+- `main.go` — client LCU (lockfile → port/password, phase gameflow, champ select), cache Data Dragon (version, champions fr_FR), endpoints `/api/status,/api/cards,/api/card,/api/search,/api/quit,/api/live`.
+- `livegame.go` — mode "en jeu" via Live Client Data API Riot (`https://127.0.0.1:2999/liveclientdata/allgamedata`, locale, officielle, lecture seule) : joueurs, niveaux, items → Ability/Ultimate/Summoner Haste (parsées des descriptions ddragon `item.json` en_US, balises `<attention>` + texte "Gain X … Haste"), CD Q/W/E/R ajustés (rang R exact 6/11/16, Q/W/E au rang max plausible), morts/respawns, objectifs (drake/héraut/baron via events), or **estimé** (500 + passif + 20,8/CS + 300/kill + 65/assist) avec historique échantillonné toutes les 10 s côté serveur (reset auto par partie).
+- `curated.go` — fiches FR par champion (priorités de sorts, fenêtres de punish) ; `matchups.go` — counters LoLalytics (auto-généré).
+- `index.html` — tout le front : CSS + JS vanilla inline (style minifié), aucune lib. Deux modes bascule auto : draft (cartes scouting) et live (HUD "concept 1" : anneau Flash cliquable autour du portrait, chips Q/W/E/R + 2e sort d'invoc + toggle CI, pills d'objectifs, graphe d'aire de différence d'or + 5 mini-graphes barres par lane). Typos : Space Grotesk (titres), Chakra Petch (chiffres/timers), Inter (corps).
+
+## Conventions et pièges connus
+- Tout en **français** (UI, commentaires, réponses).
+- Clé de tracking joueur : `pid = riotId + '#' + championKey` — le riotId est vide pour les bots, le champion (unique par partie) désambiguïse. Ne jamais indexer par riotId seul.
+- Timers côté client (`liveTracks`), horloge = `gameTime` serveur interpolée (`gameNow()`), ticker 300 ms, poll `/api/live` 2 s.
+- Limites assumées : or estimé (l'API n'expose l'or exact que du joueur actif), ordre de skill Q/W/E estimé, runes ennemies inconnues (d'où toggle CI +18 haste invocateur).
+- Les variables PowerShell ne persistent pas entre commandes ; le PATH peut perdre Go.
+
+## Build / test / run (Windows, PowerShell)
+```powershell
+$env:Path += ";C:\Program Files\Go\bin"
+go test .            # inclut tests réseau ddragon (haste items) + rangs + historique d'or
+try { Invoke-RestMethod -Method POST "http://127.0.0.1:27182/api/quit" | Out-Null } catch {}
+go build -ldflags="-s -w -H=windowsgui" -o lol-cd-scout-native.exe .
+Start-Process .\lol-cd-scout-native.exe
+```
+Toujours arrêter l'instance via `/api/quit` avant de recompiler (fichier exe verrouillé sinon). Tester le mode live via l'Outil d'entraînement de League.
