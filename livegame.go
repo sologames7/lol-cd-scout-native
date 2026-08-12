@@ -100,6 +100,9 @@ var itemHasteCache = struct {
 
 var attentionRe = regexp.MustCompile(`(?i)<attention>\s*(\d+)\s*</attention>\s*([^<]*)`)
 
+// Les hastes "passives" sont en texte brut : "Gain 10 Summoner Spell Haste", "Gain 30 Ultimate Haste".
+var plainHasteRe = regexp.MustCompile(`(?i)(\d+)\s+(summoner spell haste|ultimate haste)`)
+
 func itemHasteTable() map[int]itemHaste {
 	version := getVersion()
 	itemHasteCache.mu.Lock()
@@ -137,6 +140,14 @@ func itemHasteTable() map[int]itemHaste {
 				h.Ultimate += val
 			case strings.HasPrefix(label, "summoner spell haste"):
 				h.Summoner += val
+			}
+		}
+		for _, m := range plainHasteRe.FindAllStringSubmatch(item.Description, -1) {
+			val, _ := strconv.Atoi(m[1])
+			if strings.HasPrefix(strings.ToLower(m[2]), "summoner") {
+				h.Summoner += val
+			} else {
+				h.Ultimate += val
 			}
 		}
 		if h != (itemHaste{}) {
@@ -267,6 +278,158 @@ type LiveState struct {
 	Enemies    []LivePlayer             `json:"enemies"`
 	Allies     []LivePlayer             `json:"allies"`
 	Objectives map[string]LiveObjective `json:"objectives"`
+	Gold       *GoldInfo                `json:"gold,omitempty"`
+}
+
+// ---------- Or estimé ----------
+// L'API live n'expose l'or exact que du joueur actif. Pour les autres on estime :
+// or de départ + or passif + CS + kills/assists. Suffisant pour la tendance.
+
+type GoldSample struct {
+	T     float64  `json:"t"`
+	Ally  int      `json:"ally"`
+	Enemy int      `json:"enemy"`
+	Roles [][2]int `json:"roles"` // [or allié, or ennemi] par ligne de GoldInfo.Roles
+}
+
+type GoldRoleMeta struct {
+	Label      string `json:"label"`
+	AllyChamp  string `json:"allyChamp"`
+	EnemyChamp string `json:"enemyChamp"`
+}
+
+type GoldInfo struct {
+	Estimated bool           `json:"estimated"`
+	Roles     []GoldRoleMeta `json:"roles"`
+	History   []GoldSample   `json:"history"`
+}
+
+func goldEstimate(t float64, p LivePlayer) int {
+	g := 500.0 // or de départ
+	if t > 110 {
+		g += (t - 110) * 2.04 // or passif (20.4 / 10 s à partir de 1:50)
+	}
+	g += 20.8 * float64(p.CS)
+	g += 300*float64(p.Kills) + 65*float64(p.Assists)
+	return int(g)
+}
+
+var posOrder = []struct{ pos, label string }{
+	{"TOP", "TOP"}, {"JUNGLE", "JGL"}, {"MIDDLE", "MID"}, {"BOTTOM", "BOT"}, {"UTILITY", "SUPP"},
+}
+
+func posLabel(pos string) string {
+	for _, o := range posOrder {
+		if o.pos == pos {
+			return o.label
+		}
+	}
+	return ""
+}
+
+// Apparie allié/ennemi par rôle quand les positions sont complètes, sinon par index.
+func pairRoles(allies, enemies []LivePlayer) ([]GoldRoleMeta, [][2]int) {
+	indexByPos := func(list []LivePlayer) map[string]int {
+		m := map[string]int{}
+		for i, p := range list {
+			if p.Position != "" {
+				if _, dup := m[p.Position]; !dup {
+					m[p.Position] = i
+				}
+			}
+		}
+		return m
+	}
+	am, em := indexByPos(allies), indexByPos(enemies)
+	if len(allies) == 5 && len(enemies) == 5 && len(am) == 5 && len(em) == 5 {
+		metas := make([]GoldRoleMeta, 0, 5)
+		pairs := make([][2]int, 0, 5)
+		ok := true
+		for _, o := range posOrder {
+			ai, aok := am[o.pos]
+			ei, eok := em[o.pos]
+			if !aok || !eok {
+				ok = false
+				break
+			}
+			metas = append(metas, GoldRoleMeta{Label: o.label, AllyChamp: allies[ai].Champion, EnemyChamp: enemies[ei].Champion})
+			pairs = append(pairs, [2]int{ai, ei})
+		}
+		if ok {
+			return metas, pairs
+		}
+	}
+	n := len(allies)
+	if len(enemies) < n {
+		n = len(enemies)
+	}
+	if n > 5 {
+		n = 5
+	}
+	metas := make([]GoldRoleMeta, 0, n)
+	pairs := make([][2]int, 0, n)
+	for i := 0; i < n; i++ {
+		label := posLabel(allies[i].Position)
+		if label == "" {
+			label = fmt.Sprintf("N°%d", i+1)
+		}
+		metas = append(metas, GoldRoleMeta{Label: label, AllyChamp: allies[i].Champion, EnemyChamp: enemies[i].Champion})
+		pairs = append(pairs, [2]int{i, i})
+	}
+	return metas, pairs
+}
+
+var goldHist = struct {
+	mu      sync.Mutex
+	gameKey string
+	lastT   float64
+	samples []GoldSample
+}{}
+
+const goldSampleEvery = 10.0 // secondes de jeu entre deux échantillons
+
+func updateGold(state *LiveState) {
+	if len(state.Allies) == 0 || len(state.Enemies) == 0 {
+		return
+	}
+	metas, pairs := pairRoles(state.Allies, state.Enemies)
+	cur := GoldSample{T: state.GameTime}
+	for _, p := range state.Allies {
+		cur.Ally += goldEstimate(state.GameTime, p)
+	}
+	for _, p := range state.Enemies {
+		cur.Enemy += goldEstimate(state.GameTime, p)
+	}
+	for _, pr := range pairs {
+		cur.Roles = append(cur.Roles, [2]int{
+			goldEstimate(state.GameTime, state.Allies[pr[0]]),
+			goldEstimate(state.GameTime, state.Enemies[pr[1]]),
+		})
+	}
+	ids := make([]string, 0, 10)
+	for _, p := range state.Allies {
+		ids = append(ids, p.RiotID)
+	}
+	for _, p := range state.Enemies {
+		ids = append(ids, p.RiotID)
+	}
+	key := strings.Join(ids, "|")
+
+	goldHist.mu.Lock()
+	defer goldHist.mu.Unlock()
+	if goldHist.gameKey != key || state.GameTime+5 < goldHist.lastT {
+		goldHist.samples, goldHist.lastT = nil, 0 // nouvelle partie
+	}
+	goldHist.gameKey = key
+	if len(goldHist.samples) == 0 || state.GameTime-goldHist.lastT >= goldSampleEvery {
+		goldHist.samples = append(goldHist.samples, cur)
+		goldHist.lastT = state.GameTime
+	}
+	hist := append([]GoldSample(nil), goldHist.samples...)
+	if last := hist[len(hist)-1]; cur.T > last.T {
+		hist = append(hist, cur) // point courant pour que la courbe soit à jour
+	}
+	state.Gold = &GoldInfo{Estimated: true, Roles: metas, History: hist}
 }
 
 var liveCache = struct {
@@ -308,6 +471,9 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 	}
 	if out.RiotID == "" {
 		out.RiotID = p.SummonerName
+	}
+	if out.RiotID == "" { // bots : ni riotId ni summonerName; le champion est unique par partie
+		out.RiotID = p.RawChampionName
 	}
 	ah, uh, sh := 0, 0, 0
 	for _, it := range p.Items {
@@ -489,6 +655,7 @@ func getLiveState() LiveState {
 				}
 			}
 			state.Objectives = buildObjectives(&raw)
+			updateGold(&state)
 		}
 	}
 	if res != nil {
