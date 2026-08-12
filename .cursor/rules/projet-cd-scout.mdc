@@ -25,6 +25,8 @@ Binaire Go unique, zéro dépendance (`go.mod` sans require). Serveur HTTP local
 - Les variables PowerShell ne persistent pas entre commandes ; le PATH peut perdre Go.
 
 ## Build / test / run (Windows, PowerShell)
+Relance quotidienne : `.\run.ps1` (PATH Go, `/api/quit`, build, Start-Process).
+
 ```powershell
 $env:Path += ";C:\Program Files\Go\bin"
 go test .            # inclut tests réseau ddragon (haste items) + rangs + historique d'or
