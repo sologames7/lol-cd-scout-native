@@ -1,0 +1,8 @@
+﻿*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+.DS_Store
+Thumbs.db
+node_modules/
