@@ -1,5 +1,8 @@
 ﻿*.exe
 *.exe~
+*.exe.new
+*.exe.old
+.cdscout-upd-*
 *.dll
 *.so
 *.dylib

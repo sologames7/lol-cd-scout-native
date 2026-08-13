@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -17,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -26,6 +26,7 @@ type Spell struct {
 	Spell      string `json:"spell"`
 	Name       string `json:"name"`
 	CD         string `json:"cd"`
+	Icon       string `json:"icon,omitempty"` // chemin relatif ddragon, ex "spell/AhriQ.png"
 	Importance int    `json:"importance"`
 	Note       string `json:"note"`
 }
@@ -73,6 +74,8 @@ type Snapshot struct {
 	Error     string      `json:"error,omitempty"`
 	Lockfile  string      `json:"lockfile,omitempty"`
 	Version   string      `json:"version,omitempty"`
+	App       string      `json:"app,omitempty"`
+	Update    *UpdateInfo `json:"update,omitempty"`
 }
 
 type lcuCreds struct {
@@ -104,9 +107,17 @@ type champDetail struct {
 	Image struct {
 		Full string `json:"full"`
 	} `json:"image"`
+	Passive struct {
+		Image struct {
+			Full string `json:"full"`
+		} `json:"image"`
+	} `json:"passive"`
 	Spells []struct {
 		Name         string `json:"name"`
 		CooldownBurn string `json:"cooldownBurn"`
+		Image        struct {
+			Full string `json:"full"`
+		} `json:"image"`
 	} `json:"spells"`
 }
 
@@ -246,6 +257,13 @@ func cooldown(raw string) string {
 	return strings.ReplaceAll(raw, "/", " → ") + "s"
 }
 
+func spellIconPath(full string) string {
+	if full == "" {
+		return ""
+	}
+	return "spell/" + full
+}
+
 func isBasicSpell(key string) bool {
 	return key == "Q" || key == "W" || key == "E" || key == "R"
 }
@@ -257,7 +275,11 @@ func normalize(d champDetail) ChampionCard {
 		if i >= len(letters) {
 			break
 		}
-		auto[letters[i]] = Spell{Spell: letters[i], Name: s.Name, CD: cooldown(s.CooldownBurn), Importance: 5}
+		auto[letters[i]] = Spell{Spell: letters[i], Name: s.Name, CD: cooldown(s.CooldownBurn), Icon: spellIconPath(s.Image.Full), Importance: 5}
+	}
+	passiveIcon := ""
+	if f := d.Passive.Image.Full; f != "" {
+		passiveIcon = "passive/" + f
 	}
 	summary := ""
 	window := ""
@@ -284,6 +306,9 @@ func normalize(d champDetail) ChampionCard {
 				if s.Name == "" {
 					s.Name = a.Name
 				}
+				s.Icon = a.Icon
+			} else if s.Spell == "P" {
+				s.Icon = passiveIcon
 			}
 			curatedByKey[s.Spell] = s
 			curatedOrder = append(curatedOrder, s)
@@ -574,7 +599,12 @@ func writeJSON(w http.ResponseWriter, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 
-func apiStatus(w http.ResponseWriter, r *http.Request) { writeJSON(w, getSnapshot()) }
+func apiStatus(w http.ResponseWriter, r *http.Request) {
+	s := getSnapshot()
+	u := updateSnapshot()
+	s.App, s.Update = appVersion, &u
+	writeJSON(w, s)
+}
 
 func apiCards(w http.ResponseWriter, r *http.Request) {
 	raw := strings.TrimSpace(r.URL.Query().Get("ids"))
@@ -640,7 +670,14 @@ func openBrowser(url string) {
 	_ = cmd.Start()
 }
 
+// currentListener sert au redémarrage propre : le port doit être libéré avant
+// de lancer la nouvelle instance.
+var currentListener atomic.Value
+
 func main() {
+	if applyStagedUpdate() {
+		return // une instance à jour vient d'être lancée
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -656,15 +693,15 @@ func main() {
 	mux.HandleFunc("/api/search", apiSearch)
 	mux.HandleFunc("/api/card", apiCard)
 	mux.HandleFunc("/api/quit", apiQuit)
-	ln, err := net.Listen("tcp", listenAddr)
+	mux.HandleFunc("/api/update", apiUpdate)
+	ln, err := listenLocal()
 	if err != nil {
-		ln, err = net.Listen("tcp", "127.0.0.1:0")
-		if err != nil {
-			return
-		}
+		return
 	}
+	currentListener.Store(ln)
 	url := "http://" + ln.Addr().String() + "/"
 	go openBrowser(url)
+	go func() { time.Sleep(5 * time.Second); checkAndStage() }()
 	_ = http.Serve(ln, mux)
 }
 
