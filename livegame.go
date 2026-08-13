@@ -233,6 +233,7 @@ func hasteFactor(haste int) float64 { return 100.0 / (100.0 + float64(haste)) }
 type LiveSpell struct {
 	Spell string  `json:"spell"`
 	Name  string  `json:"name"`
+	Icon  string  `json:"icon,omitempty"` // chemin relatif ddragon, ex "spell/AhriQ.png"
 	CD    float64 `json:"cd"`   // secondes, haste incluse, 0 = inconnu
 	Rank  string  `json:"rank"` // "2" exact (R) ou "≤4" plausible
 	Est   bool    `json:"est"`  // true si le rang est estimé
@@ -266,10 +267,14 @@ type LivePlayer struct {
 }
 
 type LiveObjective struct {
-	NextAt float64 `json:"nextAt"` // temps de jeu (s) du prochain spawn, 0 = aucun
-	Label  string  `json:"label"`
-	Order  int     `json:"order,omitempty"`
-	Chaos  int     `json:"chaos,omitempty"`
+	NextAt float64   `json:"nextAt"` // temps de jeu (s) du prochain spawn, 0 = aucun
+	Label  string    `json:"label"`
+	Order  int       `json:"order,omitempty"`
+	Chaos  int       `json:"chaos,omitempty"`
+	Note   string    `json:"note,omitempty"`  // "ÂME", "×2 restantes"…
+	Leads  []float64 `json:"leads,omitempty"` // anticipations d'alerte (s avant le spawn)
+	Gone   bool       `json:"gone,omitempty"` // objectif définitivement parti (despawn / camp fini)
+	Rank   int        `json:"rank,omitempty"` // ordre d'affichage dans la barre
 }
 
 type LiveState struct {
@@ -496,7 +501,7 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 				if i >= len(letters) {
 					break
 				}
-				sp := LiveSpell{Spell: letters[i], Name: s.Name}
+				sp := LiveSpell{Spell: letters[i], Name: s.Name, Icon: spellIconPath(s.Image.Full)}
 				cds := parseCDBurn(s.CooldownBurn)
 				isUlt := letters[i] == "R"
 				rank := 0
@@ -535,14 +540,26 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 	return out
 }
 
+// Timings Failles de l'invocateur, saison 2026 (patch 26.1 : Atakhan retiré,
+// Baron ramené à 20:00 · patch 26.11 : larves à 8:00 sans respawn
+// · patch 26.12 : Héraut à 15:00).
 const (
-	dragonFirstSpawn  = 300.0
-	dragonRespawn     = 300.0
-	elderRespawn      = 360.0
-	heraldSpawn       = 960.0
-	heraldDespawn     = 1485.0 // ~24:45
-	baronFirstSpawn   = 1500.0
-	baronRespawn      = 360.0
+	dragonFirstSpawn = 300.0
+	dragonRespawn    = 300.0
+	elderRespawn     = 360.0
+	grubsSpawn       = 480.0  // 8:00, un seul spawn par partie
+	grubsDespawn     = 885.0  // 14:45 si personne ne les touche
+	heraldSpawn      = 900.0  // 15:00
+	heraldDespawn    = 1185.0 // 19:45
+	baronFirstSpawn  = 1200.0 // 20:00
+	baronRespawn     = 360.0
+)
+
+// Anticipations d'alerte : 2 min pour se regrouper avant un teamfight d'objectif,
+// 70 s pour lâcher sa lane et arriver sur les larves.
+const (
+	leadTeamfight = 120.0
+	leadGrubs     = 70.0
 )
 
 func playerTeam(players []rawLivePlayer, name string) string {
@@ -563,6 +580,13 @@ func playerTeam(players []rawLivePlayer, name string) string {
 	return ""
 }
 
+// Les larves n'ont pas d'événement documenté et stable : selon les versions le
+// kill remonte en "HordeKill" (nom interne du camp) ou en "VoidgrubKill".
+func isGrubEvent(name string) bool {
+	n := strings.ToLower(name)
+	return strings.Contains(n, "horde") || strings.Contains(n, "grub")
+}
+
 func buildObjectives(raw *rawLive) map[string]LiveObjective {
 	if raw.GameData.MapNumber != 11 && raw.GameData.GameMode != "CLASSIC" && raw.GameData.GameMode != "PRACTICETOOL" {
 		return nil
@@ -570,10 +594,10 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 	t := raw.GameData.GameTime
 	dragOrder, dragChaos := 0, 0
 	lastDragon, lastBaron := 0.0, 0.0
-	heraldDead := false
+	heraldDead, grubsKilled := false, 0
 	for _, e := range raw.Events.Events {
-		switch e.EventName {
-		case "DragonKill":
+		switch {
+		case e.EventName == "DragonKill":
 			lastDragon = e.EventTime
 			switch playerTeam(raw.AllPlayers, e.KillerName) {
 			case "ORDER":
@@ -581,14 +605,30 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 			case "CHAOS":
 				dragChaos++
 			}
-		case "HeraldKill":
+		case e.EventName == "HeraldKill":
 			heraldDead = true
-		case "BaronKill":
+		case e.EventName == "BaronKill":
 			lastBaron = e.EventTime
+		case isGrubEvent(e.EventName):
+			grubsKilled++
 		}
 	}
 	obj := map[string]LiveObjective{}
 
+	// Larves : un seul spawn, camp de 3, disparition à 14:45.
+	grubs := LiveObjective{NextAt: grubsSpawn, Label: "Larves", Leads: []float64{leadTeamfight, leadGrubs}, Rank: 1}
+	switch {
+	case grubsKilled >= 3 || (t > grubsDespawn && grubsKilled == 0):
+		grubs.Gone, grubs.Leads = true, nil
+	case grubsKilled > 0:
+		grubs.Note = fmt.Sprintf("×%d restantes", 3-grubsKilled)
+		grubs.Leads = nil
+	case t >= grubsSpawn:
+		grubs.Note = fmt.Sprintf("part à %s", clock(grubsDespawn))
+	}
+	obj["grubs"] = grubs
+
+	// Drake : le 4e d'une équipe donne l'âme, ensuite c'est l'Ancestral.
 	elder := dragOrder >= 4 || dragChaos >= 4
 	next := dragonFirstSpawn
 	if lastDragon > 0 {
@@ -598,22 +638,36 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 			next = lastDragon + dragonRespawn
 		}
 	}
-	label := "Drake"
-	if elder {
-		label = "Drake Ancestral"
+	dragon := LiveObjective{NextAt: next, Order: dragOrder, Chaos: dragChaos, Label: "Drake",
+		Leads: []float64{leadTeamfight}, Rank: 2}
+	switch {
+	case elder:
+		dragon.Label, dragon.Note = "Ancestral", "fight décisif"
+	case dragOrder == 3 || dragChaos == 3:
+		dragon.Note = "ÂME"
 	}
-	obj["dragon"] = LiveObjective{NextAt: next, Label: label, Order: dragOrder, Chaos: dragChaos}
+	obj["dragon"] = dragon
 
-	if !heraldDead && t < heraldDespawn && baronFirstSpawn > t {
-		obj["herald"] = LiveObjective{NextAt: heraldSpawn, Label: "Héraut"}
+	// Héraut : pas d'alerte teamfight (objectif de siège, souvent solo).
+	if !heraldDead && t < heraldDespawn {
+		herald := LiveObjective{NextAt: heraldSpawn, Label: "Héraut", Rank: 3}
+		if t >= heraldSpawn {
+			herald.Note = "part à " + clock(heraldDespawn)
+		}
+		obj["herald"] = herald
 	}
 
 	baronNext := baronFirstSpawn
 	if lastBaron > 0 {
 		baronNext = lastBaron + baronRespawn
 	}
-	obj["baron"] = LiveObjective{NextAt: baronNext, Label: "Baron"}
+	obj["baron"] = LiveObjective{NextAt: baronNext, Label: "Baron", Leads: []float64{leadTeamfight}, Rank: 4}
 	return obj
+}
+
+func clock(t float64) string {
+	s := int(t + 0.5)
+	return fmt.Sprintf("%d:%02d", s/60, s%60)
 }
 
 func getLiveState() LiveState {

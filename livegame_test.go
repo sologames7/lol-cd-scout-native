@@ -1,6 +1,9 @@
 package main
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // Vérifie que la haste est bien extraite des descriptions Data Dragon (réseau requis).
 func TestItemHasteTable(t *testing.T) {
@@ -53,6 +56,28 @@ func TestGoldEstimateAndPairing(t *testing.T) {
 	updateGold(st)
 	if len(goldHist.samples) != 2 || len(st.Gold.History) != 3 {
 		t.Errorf("attendu 2 samples + point courant (3), obtenu %d samples / %d points", len(goldHist.samples), len(st.Gold.History))
+	}
+}
+
+// Les icônes ddragon des sorts doivent être exposées aux cartes (réseau requis).
+func TestSpellIcons(t *testing.T) {
+	d, err := getDetail("Anivia")
+	if err != nil {
+		t.Skipf("ddragon indisponible: %v", err)
+	}
+	card := normalize(d)
+	seen := map[string]string{}
+	for _, s := range card.Important {
+		seen[s.Spell] = s.Icon
+	}
+	for _, k := range []string{"Q", "W", "E", "R"} {
+		if !strings.HasPrefix(seen[k], "spell/") {
+			t.Errorf("icône de %s manquante ou invalide: %q", k, seen[k])
+		}
+	}
+	// Anivia est curated avec une entrée passive : elle doit pointer vers img/passive.
+	if p, ok := seen["P"]; ok && !strings.HasPrefix(p, "passive/") {
+		t.Errorf("icône du passif invalide: %q", p)
 	}
 }
 
