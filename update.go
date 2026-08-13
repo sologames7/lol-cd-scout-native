@@ -6,6 +6,8 @@ package main
 // tout de suite via /api/update). Rien ne retarde jamais le démarrage.
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -271,8 +273,14 @@ func splitVersion(s string) []int {
 	return out
 }
 
+// errAlreadyRunning fait sortir main() sans démarrer de second serveur.
+var errAlreadyRunning = errors.New("instance déjà en cours")
+
 // listenLocal réessaie brièvement : après un redémarrage pour mise à jour,
-// l'ancien process peut encore tenir le port quelques centaines de ms.
+// l'ancien process peut encore tenir le port quelques centaines de ms. Si une
+// instance vivante répond toujours, on lui rend la main plutôt que de se
+// rabattre sur un port aléatoire : une telle instance serait invisible pour le
+// /api/quit de run.ps1 et survivrait indéfiniment en ouvrant son propre onglet.
 func listenLocal() (net.Listener, error) {
 	var err error
 	for i := 0; i < 8; i++ {
@@ -282,7 +290,26 @@ func listenLocal() (net.Listener, error) {
 		}
 		time.Sleep(250 * time.Millisecond)
 	}
+	if scoutIsListening(listenAddr) {
+		openBrowser("http://" + listenAddr + "/")
+		return nil, errAlreadyRunning
+	}
+	// Port squatté par un tiers : on se replie sur un port libre.
 	return net.Listen("tcp", "127.0.0.1:0")
+}
+
+// scoutIsListening distingue un CD Scout déjà lancé d'un programme tiers.
+func scoutIsListening(addr string) bool {
+	cl := &http.Client{Timeout: time.Second}
+	res, err := cl.Get("http://" + addr + "/api/status")
+	if err != nil {
+		return false
+	}
+	defer res.Body.Close()
+	var s struct {
+		Phase string `json:"phase"`
+	}
+	return json.NewDecoder(res.Body).Decode(&s) == nil && s.Phase != ""
 }
 
 func apiUpdate(w http.ResponseWriter, r *http.Request) {

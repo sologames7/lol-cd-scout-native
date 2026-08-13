@@ -83,6 +83,31 @@ func TestDownloadToRejectsWrongSize(t *testing.T) {
 	}
 }
 
+func TestScoutIsListening(t *testing.T) {
+	scout := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(`{"connected":false,"phase":"Lobby"}`))
+	}))
+	defer scout.Close()
+	other := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("<html>un autre service</html>"))
+	}))
+	defer other.Close()
+	dead := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
+	deadAddr := dead.Listener.Addr().String()
+	dead.Close()
+
+	addr := func(s *httptest.Server) string { return s.Listener.Addr().String() }
+	if !scoutIsListening(addr(scout)) {
+		t.Error("une instance de CD Scout doit être reconnue")
+	}
+	if scoutIsListening(addr(other)) {
+		t.Error("un service tiers ne doit pas être pris pour CD Scout")
+	}
+	if scoutIsListening(deadAddr) {
+		t.Error("une adresse morte ne doit pas être reconnue")
+	}
+}
+
 func TestLooksLikeExeRejectsGarbage(t *testing.T) {
 	dir := t.TempDir()
 	small := filepath.Join(dir, "small.exe")

@@ -8,4 +8,11 @@ try { Invoke-RestMethod -Method POST "http://127.0.0.1:27182/api/quit" | Out-Nul
 go build -ldflags="-s -w -H=windowsgui" -o lol-cd-scout-native.exe .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-Start-Process .\lol-cd-scout-native.exe
+# Smart App Control bloque par intermittence un exe fraichement compile lance
+# depuis PowerShell ; le passage par l'Explorateur passe.
+try {
+  Start-Process .\lol-cd-scout-native.exe -ErrorAction Stop
+} catch {
+  Write-Host "Start-Process bloque, relance via l'Explorateur."
+  Start-Process explorer.exe -ArgumentList (Resolve-Path .\lol-cd-scout-native.exe).Path
+}
