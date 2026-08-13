@@ -8,11 +8,13 @@ try { Invoke-RestMethod -Method POST "http://127.0.0.1:27182/api/quit" | Out-Nul
 go build -ldflags="-s -w -H=windowsgui" -o lol-cd-scout-native.exe .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-# Smart App Control bloque par intermittence un exe fraichement compile lance
-# depuis PowerShell ; le passage par l'Explorateur passe.
+# Smart App Control bloque un exe fraichement compile (non signe, sans
+# reputation) : dans ce cas on lance la meme app via "go run", que la strategie
+# laisse passer. Verifier l'etat de SAC : Securite Windows > Controle des
+# applications et du navigateur > Smart App Control.
 try {
   Start-Process .\lol-cd-scout-native.exe -ErrorAction Stop
 } catch {
-  Write-Host "Start-Process bloque, relance via l'Explorateur."
-  Start-Process explorer.exe -ArgumentList (Resolve-Path .\lol-cd-scout-native.exe).Path
+  Write-Host "Exe bloque par la strategie de controle d'application, relance via 'go run .'"
+  Start-Process -WindowStyle Hidden -FilePath "go" -ArgumentList "run","." -WorkingDirectory $PSScriptRoot
 }

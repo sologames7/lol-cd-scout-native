@@ -234,6 +234,9 @@ type LiveSpell struct {
 	Spell string  `json:"spell"`
 	Name  string  `json:"name"`
 	Icon  string  `json:"icon,omitempty"` // chemin relatif ddragon, ex "spell/AhriQ.png"
+	Desc  string  `json:"desc,omitempty"`
+	Cost  string  `json:"cost,omitempty"`
+	Range string  `json:"range,omitempty"`
 	CD    float64 `json:"cd"`   // secondes, haste incluse, 0 = inconnu
 	Rank  string  `json:"rank"` // "2" exact (R) ou "≤4" plausible
 	Est   bool    `json:"est"`  // true si le rang est estimé
@@ -273,8 +276,8 @@ type LiveObjective struct {
 	Chaos  int       `json:"chaos,omitempty"`
 	Note   string    `json:"note,omitempty"`  // "ÂME", "×2 restantes"…
 	Leads  []float64 `json:"leads,omitempty"` // anticipations d'alerte (s avant le spawn)
-	Gone   bool       `json:"gone,omitempty"` // objectif définitivement parti (despawn / camp fini)
-	Rank   int        `json:"rank,omitempty"` // ordre d'affichage dans la barre
+	Gone   bool      `json:"gone,omitempty"`  // objectif définitivement parti (despawn / camp fini)
+	Rank   int       `json:"rank,omitempty"`  // ordre d'affichage dans la barre
 }
 
 type LiveState struct {
@@ -444,6 +447,12 @@ var liveCache = struct {
 	at    time.Time
 }{}
 
+func liveGameActive() bool {
+	liveCache.mu.Lock()
+	defer liveCache.mu.Unlock()
+	return liveCache.state.Active
+}
+
 func champBySlug(raw string) (champIndexItem, bool) {
 	slug := raw
 	if i := strings.LastIndex(raw, "_"); i >= 0 {
@@ -501,7 +510,10 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 				if i >= len(letters) {
 					break
 				}
-				sp := LiveSpell{Spell: letters[i], Name: s.Name, Icon: spellIconPath(s.Image.Full)}
+				sp := LiveSpell{
+					Spell: letters[i], Name: s.Name, Icon: spellIconPath(s.Image.Full),
+					Desc: plainText(s.Description), Cost: burn(s.CostBurn), Range: burn(s.RangeBurn),
+				}
 				cds := parseCDBurn(s.CooldownBurn)
 				isUlt := letters[i] == "R"
 				rank := 0

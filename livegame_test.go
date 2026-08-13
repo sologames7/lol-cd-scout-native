@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -78,6 +80,77 @@ func TestSpellIcons(t *testing.T) {
 	// Anivia est curated avec une entrée passive : elle doit pointer vers img/passive.
 	if p, ok := seen["P"]; ok && !strings.HasPrefix(p, "passive/") {
 		t.Errorf("icône du passif invalide: %q", p)
+	}
+}
+
+// Timings d'objectifs du patch 26.x + fenêtres d'alerte.
+func TestObjectives(t *testing.T) {
+	live := func(gameTime float64, events string) *rawLive {
+		payload := `{"gameData":{"gameMode":"CLASSIC","mapNumber":11,"gameTime":` +
+			strconv.FormatFloat(gameTime, 'f', -1, 64) + `},"allPlayers":[{"summonerName":"Jgl","team":"ORDER"},` +
+			`{"summonerName":"EnemyJgl","team":"CHAOS"}],"events":{"Events":[` + events + `]}}`
+		var raw rawLive
+		if err := json.Unmarshal([]byte(payload), &raw); err != nil {
+			t.Fatalf("payload de test invalide: %v", err)
+		}
+		return &raw
+	}
+	kill := func(name string, at float64) string {
+		return `{"EventName":"` + name + `","EventTime":` + strconv.FormatFloat(at, 'f', -1, 64) + `,"KillerName":"Jgl"}`
+	}
+
+	obj := buildObjectives(live(120, ""))
+	for _, c := range []struct {
+		key  string
+		want float64
+	}{{"grubs", 480}, {"dragon", 300}, {"herald", 900}, {"baron", 1200}} {
+		if got := obj[c.key].NextAt; got != c.want {
+			t.Errorf("%s: spawn %.0f, attendu %.0f", c.key, got, c.want)
+		}
+	}
+	if l := obj["grubs"].Leads; len(l) != 2 || l[0] != leadTeamfight || l[1] != leadGrubs {
+		t.Errorf("alertes larves attendues à 120 s + 70 s, obtenu %v", l)
+	}
+	if l := obj["baron"].Leads; len(l) != 1 || l[0] != leadTeamfight {
+		t.Errorf("alerte baron attendue à 120 s, obtenu %v", l)
+	}
+	if obj["herald"].Leads != nil {
+		t.Errorf("le héraut ne doit pas déclencher d'alerte teamfight: %v", obj["herald"].Leads)
+	}
+
+	// Camp de larves terminé : plus de compte à rebours ni d'alerte.
+	obj = buildObjectives(live(520, kill("HordeKill", 500)+","+kill("HordeKill", 505)+","+kill("HordeKill", 510)))
+	if !obj["grubs"].Gone || obj["grubs"].Leads != nil {
+		t.Errorf("3 larves tuées: camp attendu terminé, obtenu %+v", obj["grubs"])
+	}
+	// Une seule larve prise : le reste du camp est encore là.
+	obj = buildObjectives(live(520, kill("VoidgrubKill", 500)))
+	if obj["grubs"].Gone || !strings.Contains(obj["grubs"].Note, "2") {
+		t.Errorf("1 larve tuée: 2 restantes attendues, obtenu %+v", obj["grubs"])
+	}
+	// Personne ne les touche : elles disparaissent à 14:45.
+	if o := buildObjectives(live(900, ""))["grubs"]; !o.Gone {
+		t.Errorf("larves attendues disparues après 14:45: %+v", o)
+	}
+
+	// 3 drakes pour une équipe → le prochain donne l'âme ; 4 → Ancestral.
+	obj = buildObjectives(live(1000, kill("DragonKill", 300)+","+kill("DragonKill", 600)+","+kill("DragonKill", 900)))
+	if obj["dragon"].Note != "ÂME" || obj["dragon"].NextAt != 1200 {
+		t.Errorf("drake d'âme attendu à 900+300: %+v", obj["dragon"])
+	}
+	obj = buildObjectives(live(1300, kill("DragonKill", 300)+","+kill("DragonKill", 600)+","+
+		kill("DragonKill", 900)+","+kill("DragonKill", 1200)))
+	if !strings.Contains(strings.ToLower(obj["dragon"].Label), "ancestral") || obj["dragon"].NextAt != 1200+elderRespawn {
+		t.Errorf("Ancestral attendu 6 min après le 4e drake: %+v", obj["dragon"])
+	}
+
+	// Baron tué → respawn 6 min plus tard, héraut définitivement absent.
+	obj = buildObjectives(live(1400, kill("BaronKill", 1300)))
+	if obj["baron"].NextAt != 1300+baronRespawn {
+		t.Errorf("respawn baron attendu à 1660: %.0f", obj["baron"].NextAt)
+	}
+	if _, ok := obj["herald"]; ok {
+		t.Errorf("le héraut ne devrait plus être listé après 19:45")
 	}
 }
 

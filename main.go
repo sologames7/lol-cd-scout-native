@@ -8,10 +8,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -27,6 +29,9 @@ type Spell struct {
 	Name       string `json:"name"`
 	CD         string `json:"cd"`
 	Icon       string `json:"icon,omitempty"` // chemin relatif ddragon, ex "spell/AhriQ.png"
+	Desc       string `json:"desc,omitempty"`
+	Cost       string `json:"cost,omitempty"`
+	Range      string `json:"range,omitempty"`
 	Importance int    `json:"importance"`
 	Note       string `json:"note"`
 }
@@ -108,13 +113,17 @@ type champDetail struct {
 		Full string `json:"full"`
 	} `json:"image"`
 	Passive struct {
-		Image struct {
+		Description string `json:"description"`
+		Image       struct {
 			Full string `json:"full"`
 		} `json:"image"`
 	} `json:"passive"`
 	Spells []struct {
 		Name         string `json:"name"`
+		Description  string `json:"description"`
 		CooldownBurn string `json:"cooldownBurn"`
+		CostBurn     string `json:"costBurn"`
+		RangeBurn    string `json:"rangeBurn"`
 		Image        struct {
 			Full string `json:"full"`
 		} `json:"image"`
@@ -257,6 +266,34 @@ func cooldown(raw string) string {
 	return strings.ReplaceAll(raw, "/", " → ") + "s"
 }
 
+var brRe = regexp.MustCompile(`(?i)<br\s*/?>`)
+var tagRe = regexp.MustCompile(`(?s)<[^>]*>`)
+var multiSpaceRe = regexp.MustCompile(`[ \t]{2,}`)
+
+// Les descriptions ddragon mélangent balises maison (<magicDamage>…), <br> et espaces insécables.
+func plainText(s string) string {
+	s = brRe.ReplaceAllString(s, "\n")
+	s = tagRe.ReplaceAllString(s, "")
+	s = strings.NewReplacer("&nbsp;", " ", "\u00a0", " ", "&amp;", "&", "&lt;", "<", "&gt;", ">", "&quot;", `"`, "&#39;", "'").Replace(s)
+	s = multiSpaceRe.ReplaceAllString(s, " ")
+	lines := strings.Split(s, "\n")
+	for i := range lines {
+		lines[i] = strings.TrimSpace(lines[i])
+	}
+	return strings.TrimSpace(strings.Join(lines, "\n"))
+}
+
+func burn(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" || raw == "0" {
+		return ""
+	}
+	if raw == "self" {
+		return "soi"
+	}
+	return strings.ReplaceAll(raw, "/", " → ")
+}
+
 func spellIconPath(full string) string {
 	if full == "" {
 		return ""
@@ -275,12 +312,17 @@ func normalize(d champDetail) ChampionCard {
 		if i >= len(letters) {
 			break
 		}
-		auto[letters[i]] = Spell{Spell: letters[i], Name: s.Name, CD: cooldown(s.CooldownBurn), Icon: spellIconPath(s.Image.Full), Importance: 5}
+		auto[letters[i]] = Spell{
+			Spell: letters[i], Name: s.Name, CD: cooldown(s.CooldownBurn),
+			Icon: spellIconPath(s.Image.Full), Desc: plainText(s.Description),
+			Cost: burn(s.CostBurn), Range: burn(s.RangeBurn), Importance: 5,
+		}
 	}
 	passiveIcon := ""
 	if f := d.Passive.Image.Full; f != "" {
 		passiveIcon = "passive/" + f
 	}
+	passiveDesc := plainText(d.Passive.Description)
 	summary := ""
 	window := ""
 	source := "ddragon"
@@ -306,9 +348,9 @@ func normalize(d champDetail) ChampionCard {
 				if s.Name == "" {
 					s.Name = a.Name
 				}
-				s.Icon = a.Icon
+				s.Icon, s.Desc, s.Cost, s.Range = a.Icon, a.Desc, a.Cost, a.Range
 			} else if s.Spell == "P" {
-				s.Icon = passiveIcon
+				s.Icon, s.Desc = passiveIcon, passiveDesc
 			}
 			curatedByKey[s.Spell] = s
 			curatedOrder = append(curatedOrder, s)
@@ -573,7 +615,7 @@ func getSnapshot() Snapshot {
 				ChampionID         int `json:"championId"`
 				ChampionPickIntent int `json:"championPickIntent"`
 			} `json:"theirTeam"`
-			MyTeam            []teamMember `json:"myTeam"`
+			MyTeam []teamMember `json:"myTeam"`
 		}
 		status, err := lcuGET(creds, "/lol-champ-select/v1/session", &session)
 		if err == nil {
@@ -649,6 +691,86 @@ func apiQuit(w http.ResponseWriter, r *http.Request) {
 	go func() { time.Sleep(100 * time.Millisecond); os.Exit(0) }()
 }
 
+// hudURL renvoie l'URL de la page en mode HUD compact (fenêtre épinglée).
+func hudURL() string {
+	addr := listenAddr
+	if ln, ok := currentListener.Load().(net.Listener); ok {
+		addr = ln.Addr().String()
+	}
+	return "http://" + addr + "/?hud=1"
+}
+
+func apiHUDOpen(w http.ResponseWriter, r *http.Request) {
+	if err := hudOpen(hudURL()); err != nil {
+		http.Error(w, err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	writeJSON(w, map[string]any{"ok": true, "url": hudURL()})
+}
+
+func apiHUDPin(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	hudSetPin(q.Get("on") != "0", q.Get("noactivate") == "1")
+	writeHUDStatus(w)
+}
+
+func apiHUDHold(w http.ResponseWriter, r *http.Request) {
+	hudSetHold(r.URL.Query().Get("on") != "0")
+	writeHUDStatus(w)
+}
+
+func apiHUDHits(w http.ResponseWriter, r *http.Request) {
+	var rs []hudHit
+	if err := json.NewDecoder(io.LimitReader(r.Body, 8192)).Decode(&rs); err != nil && err != io.EOF {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	hudSetHits(rs)
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiHUDSolid(w http.ResponseWriter, r *http.Request) {
+	hudSetSolid(r.URL.Query().Get("on") != "0")
+	writeHUDStatus(w)
+}
+
+func apiHUDClose(w http.ResponseWriter, r *http.Request) {
+	hudCloseWindow()
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiInput(w http.ResponseWriter, r *http.Request) {
+	since, _ := strconv.ParseUint(r.URL.Query().Get("since"), 10, 64)
+	tab, seq, events := inputSince(since)
+	pinned, noActivate, window := hudStatus()
+	writeJSON(w, map[string]any{
+		"supported": hudSupported(), "tab": tab, "seq": seq, "events": events,
+		"pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold(),
+	})
+}
+
+func apiClipboard(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST", http.StatusMethodNotAllowed)
+		return
+	}
+	b, err := io.ReadAll(io.LimitReader(r.Body, 2048))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := setClipboard(strings.TrimSpace(string(b))); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+func writeHUDStatus(w http.ResponseWriter) {
+	pinned, noActivate, window := hudStatus()
+	writeJSON(w, map[string]any{"supported": hudSupported(), "pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold()})
+}
+
 func apiCard(w http.ResponseWriter, r *http.Request) {
 	key, _ := strconv.Atoi(r.URL.Query().Get("key"))
 	if key == 0 {
@@ -670,8 +792,8 @@ func openBrowser(url string) {
 	_ = cmd.Start()
 }
 
-// currentListener sert au redémarrage propre : le port doit être libéré avant
-// de lancer la nouvelle instance.
+// currentListener expose l'adresse réellement écoutée (le port peut varier si
+// 27182 est pris) aux fonctions qui doivent forger une URL locale.
 var currentListener atomic.Value
 
 func main() {
@@ -685,7 +807,18 @@ func main() {
 			return
 		}
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
 		io.WriteString(w, indexHTML)
+	})
+	mux.HandleFunc("/logo.png", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		w.Write(logoPNG)
+	})
+	mux.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/x-icon")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		w.Write(logoICO)
 	})
 	mux.HandleFunc("/api/status", apiStatus)
 	mux.HandleFunc("/api/live", apiLive)
@@ -694,6 +827,15 @@ func main() {
 	mux.HandleFunc("/api/card", apiCard)
 	mux.HandleFunc("/api/quit", apiQuit)
 	mux.HandleFunc("/api/update", apiUpdate)
+	mux.HandleFunc("/api/hud", func(w http.ResponseWriter, r *http.Request) { writeHUDStatus(w) })
+	mux.HandleFunc("/api/hud/open", apiHUDOpen)
+	mux.HandleFunc("/api/hud/pin", apiHUDPin)
+	mux.HandleFunc("/api/hud/hold", apiHUDHold)
+	mux.HandleFunc("/api/hud/hits", apiHUDHits)
+	mux.HandleFunc("/api/hud/solid", apiHUDSolid)
+	mux.HandleFunc("/api/hud/close", apiHUDClose)
+	mux.HandleFunc("/api/input", apiInput)
+	mux.HandleFunc("/api/clipboard", apiClipboard)
 	ln, err := listenLocal()
 	if err != nil {
 		return
@@ -707,3 +849,12 @@ func main() {
 
 //go:embed index.html
 var indexHTML string
+
+// Logo embarqué (header, favicon). L'icône de l'exe Windows est dans
+// rsrc_windows_amd64.syso, généré depuis branding/logo.ico.
+//
+//go:embed branding/logo.png
+var logoPNG []byte
+
+//go:embed branding/logo.ico
+var logoICO []byte
