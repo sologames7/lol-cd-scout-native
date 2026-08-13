@@ -35,6 +35,14 @@ func hudSetHits([]hudHit) {}
 
 func hudSetSolid(bool) {}
 
+func hudSetBounds(int, int) {}
+
+func hudResetPos() {}
+
+func hudBeginDrag() {}
+
 func hudCloseWindow() {}
+
+func autoOpenHudForGame(string) {}
 
 func inputSince(uint64) (bool, uint64, []inputEvent) { return false, 0, []inputEvent{} }

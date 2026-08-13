@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoL CD Scout</title>
-<script>if(/\bhud=/.test(location.search))document.title='CD Scout HUD'</script>
+<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');document.title='CD Scout HUD'}})()</script>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Chakra+Petch:wght@600;700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -59,25 +59,31 @@ input{transition:border-color .15s,box-shadow .15s}input:focus{box-shadow:0 0 0 
 .sp-tip-clip video{width:100%;height:100%;object-fit:cover;display:block}
 .sp-tip-clip small{color:var(--muted);font-size:10.5px}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#22304a;border-radius:99px;border:2px solid var(--bg)}::-webkit-scrollbar-track{background:transparent}
-/* ---- HUD overlay plein écran : panneaux flottants, fond clé #000001 ---- */
+/* ---- HUD widget natif 200×100 (WS_POPUP + WebView2, comme Blitz) ---- */
 #hud{display:none}
-html.hudmode,body.hudmode{background:#000001!important;overflow:hidden;cursor:none!important;user-select:none!important;-webkit-user-select:none!important}
-html.hudmode,html.hudmode *{cursor:none!important;-webkit-user-drag:none}
-body.hudmode .shell{display:none}body.hudmode #hud{display:block}
-#hud{position:fixed;inset:0;padding:0;font-size:12px;overflow:hidden;background:transparent;pointer-events:none;-webkit-app-region:no-drag}
-.hud-pane{position:absolute;width:max-content;min-width:200px;max-width:280px;pointer-events:none;display:flex;flex-direction:column;gap:4px}
-.hud-pane[data-hud="top"]{min-width:0;max-width:none}
-.hud-tools,.hud-top,.hud-objs,.hud-rows,.hud-gold,.hud-wait,#alert,#sp-tip{pointer-events:auto}
-.hud-tools{display:flex;align-items:center;gap:3px;width:max-content}
-.hud-pane .hud-drag,.hud-pane .hud-eye{width:22px;height:22px;padding:0;border-radius:6px;background:#243044;color:#8d9bb0;font-size:13px;line-height:1;flex-shrink:0;border:1px solid var(--border)}
-.hud-pane .hud-drag{cursor:none}.hud-pane .hud-drag:active{cursor:none}
-.hud-pane .hud-eye{cursor:none;font-size:12px}.hud-pane .hud-eye:hover{color:#dbe6f5;background:#1d2942}
-.hud-pane.off{min-width:0;max-width:none;width:auto}
-.hud-pane.off>.hud-objs,.hud-pane.off>.hud-rows,.hud-pane.off>.hud-gold,.hud-pane.off>.hud-wait{display:none!important}
-.hud-pane.off .hud-top>:not(.hud-drag):not(.hud-eye):not(.hud-btns){display:none!important}
-.hud-pane.off .hud-btns>:not(.x){display:none!important}
-.hud-pane.off .hud-eye{color:#64748b}
-.hud-top{display:flex;align-items:center;gap:6px;min-width:0;padding:4px 6px;border-radius:10px;background:#101827;border:1px solid var(--border)}
+html.hudmode,body.hudmode{background:transparent!important;overflow:hidden;margin:0;width:max-content;height:max-content;cursor:default;user-select:none!important;-webkit-user-select:none!important}
+html.hudmode .shell,body.hudmode .shell{display:none!important}html.hudmode #hud,body.hudmode #hud{display:flex}
+#hud{flex-direction:column;gap:4px;padding:6px;width:200px;box-sizing:border-box;font-size:12px;overflow:hidden;background:rgba(16,24,39,.78);border:1px solid rgba(255,255,255,.16);border-radius:10px}
+html.hudmode.expanded #hud{width:268px}
+.hud-mini{display:flex;align-items:center;gap:5px;min-width:0}
+.hud-flashes{display:flex;gap:3px}
+html.hudmode.expanded .hud-flashes,html.hudmode.idle .hud-flashes{display:none}
+html.hudmode:not(.expanded) .hud-objs,html.hudmode:not(.expanded) .hud-rows,html.hudmode:not(.expanded) .hud-gold{display:none!important}
+html.hudmode:not(.idle) .hud-wait{display:none!important}
+html.hudmode.idle:not(.expanded) .hud-wait{padding:2px 0 0;gap:2px}html.hudmode.idle:not(.expanded) .hud-wait span{display:none}html.hudmode.idle:not(.expanded) .hud-wait strong{font-size:12px}
+.hud-drag{width:22px;height:22px;padding:0;border-radius:6px;background:#243044;color:#8d9bb0;font-size:13px;line-height:1;flex-shrink:0;border:1px solid var(--border);cursor:grab}
+.hud-drag:active{cursor:grabbing}
+.hud-next{display:flex;align-items:center;gap:3px;margin-left:auto;flex-shrink:0}
+.hud-next img{width:16px;height:16px;object-fit:contain}
+.hud-next b{font-family:'Chakra Petch',Inter,sans-serif;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+html.hudmode.idle .hud-next{display:none}
+html.hudmode:not(.expanded) .hud-btns{display:flex}html.hudmode:not(.expanded) .hud-btns .hbtn:not(.x){display:none}
+.hf{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 1px 2px;border:0;border-radius:7px;background:rgba(20,29,46,.7);color:#e7eefb;cursor:pointer}
+.hf img{width:22px;height:22px;border-radius:5px;object-fit:cover;border:2px solid #5b6a82;display:block}
+.hf .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:10px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.hf.cd .hv{color:#fca5a5}.hf.up .hv{color:var(--accent)}
+.hf.dead img{filter:grayscale(.45) contrast(.88)}
+.hud-top{display:flex;align-items:center;gap:6px;min-width:0}
 .hud-logo{display:none}
 .hud-clock{font-family:'Chakra Petch',Inter,sans-serif;font-size:20px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;cursor:pointer;-webkit-app-region:no-drag}.hud-clock.copied{color:var(--accent)}
 .hud-state{width:7px;height:7px;padding:0;border-radius:99px;background:#64748b;border:0;overflow:hidden;text-indent:-99px;flex-shrink:0}
@@ -87,8 +93,7 @@ body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 .hbtn:hover{background:#1d2942;color:#dbe6f5}.hbtn.on{background:rgba(91,231,196,.14);border-color:rgba(91,231,196,.55);color:var(--accent)}
 .hbtn.x{color:#fda4a4}.hbtn.x:hover{background:rgba(248,113,113,.2);color:#fff}
 .hud-objs{display:flex;flex-direction:column;gap:3px}
-.hud-pane[data-hud="objs"] .hobj{background:#101827}
-.hobj{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:10px;border:1px solid var(--border);background:#101827;min-width:0}
+.hobj{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:10px;border:1px solid var(--border);background:rgba(16,24,39,.55);min-width:0}
 .hobj img{width:22px;height:22px;object-fit:contain;flex-shrink:0;background:#1a2438;border-radius:4px}
 .hobj .on-name{display:none}
 .hobj strong{margin-left:auto;flex-shrink:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:15px;font-variant-numeric:tabular-nums;color:#e7eefb}
@@ -99,7 +104,7 @@ body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 .hobj.gone{background:#0c121c}.hobj.gone strong{font-size:11px;color:var(--muted)}
 .hud-rows{display:flex;flex-direction:column;gap:4px;flex-shrink:0;min-width:248px}
 .hud-lab{font-size:8px;font-weight:900;letter-spacing:.18em;color:#5b6a82;padding:2px 2px 0}
-.hr{display:flex;flex-direction:column;align-items:stretch;gap:0;min-width:0;border-radius:10px;border:1px solid rgba(251,191,36,.4);background:#14100c;overflow:hidden;position:relative}
+.hr{display:flex;flex-direction:column;align-items:stretch;gap:0;min-width:0;border-radius:10px;border:1px solid rgba(251,191,36,.4);background:rgba(20,16,12,.82);overflow:hidden;position:relative}
 .hr.ally,.hr.me{border-color:rgba(251,191,36,.55)}.hr.dead{border-color:rgba(248,113,113,.55);background:#18100e}
 .hr-main{flex:none;width:100%;min-width:0;display:flex;align-items:center;gap:6px;padding:5px 6px 3px;background:none;border:0;border-radius:0;color:var(--text);cursor:pointer;text-align:left;-webkit-app-region:no-drag}
 .hr-main:hover{background:rgba(255,255,255,.05)}
@@ -118,7 +123,7 @@ body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 .hr-tm.cd .hv{color:#fca5a5}.hr-tm.up .hv{color:var(--accent)}
 .hr-spells{display:flex;width:100%;border-top:1px solid rgba(255,255,255,.06)}
 .hr-sk{flex:1;width:auto;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 1px 5px;border:0;border-left:1px solid var(--border);border-radius:0;background:rgba(255,255,255,.03);color:#e7eefb;-webkit-app-region:no-drag}
-.hr-p{background:rgba(122,162,255,.07)}.hr-p .hv{display:none}
+.hr-p{background:rgba(122,162,255,.07)}button.hr-p{cursor:pointer}button.hr-p:hover{background:rgba(122,162,255,.16)}.hr-p.cd{background:rgba(248,113,113,.2)}.hr-p.up{background:rgba(91,231,196,.16)}.hr-p.cd .hv{color:#fecaca}.hr-p.up .hv{color:var(--accent)}.hr-p.cd .qi i{color:#fecaca;border-color:rgba(248,113,113,.7)}.hr-p.up .qi i{color:var(--accent);border-color:rgba(91,231,196,.65)}
 .hr-sk[data-tip]{cursor:help}
 .hr-sk .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:#cdd8ea}
 .hr-sk img{width:20px;height:20px;border-radius:4px;display:block;background:#243044}
@@ -137,7 +142,7 @@ body.hudmode .sp-tip p{font-size:11px}
 .hr-more{display:none;padding:0 8px 5px 40px;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums;gap:5px;align-items:center;flex-wrap:wrap}
 .hr-more img{width:16px;height:16px;border-radius:4px;background:#0b1220;border:1px solid var(--border)}
 #hud.detail .hr-more{display:flex;width:100%}
-.hud-gold{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:10px;border:1px solid var(--border);background:#101827}
+.hud-gold{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:10px;border:1px solid var(--border);background:rgba(16,24,39,.55)}
 .hud-gold .hg-lab{display:none}
 .hud-gold strong{font-family:'Chakra Petch',Inter,sans-serif;font-size:16px;font-variant-numeric:tabular-nums}
 .hud-gold.pos strong{color:var(--accent)}.hud-gold.neg strong{color:#f87171}
@@ -148,12 +153,10 @@ body.hudmode .sp-tip p{font-size:11px}
 .hud-allies .hr-tm .hv{font-size:13px}.hud-allies .hr-fi{width:16px;height:16px}
 .hud-allies .hr-spells{display:none}
 .hud-foot{display:none}
-.hud-wait{display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);padding:16px 10px;border-radius:12px;background:#101827}
+.hud-wait{display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);padding:16px 10px;border-radius:12px;background:rgba(16,24,39,.45)}
 .hud-wait strong{font-family:'Space Grotesk',Inter,sans-serif;font-size:14px;color:#dbe6f5}.hud-wait span{font-size:10.5px;line-height:1.45}
-/* Color-key #000001 : pas d'opacité / pas de noir pur (portrait Blitz, etc. = trous). */
-html.hudmode #hud img{filter:contrast(.92)}
-html.hudmode #hud .hr.dead .hr-pic{filter:grayscale(.35) contrast(.88)}
-html.hudmode #hud .hr-tm.cd .hr-fi{filter:saturate(.55) contrast(.92)}
+html.hudmode #hud .hr.dead .hr-pic{filter:grayscale(.35) contrast(.9)}
+html.hudmode #hud .hr-tm.cd .hr-fi{filter:saturate(.55)}
 /* ---- Alertes d'objectif (les deux modes) ---- */
 .alert{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;align-items:center;gap:2px;padding:12px 26px;border-radius:16px;border:1px solid rgba(251,191,36,.7);background:linear-gradient(180deg,rgba(41,32,8,.97),rgba(18,14,6,.97));box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 40px rgba(251,191,36,.18);text-align:center;max-width:min(92vw,760px);animation:alertIn .22s ease-out}
 .alert b{font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;letter-spacing:-.01em;color:#fde68a}
@@ -162,7 +165,7 @@ html.hudmode #hud .hr-tm.cd .hr-fi{filter:saturate(.55) contrast(.92)}
 .alert.hot b{color:#fecaca}.alert.hot span{color:#e8b4b4}
 @keyframes alertIn{from{opacity:0;transform:translate(-50%,-14px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes pulseHot{0%,100%{box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 26px rgba(248,113,113,.18)}50%{box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 54px rgba(248,113,113,.42)}}
-body.hudmode .alert{top:8px;padding:9px 16px;border-radius:13px}body.hudmode .alert b{font-size:17px}body.hudmode .alert span{font-size:10.5px}
+body.hudmode .alert{position:relative;left:auto;top:auto;transform:none;max-width:100%;margin:0;padding:8px 10px;border-radius:10px;animation:none}body.hudmode .alert b{font-size:12px}body.hudmode .alert span{font-size:10px}
 .t-iron{--tc:#8a7f70}.t-bronze{--tc:#c88a5a}.t-silver{--tc:#c5d0dc}.t-gold{--tc:#f0c75e}.t-platinum{--tc:#5ecfc0}.t-emerald{--tc:#3dcf7a}.t-diamond{--tc:#57c3ff}.t-master{--tc:#c47bff}.t-grandmaster{--tc:#e84d4d}.t-challenger{--tc:#f4d58a}
 .pic-frame{width:50px;height:50px;padding:2px;border-radius:14px;background:#4a5568;flex-shrink:0}.pic-frame[class*="t-"]{background:var(--tc)}.pic-frame .portrait{width:100%;height:100%;border-radius:12px;display:block}
 .rank-tag{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--tc,#f0c75e);margin-left:auto;align-self:flex-start}
@@ -171,25 +174,28 @@ a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:non
 .ring-portrait{border:3px solid #4a5568}
 .hr-pic[class*="t-"],.ring-portrait[class*="t-"]{border-color:var(--tc)}
 .hr-dl{display:inline-grid;place-items:center;margin-left:4px;width:14px;height:14px;border-radius:3px;background:#243044;color:var(--accent);font-size:9px;font-weight:900;border:1px solid #3d4a5c;vertical-align:middle}
-</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><button id="demo" class="secondary">Démo draft</button><button id="demo-live" class="secondary">Démo en jeu</button><button id="hud-open" class="secondary" title="Ouvre le HUD compact épinglé au-dessus de League">HUD en jeu</button><button id="quit" class="secondary">Quitter</button></section><section class="hero"><div><span class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis + SUPP / JGL / MID alliés apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">…</strong></div></section><main>
+</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><button id="demo" class="secondary">Démo draft</button><button id="demo-live" class="secondary">Démo en jeu</button><button id="hud-open" class="secondary" title="Ouvre le widget HUD (200×100, toujours visible au-dessus de League)">HUD en jeu</button><button id="quit" class="secondary">Quitter</button></section><section class="hero"><div><span class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis + SUPP / JGL / MID alliés apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
 <section id="live" class="hidden"><div id="obj-bar" class="obj-bar"></div><div id="live-cards" class="tiles"></div><div class="gold-row"><div id="gold-main" class="gold-main"></div><div id="gold-roles" class="gold-grid"></div></div><div class="live-hint">Clique l'<strong>anneau</strong> d'un ennemi (ou <strong>Alt+1–5</strong> sur le HUD) quand il Flash → timer + les Flash ennemis encore en CD s'écrivent dans le chat League (ouvre le chat avec <strong>Entrée</strong> avant, le jeu refuse Ctrl+V). Clique le chip <strong>R</strong> quand il ult, re-clique pour annuler. <strong>CI</strong> = Cosmic Insight (+18 haste invocateur). CD Q/W/E au rang max plausible, rang de R exact, haste des items incluse (runes inconnues). Or <em>estimé</em> (CS + kills + assists + or passif) : Riot n'expose pas l'or exact des autres joueurs, la tendance est fiable.</div><div class="section-title" style="margin-top:16px"><h3>Alliés</h3><span id="live-ally-count">—</span></div><div id="live-allies" class="tiles"></div></section>
 <section id="cs-enemies"><div class="section-title"><h3>Ennemis détectés</h3><span id="enemy-count">0/5</span></div><nav id="champ-nav" class="champ-nav hidden" aria-label="Filtrer les ennemis"></nav><div id="cards" class="cards"></div><div id="empty" class="empty"><div class="empty-icon">⌁</div><strong>Aucun champion ennemi détecté</strong><span>Utilise la recherche, la démo draft ou la démo en jeu pour tester l'interface.</span></div></section>
 <section id="cs-allies"><div class="section-title"><h3>Alliés clés</h3><span id="ally-count">SUPP · JGL · MID</span></div><div id="ally-cards" class="cards"></div><div id="ally-empty" class="empty"><div class="empty-icon">⌁</div><strong>Pas encore d’alliés SUPP / JGL / MID</strong><span>Dès que leurs picks sont visibles en champ select, leurs CD s’affichent ici.</span></div></section>
-</main><footer><span>1–5 : focus ennemis (draft) · Flash ennemi (en jeu)</span><span>Draft : CD sans haste · En jeu : haste des items incluse (runes inconnues).</span></footer></div>
+</main><footer><span>Tab : aperçu HUD · ² : verrouiller · Alt+1–5 : Flash</span><span>Draft : CD sans haste · En jeu : haste des items incluse (runes inconnues).</span></footer></div>
 <div id="sp-tip" class="sp-tip hidden"></div>
 <div id="hud">
-<div class="hud-pane" data-hud="top" id="hud-pane-top"><div class="hud-top"><button type="button" class="hud-drag" data-move="top" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button><strong id="hud-clock" class="hud-clock" title="Clic : écrire les Flash ennemis dans le chat (ouvre le chat avant)">—</strong><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-btns"><button type="button" id="hud-hold" class="hbtn" title="Rester visible (sinon ² en partie)">LOCK</button><button type="button" id="hud-sound" class="hbtn on" title="Alertes sonores">♪</button><button type="button" id="hud-reset" class="hbtn" title="Réinitialiser les positions">RST</button><button type="button" id="hud-close" class="hbtn x" title="Fermer">✕</button></div></div></div>
-<div class="hud-pane" data-hud="objs" id="hud-pane-objs"><div class="hud-tools"><button type="button" class="hud-drag" data-move="objs" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button></div><div id="hud-objs" class="hud-objs"></div></div>
-<div class="hud-pane" data-hud="enemies" id="hud-pane-enemies"><div class="hud-tools"><button type="button" class="hud-drag" data-move="enemies" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button></div><div id="hud-enemies" class="hud-rows"></div></div>
-<div class="hud-pane" data-hud="gold" id="hud-pane-gold"><div class="hud-tools"><button type="button" class="hud-drag" data-move="gold" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button></div><div id="hud-gold" class="hud-gold hidden"></div></div>
-<div class="hud-pane" data-hud="allies" id="hud-pane-allies"><div class="hud-tools"><button type="button" class="hud-drag" data-move="allies" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button></div><div id="hud-allies" class="hud-rows hud-allies"></div></div>
-<div class="hud-pane" data-hud="wait" id="hud-pane-wait"><div class="hud-tools"><button type="button" class="hud-drag" data-move="wait" title="Déplacer">⠿</button><button type="button" class="hud-eye" title="Masquer">👁</button></div><div id="hud-wait" class="hud-wait"><strong>En attente</strong><span>En partie : maintiens <b>²</b>.<br>⠿ pour placer · 👁 pour masquer.<br>LOCK pour rester visible.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div></div>
-</div><div id="alert" class="alert hidden"></div>
+<div class="hud-mini" id="hud-mini-bar"><button type="button" class="hud-drag" id="hud-drag" title="Déplacer">⠿</button><strong id="hud-clock" class="hud-clock" title="Clic : écrire les Flash ennemis dans le chat (ouvre le chat avant)">—</strong><span id="hud-state" class="hud-state" title="état">·</span><div id="hud-next" class="hud-next"></div><div class="hud-btns"><button type="button" id="hud-hold" class="hbtn" title="Verrouiller déplié (²)">LOCK</button><button type="button" id="hud-sound" class="hbtn on" title="Alertes sonores">♪</button><button type="button" id="hud-reset" class="hbtn" title="Réinitialiser la position">RST</button><button type="button" id="hud-close" class="hbtn x" title="Quitter CD Scout">✕</button></div></div>
+<div id="hud-flashes" class="hud-flashes"></div>
+<div id="alert" class="alert hidden"></div>
+<div id="hud-wait" class="hud-wait"><strong>En attente</strong><span>Widget permanent · <b>Tab</b> aperçu (scoreboard).<br><b>²</b> verrouille / déverrouille — la touche n'arrive pas au chat.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
+<div id="hud-objs" class="hud-objs"></div>
+<div id="hud-enemies" class="hud-rows"></div>
+<div id="hud-gold" class="hud-gold hidden"></div>
+<div id="hud-allies" class="hud-rows hud-allies"></div>
+</div>
 <div id="upd" class="upd hidden"></div>
 <script>
-const $=id=>document.getElementById(id);let roster=[],visible=new Set(),focusKey=null,allyRoster=[],draftPool=[],timer,version='',lastPhase='';
-// ?hud=1 : fenêtre compacte épinglée au-dessus de League (le titre sert à la retrouver côté Go).
-const HUDMODE=new URLSearchParams(location.search).has('hud');
+const $=id=>document.getElementById(id);let roster=[],visible=new Set(),focusKey=null,allyRoster=[],draftPool=[],timer,version='16.15.1',lastPhase='';
+document.addEventListener('error',e=>{const img=e.target;if(!img||img.tagName!=='IMG'||img.dataset.ddfb)return;const m=String(img.src||'').match(/\/ddragon\/(.+)$/);if(!m)return;img.dataset.ddfb='1';img.src='https://ddragon.leagueoflegends.com/cdn/'+m[1]},true);
+// ?hud=1 : widget natif 200×100 (WebView2), toujours visible.
+const HUDMODE=document.documentElement.classList.contains('hudmode')||/\bhud=/.test(location.search)||location.pathname==='/hud';
 if(HUDMODE){document.documentElement.classList.add('hudmode');document.body.classList.add('hudmode');document.title='CD Scout HUD';
 const eat=e=>{e.preventDefault();e.stopPropagation()};
 document.addEventListener('contextmenu',eat,true);
@@ -204,8 +210,9 @@ const tierClass=t=>{t=String(t||'').toLowerCase();return(!t||t==='none'||t==='un
 const playerLabel=p=>p.hidden?(p.champion||p.name||''):(p.name||p.playerName||p.riotId||p.champion||'');
 function openDeepLoL(url){if(!url)return;if(HUDMODE){fetch('/api/open?url='+encodeURIComponent(url),{method:'POST'}).catch(()=>{});return}window.open(url,'_blank','noopener')}
 const mixScout=(c,s)=>!s?c:{...c,playerName:s.name,hidden:s.hidden,rank:s.rank,tier:s.tier,deeplol:s.deeplol,riotId:s.riotId||c.riotId};
-const iconUrl=c=>`https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${encodeURIComponent(c.icon)}`;
-const spellIcon=s=>s&&s.icon?`https://ddragon.leagueoflegends.com/cdn/${version}/img/${s.icon.split('/').map(encodeURIComponent).join('/')}`:'';
+const dd=p=>`/ddragon/${version||'16.15.1'}/img/${p}`;
+const iconUrl=c=>dd('champion/'+encodeURIComponent(c.icon));
+const spellIcon=s=>s&&s.icon?dd(s.icon.split('/').map(encodeURIComponent).join('/')):'';
 const spellBadge=(s,cls)=>{const u=spellIcon(s);return u?`<span class="${cls}"><img src="${u}" alt="" loading="lazy"><i>${esc(s.spell)}</i></span>`:''};
 // Clips d'abilités du client League (CommunityDragon) : .../champion-abilities/0103/ability_0103_Q1.webm
 const CLIP_SLOT={P:'P1',Q:'Q1',W:'W1',E:'E1',R:'R1'};
@@ -257,15 +264,16 @@ if(st==='error'){el.className='upd err';el.innerHTML=`<span class="utxt">Mise à
 el.className='upd';el.innerHTML=`<span class="utxt">Version <b>${esc(u.latest)}</b> prête · elle s'installe au prochain lancement.</span><button type="button" id="upd-now">Redémarrer</button>`;
 $('upd-now').onclick=async()=>{el.innerHTML='<span class="utxt">Redémarrage…</span>';try{await fetch('/api/update',{method:'POST'})}catch(_){}setTimeout(()=>location.reload(),2500)}}
 async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`:'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.'}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
-$('quit').onclick=async()=>{try{await fetch('/api/quit',{method:'POST'})}catch(_){};document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
+$('quit').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
+document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
 $('demo').onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés SUPP / JGL / MID en exemple.';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean))};
 $('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){$('results').classList.add('hidden');return}const rs=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();$('results').innerHTML=rs.map(r=>`<div class="result" data-key="${r.key}"><span>${esc(r.name)}</span><small>${esc(r.title)}</small></div>`).join('');$('results').classList.toggle('hidden',!rs.length);document.querySelectorAll('.result').forEach(row=>row.onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;$('search').value='';$('results').classList.add('hidden');const c=await (await fetch('/api/card?key='+row.dataset.key)).json();focusKey=c.key;draftPool=[c];setRoster([c],true);setAllies([]);$('hero-title').textContent=c.name;$('hero-copy').textContent='Recherche manuelle.'})},180)};
 document.onclick=e=>{if(!e.target.closest('.search-wrap'))$('results').classList.add('hidden')};
 // ---- Mode En jeu (Live Client Data API, port 2999) ----
 let liveState=null,liveAt=0,liveTracks={},ciSet=new Set(),liveScout={};
 const POS={TOP:'TOP',JUNGLE:'JGL',MIDDLE:'MID',BOTTOM:'BOT',UTILITY:'SUPP'};
-const summIcon=s=>`https://ddragon.leagueoflegends.com/cdn/${version}/img/spell/${encodeURIComponent(s)}.png`;
-const itemIcon=id=>`https://ddragon.leagueoflegends.com/cdn/${version}/img/item/${id}.png`;
+const summIcon=s=>dd('spell/'+encodeURIComponent(s)+'.png');
+const itemIcon=id=>dd('item/'+id+'.png');
 const liveOn=()=>!!(liveState&&liveState.active);
 const gameNow=()=>liveOn()?liveState.gameTime+(Date.now()-liveAt)/1000:0;
 const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
@@ -298,13 +306,15 @@ const ringS=(p.summoners||[])[ringSi];
 const ringKey=`${P}|S${ringSi}`,ringCd=ringS?summCD(p,ringS):0;
 const ringLabel=ringS?(ringS.slug==='SummonerFlash'?'FLASH':String(ringS.name||ringS.slug||'').toUpperCase().slice(0,9)):'—';
 const chips=(p.spells||[]).map(s=>{
-const isP=s.spell==='P',isR=s.spell==='R',k=`${P}|R`,tr=isR&&liveTracks[k];
+const isP=s.spell==='P',isR=s.spell==='R',cd=s.cd||0;
+const k=isP?`${P}|P`:isR?`${P}|R`:'';
+const tr=(isP||isR)&&k&&liveTracks[k];
 const note=((sc&&sc.important)||[]).find(x=>x.spell===s.spell&&x.note);
-const tip=spellTip(s,p.key,{cd:isP?'':(s.cd?fmtCD(s.cd):''),meta:isP?[]:[`Rang ${s.rank||'?'}${s.est?' (max plausible)':''}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint:isR&&s.cd?'Clique le chip quand il ult (re-clique pour annuler).':''});
-const val=tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${s.cd?fmtCD(s.cd):'—'}</span>`;
+const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}${s.est?' (max plausible)':''}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint:(isP||isR)&&cd?'Clique le chip quand il l\'utilise (re-clique pour annuler).':''});
+const val=tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${cd?fmtCD(cd):'—'}</span>`;
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
-if(isP)return `<div class="qchip pchip" data-tip="${tip}">${head}</div>`;
-return isR&&s.cd?`<button type="button" class="qchip rchip${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${s.cd}" data-tip="${tip}">${head}${val}</button>`
+if(isP&&!(cd>0))return `<div class="qchip pchip" data-tip="${tip}">${head}</div>`;
+return (isP||isR)&&cd?`<button type="button" class="qchip ${isP?'pchip':'rchip'}${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" data-tip="${tip}">${head}${val}</button>`
 :`<div class="qchip" data-tip="${tip}">${head}${val}</div>`}).join('');
 const others=(p.summoners||[]).map((s,si)=>{if(si===ringSi)return'';const k=`${P}|S${si}`,tr=liveTracks[k],cd=summCD(p,s);
 return `<button type="button" class="qchip${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" title="${esc(s.name||s.slug)} · CD ${mmss(cd)} · clique quand il l'utilise">${s.slug?`<img src="${summIcon(s.slug)}" alt="">`:'<b>S</b>'}${tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${mmss(cd)}</span>`}</button>`}).join('');
@@ -424,13 +434,13 @@ const fIcon=fs&&fs.slug?`<img class="hr-fi" src="${summIcon(fs.slug)}" alt="">`:
 const spells=(p.spells||[]).map(s=>{
 const isP=s.spell==='P',isR=s.spell==='R',cd=s.cd||0;
 const note=((sc&&sc.important)||[]).find(x=>x.spell===s.spell&&x.note);
-const hint=isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'';
-const tip=spellTip(s,p.key,{cd:isP?'':(cd?fmtSec(cd):''),meta:isP?[]:[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
+const hint=isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:isP&&cd?'Clic quand le passif se déclenche (re-clique pour annuler).':'';
+const tip=spellTip(s,p.key,{cd:cd?(cd>=120?mmss(cd):fmtSec(cd)):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
-if(isP)return `<div class="hr-sk hr-p" data-tip="${tip}">${head}</div>`;
-return isR&&cd
-?`<button type="button" class="hr-sk hr-r" data-track="${esc(P)}|R" data-cd="${cd}" data-tm="${esc(P)}|R" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}<span class="hv">${fmtSec(cd)}</span></button>`
-:`<div class="hr-sk" data-tip="${tip}">${head}<span class="hv">${fmtSec(cd)}</span></div>`}).join('');
+const shown=cd>=120?mmss(cd):fmtSec(cd);
+if(isP&&!(cd>0))return `<div class="hr-sk hr-p" data-tip="${tip}">${head}</div>`;
+if((isP||isR)&&cd)return `<button type="button" class="hr-sk ${isP?'hr-p':'hr-r'}" data-track="${esc(P)}|${isP?'P':'R'}" data-cd="${cd}" data-tm="${esc(P)}|${isP?'P':'R'}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}<span class="hv">${shown}</span></button>`;
+return `<div class="hr-sk" data-tip="${tip}">${head}<span class="hv">${shown}</span></div>`}).join('');
 const others=(p.summoners||[]).map((s,j)=>j===si?'':`${s.name||s.slug||''} ${mmss(summCD(p,s))}`).filter(Boolean).join(' · ');
 const items=(p.items||[]).map(id=>`<img src="${itemIcon(id)}" alt="" loading="lazy">`).join('');
 const pos=POS[p.position]||'';
@@ -444,40 +454,56 @@ return `<div class="hr${ally?' ally':''}${p.isMe?' me':''}" data-slot="${i+1}" d
 `<span class="hr-tm" data-tm="${esc(fkey)}" data-base="${fcd}" data-kind="summ">${fIcon}<span class="hv">—</span></span></button>`+
 (ally?'':`<div class="hr-spells">${spells}</div>`)+
 `<div class="hr-more">${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS${others?' · '+others:''}${items?' &nbsp;'+items:''}</div></div>`}
-function hudGold(g){const el=$('hud-gold'),pane=$('hud-pane-gold');
-if(!g||!g.history||g.history.length<2){el.classList.add('hidden');if(pane)pane.classList.add('hidden');return}
+function hudGold(g){const el=$('hud-gold');
+if(!g||!g.history||g.history.length<2){el.classList.add('hidden');return}
 const h=g.history,last=h[h.length-1],d=last.ally-last.enemy;
 let m=1;for(const s of h)m=Math.max(m,Math.abs(s.ally-s.enemy));
 const W=200,H=26,mid=H/2,dx=W/(h.length-1),y=v=>mid-(v/m)*(mid-2);
 const line=h.map((s,i)=>`${i?'L':'M'}${(i*dx).toFixed(1)},${y(s.ally-s.enemy).toFixed(1)}`).join('');
 const area=sign=>{let p=`M0,${mid}`;h.forEach((s,i)=>{const v=s.ally-s.enemy,c=sign>0?Math.max(0,v):Math.min(0,v);p+=`L${(i*dx).toFixed(1)},${y(c).toFixed(1)}`});return p+`L${W},${mid}Z`};
 el.className='hud-gold '+(d>=0?'pos':'neg');
-if(pane)pane.classList.remove('hidden');
 el.innerHTML=`<span class="hg-lab">OR</span><strong>${fmtDiff(d)}</strong><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${area(1)}" fill="rgba(91,231,196,.25)"/><path d="${area(-1)}" fill="rgba(248,113,113,.25)"/><path d="${line}" fill="none" stroke="${d>=0?'#5be7c4':'#f87171'}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`}
+function hudFlashChip(p,i){
+let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
+const fs=(p.summoners||[])[si],fkey=`${pid(p)}|S${si}`,fcd=fs?summCD(p,fs):0;
+const dead=p.isDead?(gameNow()+p.respawn):0;
+return `<button type="button" class="hf" data-track="${esc(fkey)}" data-cd="${fcd}" data-tm="${esc(fkey)}" data-base="${fcd}" data-kind="summ" data-dead="${dead}" title="${esc(playerLabel(p))} · Flash"><img class="${tierClass(p.tier)}" src="${iconUrl(p)}" alt=""><span class="hv">—</span></button>`}
+function hudNextHTML(){
+const now=gameNow();let best=null,bestRest=1e9;
+for(const[k] of OBJ_ORDER){const o=(liveState.objectives||{})[k];if(!o||o.gone)continue;const rest=o.nextAt-now;if(rest<bestRest){bestRest=rest;best={k,o,rest}}}
+if(!best)return '';
+const t=best.rest>0?mmss(best.rest):'MAP';
+return `<img src="${OBJ_ICON[best.k]||''}" alt=""><b>${t}</b>`}
+function syncHudExpand(){
+const expand=hudHoldOn||(!!tabUntil&&Date.now()<tabUntil);
+document.documentElement.classList.toggle('expanded',expand);
+document.body.classList.toggle('expanded',expand);
+document.documentElement.classList.toggle('idle',!liveOn());
+document.body.classList.toggle('idle',!liveOn());
+reportHudSize()}
 function renderHud(){
 const on=liveOn();
 $('hud-state').title=on?(window.__liveDemo?'DÉMO':'EN JEU'):'ATTENTE';
 $('hud-state').classList.toggle('on',on);
-const pane=(id,h)=>{const e=$(id);if(e)e.classList.toggle('hidden',h)};
-if(!on){pane('hud-pane-wait',false);pane('hud-pane-objs',true);pane('hud-pane-enemies',true);pane('hud-pane-allies',true);pane('hud-pane-gold',true);
-$('hud-objs').innerHTML='';$('hud-enemies').innerHTML='';$('hud-allies').innerHTML='';$('hud-gold').classList.add('hidden');$('hud-clock').textContent='—';reportHudHits();return}
-pane('hud-pane-wait',true);pane('hud-pane-objs',false);pane('hud-pane-enemies',false);
+if(!on){$('hud-objs').innerHTML='';$('hud-enemies').innerHTML='';$('hud-allies').innerHTML='';$('hud-flashes').innerHTML='';$('hud-next').innerHTML='';$('hud-gold').classList.add('hidden');$('hud-clock').textContent='—';syncHudExpand();return}
 $('hud-objs').innerHTML=OBJ_ORDER.map(([k,c])=>hudObj(k,c)).join('');
 $('hud-enemies').innerHTML=(liveState.enemies||[]).map((p,i)=>hudRow(p,i,false)).join('');
+$('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudFlashChip(p,i)).join('');
 const hudAll=liveState.allies||[];
 $('hud-allies').innerHTML=hudAll.length?'<div class="hud-lab">ALLIÉS</div>'+hudAll.map((p,i)=>hudRow(p,i,true)).join(''):'';
-pane('hud-pane-allies',!hudAll.length);
 hudGold(liveState.gold);
 document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)});
 document.querySelectorAll('#hud .hr-dl').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();openDeepLoL(el.dataset.url)});
-tickHud();reportHudHits()}
+tickHud();syncHudExpand()}
 function tickHud(){
+syncHudExpand();
 const on=liveOn();
 if(!on){$('hud-clock').textContent='—';$('hud-clock').classList.remove('copied');return}
 const now=gameNow();
 if(pruneTracks(now)){renderHud();return}
 if(Date.now()<copiedUntil){$('hud-clock').textContent='CHAT';$('hud-clock').classList.add('copied')}
 else{$('hud-clock').textContent=mmss(now);$('hud-clock').classList.remove('copied')}
+$('hud-next').innerHTML=hudNextHTML();
 document.querySelectorAll('#hud-objs .hobj').forEach(el=>{const s=el.querySelector('strong');
 if(el.dataset.gone){s.textContent='—';return}
 const rest=+el.dataset.next-now;
@@ -485,39 +511,33 @@ s.textContent=rest>0?mmss(rest):'MAP';
 el.classList.toggle('live',rest<=0);
 el.classList.toggle('hot',rest>0&&rest<=45);
 el.classList.toggle('warn',rest>45&&rest<=120)});
-document.querySelectorAll('#hud .hr').forEach(row=>{
+document.querySelectorAll('#hud .hr, #hud .hf').forEach(row=>{
 const dead=+row.dataset.dead||0,isDead=dead>now;
 row.classList.toggle('dead',isDead);
 if(isDead){const b=row.querySelector('[data-dead-t]');if(b)b.textContent=Math.ceil(dead-now)+'s'}
-row.querySelectorAll('[data-tm]').forEach(el=>{
+const tms=row.hasAttribute('data-tm')?[row]:[...row.querySelectorAll('[data-tm]')];
+tms.forEach(el=>{
 const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,val=el.querySelector('.hv');
+if(!val)return;
 el.classList.remove('cd','up');
-if(tr&&tr.end-now>0){el.classList.add('cd');val.textContent=el.dataset.kind==='spell'?fmtSec(tr.end-now):mmss(tr.end-now)}
-else val.textContent=base?(el.dataset.kind==='spell'?fmtSec(base):mmss(base)):'—'})});
+if(row.classList.contains('hf'))row.classList.remove('cd','up');
+if(tr&&tr.end-now>0){el.classList.add('cd');if(row.classList.contains('hf'))row.classList.add('cd');val.textContent=el.dataset.kind==='spell'?fmtCD(tr.end-now):mmss(tr.end-now)}
+else val.textContent=base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—'})});
 $('hud').classList.toggle('detail',!!tabUntil&&Date.now()<tabUntil);
 checkAlerts(now)}
-// Raccourcis globaux lus côté Go : ² (afficher + vue détaillée), Alt+1..5 (Flash), Alt+Maj+1..5 (ult).
+// Raccourcis globaux lus côté Go : Tab (aperçu), ² (verrou), Alt+1..5 (Flash), Alt+Maj+1..5 (ult).
 function applyHotkey(e){const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
 if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd);return}
 let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
 const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s))}
-function hudBtns(s){hudHoldOn=!!s.hold;const b=$('hud-hold');if(b)b.classList.toggle('on',hudHoldOn)}
-const HUD_LAYOUT_KEY='cdscout.hud.layout';
-function hudDefaults(){const w=innerWidth,h=innerHeight,col=268,r=Math.max(8,w-col-16);
-return{top:{x:r,y:10},objs:{x:r,y:48},enemies:{x:r,y:210},gold:{x:r,y:Math.max(48,h-90)},allies:{x:12,y:210},wait:{x:r,y:48}}}
-function applyHudLayout(map){document.querySelectorAll('[data-hud]').forEach(el=>{const p=map[el.dataset.hud];if(!p)return;el.style.left=p.x+'px';el.style.top=p.y+'px';el.classList.toggle('off',!!p.off);syncHudEye(el)})}
-function loadHudLayout(){let saved={};try{saved=JSON.parse(localStorage.getItem(HUD_LAYOUT_KEY)||'{}')}catch(_){}applyHudLayout({...hudDefaults(),...saved})}
-function saveHudLayout(){const o={};document.querySelectorAll('[data-hud]').forEach(el=>{o[el.dataset.hud]={x:parseInt(el.style.left,10)||el.offsetLeft,y:parseInt(el.style.top,10)||el.offsetTop,off:el.classList.contains('off')}});localStorage.setItem(HUD_LAYOUT_KEY,JSON.stringify(o))}
-function syncHudEye(pane){const b=pane.querySelector('.hud-eye');if(!b)return;const off=pane.classList.contains('off');b.title=off?'Afficher':'Masquer';b.setAttribute('aria-pressed',off?'true':'false')}
-function bindHudEye(){document.querySelectorAll('.hud-eye').forEach(btn=>{btn.onclick=e=>{e.preventDefault();e.stopPropagation();const pane=btn.closest('[data-hud]');if(!pane)return;pane.classList.toggle('off');syncHudEye(pane);saveHudLayout();reportHudHits()}})}
-function reportHudHits(){if(!HUDMODE)return;const rs=[...document.querySelectorAll('.hud-tools,.hud-top,.hobj,.hr,.hud-gold:not(.hidden),.hud-wait,#alert:not(.hidden),#sp-tip:not(.hidden)')].filter(el=>el.offsetWidth&&el.offsetHeight&&!el.classList.contains('hidden')&&el.closest('[data-hud]')&&!el.closest('[data-hud]').classList.contains('hidden')).map(el=>{const r=el.getBoundingClientRect();return{x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}});
-fetch('/api/hud/hits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rs)}).catch(()=>{})}
-function bindHudDrag(){document.querySelectorAll('.hud-drag[data-move]').forEach(btn=>{btn.onmousedown=e=>{if(e.button)return;e.preventDefault();e.stopPropagation();
-const pane=btn.closest('[data-hud]');if(!pane)return;const ox=e.clientX-pane.offsetLeft,oy=e.clientY-pane.offsetTop;
-fetch('/api/hud/solid?on=1',{method:'POST'}).catch(()=>{});
-const move=ev=>{let x=ev.clientX-ox,y=ev.clientY-oy;x=Math.max(0,Math.min(innerWidth-pane.offsetWidth,x));y=Math.max(0,Math.min(innerHeight-28,y));pane.style.left=x+'px';pane.style.top=y+'px'};
-const up=()=>{document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);saveHudLayout();reportHudHits();fetch('/api/hud/solid?on=0',{method:'POST'}).catch(()=>{})};
-document.addEventListener('mousemove',move);document.addEventListener('mouseup',up)}})}
+function hudBtns(s){hudHoldOn=!!s.hold;const b=$('hud-hold');if(b)b.classList.toggle('on',hudHoldOn);syncHudExpand()}
+let lastHudW=0,lastHudH=0;
+function reportHudSize(){if(!HUDMODE)return;const el=$('hud');if(!el)return;
+const w=Math.max(160,Math.ceil(el.offsetWidth)),h=Math.max(72,Math.ceil(el.offsetHeight));
+if(w===lastHudW&&h===lastHudH)return;lastHudW=w;lastHudH=h;
+fetch('/api/hud/bounds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({w,h})}).catch(()=>{})}
+function bindHudDrag(){const btn=$('hud-drag');if(!btn)return;
+btn.onpointerdown=e=>{if(e.button)return;e.preventDefault();fetch('/api/hud/drag',{method:'POST'}).catch(()=>{})}}
 async function setHold(on){try{hudBtns(await(await fetch('/api/hud/hold?on='+(on?1:0),{method:'POST'})).json())}catch(_){}}
 async function pollInput(){
 try{const s=await(await fetch('/api/input?since='+inputSeq)).json();
@@ -526,17 +546,18 @@ if(s.tab)tabUntil=Date.now()+450;
 for(const e of s.events||[])applyHotkey(e);
 hudBtns(s)}catch(_){}}
 if(HUDMODE){
-loadHudLayout();bindHudDrag();bindHudEye();window.addEventListener('resize',()=>{loadHudLayout();reportHudHits()});
+bindHudDrag();
 $('hud-sound').classList.toggle('on',soundOn);
 $('hud-sound').onclick=()=>{soundOn=!soundOn;localStorage.setItem('cdscout.sound',soundOn?'1':'0');$('hud-sound').classList.toggle('on',soundOn);if(soundOn)beep(1)};
 $('hud-hold').onclick=()=>setHold(!hudHoldOn);
-$('hud-reset').onclick=()=>{localStorage.removeItem(HUD_LAYOUT_KEY);document.querySelectorAll('[data-hud]').forEach(el=>el.classList.remove('off'));applyHudLayout(hudDefaults());reportHudHits()};
-$('hud-close').onclick=()=>{fetch('/api/hud/close',{method:'POST'}).catch(()=>{});window.close()};
+$('hud-reset').onclick=()=>{fetch('/api/hud/reset',{method:'POST'}).catch(()=>{})};
+$('hud-close').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){};window.close()};
 setInterval(async()=>{try{if((await fetch('/api/status',{cache:'no-store'})).ok)return}catch(_){}
 window.close()},2500);
 $('hud-clock').onclick=()=>{copyFlashCallout();if(liveOn())tickHud()};
 $('hud-demo').onclick=()=>startLiveDemo();
-pollInput();setInterval(pollInput,140);reportHudHits();setInterval(reportHudHits,800)}
+if(window.ResizeObserver)new ResizeObserver(()=>reportHudSize()).observe($('hud'));
+pollInput();setInterval(pollInput,140);syncHudExpand();setInterval(reportHudSize,800)}
 let autoHudDone=false;
 // Le HUD s'ouvre tout seul au tout début de la partie (à la fontaine) : plus tard,
 // le vol de focus du navigateur serait dangereux en pleine action.
@@ -545,9 +566,10 @@ if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0')return;
 autoHudDone=true;
 try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)return;await fetch('/api/hud/open',{method:'POST'})}catch(_){}}
 function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}renderLive()}
+function parseSpellCD(s){const t=String(s||'');if(!t||t==='—'||t==='auto')return 0;const m=t.match(/(\d+(?:[.,]\d+)?)/);if(!m)return 0;let v=parseFloat(m[1].replace(',','.'));if(/min/i.test(t))v*=60;return v}
 function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;
 const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
-return (p?[{spell:'P',name:p.name||'Passif',icon:p.icon||'',desc:p.desc||'',cost:'',range:'',cd:0,rank:'P'}]:[]).concat(qwer)}
+return (p?[{spell:'P',name:p.name||'Passif',icon:p.icon||'',desc:p.desc||'',cost:'',range:'',cd:parseSpellCD(p.cd),rank:'P'}]:[]).concat(qwer)}
 function demoMkGold(tEnd,metas){const bias=[t=>-t*.55-180*Math.sin(t/210),t=>420+820*Math.sin(t/380)+(t>620?350:0),t=>90*Math.sin(t/95)+(t>740?480:-80),t=>t*1.35+220*Math.sin(t/190),t=>70*Math.sin(t/150)+t*.12];const hist=[];for(let t=0;t<=tEnd;t+=10){const roles=bias.map((f,i)=>{const d=Math.round(f(t)+((i*41+t)%19-9)*14),base=500+t*8.4;return[Math.max(0,Math.round(base+d/2)),Math.max(0,Math.round(base-d/2))]});hist.push({t,ally:roles.reduce((s,p)=>s+p[0],0),enemy:roles.reduce((s,p)=>s+p[1],0),roles})}return{estimated:true,roles:metas,history:hist}}
 async function startLiveDemo(){if(!version){try{const s=await(await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version}catch(_){}}
 let cards=[];try{cards=await fetchCards(demoLiveIds)}catch(_){}
@@ -578,16 +600,17 @@ try{const r=await fetch('/api/hud/open',{method:'POST'});b.textContent=r.ok?'HUD
 setTimeout(()=>{b.textContent=label},3000)};
 async function pollLive(){
 try{const s=await(await fetch('/api/live')).json();
-if(s.active){const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();firedAlerts=new Set();if(s.gameTime<60)maybeAutoHud()}
+if(s.active){const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();firedAlerts=new Set();maybeAutoHud()}
 const missing=[...new Set([...(s.enemies||[]),...(s.allies||[])].map(p=>p.key).filter(k=>k&&!liveScout[k]))];
-if(missing.length){for(const c of await fetchCards(missing))liveScout[c.key]=c}}
-else if(window.__liveDemo)return;
+if(missing.length){fetchCards(missing).then(list=>{for(const c of list)liveScout[c.key]=c;if(liveOn())renderLive()}).catch(()=>{})}
+}else if(window.__liveDemo)return;
 else{liveState=s;liveAt=Date.now();autoHudDone=false}
 }catch(_){if(!window.__liveDemo)liveState=null}
 renderLive()}
 document.onkeydown=e=>{if(document.activeElement===$('search'))return;
 if(HUDMODE&&(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&'IJKCijkc'.includes(e.key))||(e.ctrlKey&&(e.key==='u'||e.key==='U')))){e.preventDefault();return}
-if(HUDMODE&&(e.key==='²'||e.code==='Backquote')){e.preventDefault();tabUntil=Date.now()+450;return}
+if(HUDMODE&&(e.key==='Tab'||e.code==='Tab')){e.preventDefault();tabUntil=Date.now()+450;return}
+if(HUDMODE&&(e.key==='²'||e.code==='Backquote'||e.code==='Quote')){e.preventDefault();return}
 const n=+e.key;if(!(n>=1&&n<=9))return;
 if(liveOn()){const p=(liveState.enemies||[])[n-1];if(!p)return;let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s));return}
 const list=visibleCards();if(n<=list.length){focusKey=list[n-1].key;render()}};

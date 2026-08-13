@@ -106,10 +106,13 @@ var plainHasteRe = regexp.MustCompile(`(?i)(\d+)\s+(summoner spell haste|ultimat
 func itemHasteTable() map[int]itemHaste {
 	version := getVersion()
 	itemHasteCache.mu.Lock()
-	defer itemHasteCache.mu.Unlock()
 	if itemHasteCache.version == version && itemHasteCache.data != nil {
-		return itemHasteCache.data
+		d := itemHasteCache.data
+		itemHasteCache.mu.Unlock()
+		return d
 	}
+	itemHasteCache.mu.Unlock()
+
 	var payload struct {
 		Data map[string]struct {
 			Description string `json:"description"`
@@ -117,7 +120,8 @@ func itemHasteTable() map[int]itemHaste {
 	}
 	url := fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/%s/data/en_US/item.json", version)
 	if err := jsonGET(url, &payload); err != nil {
-		// On garde l'ancienne table si le refresh échoue.
+		itemHasteCache.mu.Lock()
+		defer itemHasteCache.mu.Unlock()
 		if itemHasteCache.data != nil {
 			return itemHasteCache.data
 		}
@@ -154,7 +158,9 @@ func itemHasteTable() map[int]itemHaste {
 			table[id] = h
 		}
 	}
+	itemHasteCache.mu.Lock()
 	itemHasteCache.version, itemHasteCache.data = version, table
+	itemHasteCache.mu.Unlock()
 	return table
 }
 
@@ -511,17 +517,13 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 		out.Icon = base.Image.Full
 		if detail, err := getDetail(base.ID); err == nil {
 			if f := detail.Passive.Image.Full; f != "" || detail.Passive.Name != "" {
-				name := detail.Passive.Name
-				if name == "" {
-					name = "Passif"
-				}
 				icon := ""
 				if f != "" {
 					icon = "passive/" + f
 				}
-				out.Spells = append(out.Spells, LiveSpell{
-					Spell: "P", Name: name, Icon: icon, Desc: plainText(detail.Passive.Description),
-				})
+				out.Spells = append(out.Spells, livePassiveSpell(
+					base.ID, detail.Passive.Name, icon, plainText(detail.Passive.Description), p.Level, ah,
+				))
 			}
 			letters := []string{"Q", "W", "E", "R"}
 			for i, s := range detail.Spells {
@@ -732,6 +734,13 @@ func getLiveState() LiveState {
 				myTeam = "ORDER" // spectateur : ORDER affiché comme "alliés"
 			}
 			haste := itemHasteTable()
+			var slugs []string
+			for _, p := range raw.AllPlayers {
+				if base, ok := champBySlug(p.RawChampionName); ok {
+					slugs = append(slugs, base.ID)
+				}
+			}
+			prefetchPassiveCDs(slugs)
 			for _, p := range raw.AllPlayers {
 				lp := buildLivePlayer(p, haste)
 				lp.IsMe = (raw.ActivePlayer.RiotID != "" && strings.EqualFold(p.RiotID, raw.ActivePlayer.RiotID)) ||
@@ -759,4 +768,23 @@ func getLiveState() LiveState {
 	return state
 }
 
-func apiLive(w http.ResponseWriter, r *http.Request) { writeJSON(w, getLiveState()) }
+func liveGameKey(state LiveState) string {
+	if !state.Active {
+		return ""
+	}
+	parts := make([]string, 0, 1+len(state.Enemies)+len(state.Allies))
+	parts = append(parts, state.GameMode)
+	for _, p := range state.Enemies {
+		parts = append(parts, p.Champion)
+	}
+	for _, p := range state.Allies {
+		parts = append(parts, p.Champion)
+	}
+	return strings.Join(parts, "|")
+}
+
+func apiLive(w http.ResponseWriter, r *http.Request) {
+	state := getLiveState()
+	autoOpenHudForGame(liveGameKey(state))
+	writeJSON(w, state)
+}

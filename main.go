@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	_ "embed"
 	"encoding/base64"
@@ -157,7 +158,30 @@ type dragonCache struct {
 }
 
 var dragon = dragonCache{details: map[string]champDetail{}}
-var httpClient = &http.Client{Timeout: 7 * time.Second}
+
+// IPv4 d'abord : un DNS IPv6 blackhole fait autrement bloquer tout /api/status
+// (et saturait les 6 connexions HTTP/1.1 du navigateur → Quitter ne partait plus).
+var httpClient = &http.Client{
+	Timeout: 5 * time.Second,
+	Transport: &http.Transport{
+		DialContext:           dialHTTP,
+		ForceAttemptHTTP2:     false,
+		TLSHandshakeTimeout:   4 * time.Second,
+		ResponseHeaderTimeout: 4 * time.Second,
+		IdleConnTimeout:       30 * time.Second,
+		MaxIdleConns:          8,
+		MaxIdleConnsPerHost:   4,
+	},
+}
+
+func dialHTTP(ctx context.Context, _, addr string) (net.Conn, error) {
+	d := net.Dialer{Timeout: 3 * time.Second}
+	c, err := d.DialContext(ctx, "tcp4", addr)
+	if err == nil {
+		return c, nil
+	}
+	return d.DialContext(ctx, "tcp", addr)
+}
 
 // Reuse one LCU client — creating a Transport per poll leaked dozens of sockets to League.
 var lcuHTTP = &http.Client{
@@ -199,16 +223,33 @@ func getVersion() string {
 	if dragon.version != "" {
 		return dragon.version
 	}
+	return fallbackVersion
+}
+
+// refreshDragon met à jour la version CDN en fond : /api/status ne doit jamais
+// attendre le réseau Riot, sinon le front reste bloqué sur « Data Dragon … »
+// et le navigateur n'a plus de connexion libre pour /api/quit.
+func refreshDragon() {
 	var versions []string
-	if err := jsonGET("https://ddragon.leagueoflegends.com/api/versions.json", &versions); err == nil && len(versions) > 0 {
-		dragon.version = versions[0]
-	} else {
-		dragon.version = fallbackVersion
-		if err != nil {
-			dragon.lastErr = err.Error()
-		}
+	err := jsonGET("https://ddragon.leagueoflegends.com/api/versions.json", &versions)
+	ver := fallbackVersion
+	if err == nil && len(versions) > 0 {
+		ver = versions[0]
 	}
-	return dragon.version
+	dragon.mu.Lock()
+	changed := dragon.version != ver
+	dragon.version = ver
+	if err != nil {
+		dragon.lastErr = err.Error()
+	} else {
+		dragon.lastErr = ""
+	}
+	if changed {
+		dragon.index, dragon.byKey, dragon.details = nil, nil, map[string]champDetail{}
+		resetPassiveCDCache()
+	}
+	dragon.mu.Unlock()
+	_ = ensureIndex()
 }
 
 func ensureIndex() error {
@@ -239,8 +280,14 @@ func ensureIndex() error {
 	}
 	sort.Slice(items, func(i, j int) bool { return items[i].Name < items[j].Name })
 	dragon.mu.Lock()
-	dragon.index, dragon.byKey = items, byKey
+	mismatch := dragon.version != "" && dragon.version != version
+	if !mismatch {
+		dragon.index, dragon.byKey = items, byKey
+	}
 	dragon.mu.Unlock()
+	if mismatch {
+		return ensureIndex()
+	}
 	return nil
 }
 
@@ -321,7 +368,9 @@ func passiveFromDetail(d champDetail) Spell {
 	if name == "" {
 		name = "Passif"
 	}
-	return Spell{Spell: "P", Name: name, CD: "—", Icon: icon, Desc: plainText(d.Passive.Description), Importance: 4}
+	desc := plainText(d.Passive.Description)
+	cd := formatPassiveCD(passiveCDFor(d.ID, desc).Values)
+	return Spell{Spell: "P", Name: name, CD: cd, Icon: icon, Desc: desc, Importance: 4}
 }
 
 func isBasicSpell(key string) bool {
@@ -371,6 +420,9 @@ func normalize(d champDetail) ChampionCard {
 			} else if s.Spell == "P" {
 				if s.Name == "" {
 					s.Name = passive.Name
+				}
+				if s.CD == "" || s.CD == "auto" || s.CD == "—" {
+					s.CD = passive.CD
 				}
 				s.Icon, s.Desc = passive.Icon, passive.Desc
 			}
@@ -618,21 +670,22 @@ func allyFocusFromTeam(myTeam []teamMember, localCell int) []AllyFocus {
 
 func getSnapshot() Snapshot {
 	snapMu.Lock()
-	defer snapMu.Unlock()
 	if time.Since(snapAt) < 500*time.Millisecond && snapAt != (time.Time{}) {
-		return snapCache
+		s := snapCache
+		snapMu.Unlock()
+		return s
 	}
+	snapMu.Unlock()
+
 	snap := Snapshot{Connected: false, Phase: "Disconnected", Version: getVersion()}
 	creds, err := getCreds()
 	if err != nil {
-		snapCache, snapAt = snap, time.Now()
-		return snap
+		return storeSnapshot(snap)
 	}
 	var phase string
 	if _, err := lcuGET(creds, "/lol-gameflow/v1/gameflow-phase", &phase); err != nil {
 		snap.Phase, snap.Error = "Connection error", err.Error()
-		snapCache, snapAt = snap, time.Now()
-		return snap
+		return storeSnapshot(snap)
 	}
 	snap.Connected, snap.Phase, snap.Lockfile = true, phase, creds.Lockfile
 	if phase == "ChampSelect" {
@@ -659,7 +712,13 @@ func getSnapshot() Snapshot {
 		kickHarvest(creds, phase)
 		attachDraftScout(&snap)
 	}
+	return storeSnapshot(snap)
+}
+
+func storeSnapshot(snap Snapshot) Snapshot {
+	snapMu.Lock()
 	snapCache, snapAt = snap, time.Now()
+	snapMu.Unlock()
 	return snap
 }
 
@@ -683,6 +742,20 @@ func apiCards(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	cards := []ChampionCard{}
+	_ = ensureIndex()
+	var slugs []string
+	for _, s := range strings.Split(raw, ",") {
+		id, _ := strconv.Atoi(strings.TrimSpace(s))
+		if id == 0 {
+			continue
+		}
+		dragon.mu.Lock()
+		if base, ok := dragon.byKey[id]; ok {
+			slugs = append(slugs, base.ID)
+		}
+		dragon.mu.Unlock()
+	}
+	prefetchPassiveCDs(slugs)
 	for _, s := range strings.Split(raw, ",") {
 		id, _ := strconv.Atoi(strings.TrimSpace(s))
 		if id == 0 {
@@ -715,28 +788,73 @@ func apiSearch(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiQuit(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Connection", "close")
 	w.WriteHeader(http.StatusNoContent)
+	if f, ok := w.(http.Flusher); ok {
+		f.Flush()
+	}
 	go func() {
-		hudCloseWindow()
-		time.Sleep(80 * time.Millisecond)
-		os.Exit(0)
+		time.Sleep(50 * time.Millisecond)
+		terminateSelf()
 	}()
 }
 
-// hudURL renvoie l'URL de la page en mode HUD compact (fenêtre épinglée).
+var ddragonPathRe = regexp.MustCompile(`(?i)^[0-9]+(?:\.[0-9]+)+/(?:img|data)/[A-Za-z0-9._%/-]+$`)
+
+func ddragonPathOK(p string) bool {
+	p = strings.TrimPrefix(p, "/")
+	return p != "" && !strings.Contains(p, "..") && !strings.Contains(p, "//") && ddragonPathRe.MatchString(p)
+}
+
+// apiDDragon reverse-proxie le CDN Riot en same-origin : WebView2 (tracking
+// prevention) et certains bloqueurs coupent sinon les icônes ddragon.
+func apiDDragon(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+		http.Error(w, "GET", http.StatusMethodNotAllowed)
+		return
+	}
+	rest := strings.TrimPrefix(r.URL.Path, "/ddragon/")
+	if !ddragonPathOK(rest) {
+		http.NotFound(w, r)
+		return
+	}
+	src := "https://ddragon.leagueoflegends.com/cdn/" + rest
+	req, err := http.NewRequest(r.Method, src, nil)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	req.Header.Set("User-Agent", "LoL-CD-Scout/0.2")
+	res, err := httpClient.Do(req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadGateway)
+		return
+	}
+	defer res.Body.Close()
+	if ct := res.Header.Get("Content-Type"); ct != "" {
+		w.Header().Set("Content-Type", ct)
+	}
+	w.Header().Set("Cache-Control", "public, max-age=86400")
+	w.WriteHeader(res.StatusCode)
+	if r.Method == http.MethodHead {
+		return
+	}
+	_, _ = io.Copy(w, io.LimitReader(res.Body, 12<<20))
+}
+
+// hudURL renvoie l'URL de la page widget HUD (WebView2).
 func hudURL() string {
 	addr := listenAddr
 	if ln, ok := currentListener.Load().(net.Listener); ok {
 		addr = ln.Addr().String()
 	}
-	return "http://" + addr + "/?hud=1"
+	return "http://" + addr + "/hud"
 }
 
 func apiHUDOpen(w http.ResponseWriter, r *http.Request) {
-	if err := hudOpen(hudURL()); err != nil {
-		http.Error(w, err.Error(), http.StatusServiceUnavailable)
-		return
-	}
+	// Ne pas bloquer la requête HTTP : WebView2 Embed peut prendre plusieurs
+	// secondes, et ça saturait le navigateur (Quitter / Data Dragon coincés).
+	go func() { _ = hudOpen(hudURL()) }()
 	writeJSON(w, map[string]any{"ok": true, "url": hudURL()})
 }
 
@@ -759,6 +877,29 @@ func apiHUDHits(w http.ResponseWriter, r *http.Request) {
 	}
 	hudSetHits(rs)
 	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiHUDBounds(w http.ResponseWriter, r *http.Request) {
+	var b struct {
+		W int `json:"w"`
+		H int `json:"h"`
+	}
+	if err := json.NewDecoder(io.LimitReader(r.Body, 256)).Decode(&b); err != nil && err != io.EOF {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	hudSetBounds(b.W, b.H)
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiHUDDrag(w http.ResponseWriter, r *http.Request) {
+	hudBeginDrag()
+	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiHUDReset(w http.ResponseWriter, r *http.Request) {
+	hudResetPos()
+	writeHUDStatus(w)
 }
 
 func apiHUDSolid(w http.ResponseWriter, r *http.Request) {
@@ -819,6 +960,9 @@ func apiCard(w http.ResponseWriter, r *http.Request) {
 
 func openBrowser(url string) {
 	time.Sleep(250 * time.Millisecond)
+	if !strings.Contains(url, "?") {
+		url = strings.TrimRight(url, "/") + "/?t=" + strconv.FormatInt(time.Now().Unix(), 10)
+	}
 	cmd := exec.Command("rundll32", "url.dll,FileProtocolHandler", url)
 	cmd.SysProcAttr = windowsHiddenProcAttr()
 	_ = cmd.Start()
@@ -842,6 +986,11 @@ func main() {
 		w.Header().Set("Cache-Control", "no-store")
 		io.WriteString(w, indexHTML)
 	})
+	mux.HandleFunc("/hud", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-store")
+		io.WriteString(w, indexHTML)
+	})
 	mux.HandleFunc("/logo.png", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/png")
 		w.Header().Set("Cache-Control", "public, max-age=86400")
@@ -852,6 +1001,7 @@ func main() {
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		w.Write(logoICO)
 	})
+	mux.HandleFunc("/ddragon/", apiDDragon)
 	mux.HandleFunc("/api/status", apiStatus)
 	mux.HandleFunc("/api/live", apiLive)
 	mux.HandleFunc("/api/cards", apiCards)
@@ -864,6 +1014,9 @@ func main() {
 	mux.HandleFunc("/api/hud/pin", apiHUDPin)
 	mux.HandleFunc("/api/hud/hold", apiHUDHold)
 	mux.HandleFunc("/api/hud/hits", apiHUDHits)
+	mux.HandleFunc("/api/hud/bounds", apiHUDBounds)
+	mux.HandleFunc("/api/hud/drag", apiHUDDrag)
+	mux.HandleFunc("/api/hud/reset", apiHUDReset)
 	mux.HandleFunc("/api/hud/solid", apiHUDSolid)
 	mux.HandleFunc("/api/hud/close", apiHUDClose)
 	mux.HandleFunc("/api/input", apiInput)
@@ -876,8 +1029,10 @@ func main() {
 	currentListener.Store(ln)
 	url := "http://" + ln.Addr().String() + "/"
 	go openBrowser(url)
+	go refreshDragon()
 	go func() { time.Sleep(5 * time.Second); checkAndStage() }()
-	_ = http.Serve(ln, mux)
+	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 3 * time.Second}
+	_ = srv.Serve(ln)
 }
 
 //go:embed index.html
