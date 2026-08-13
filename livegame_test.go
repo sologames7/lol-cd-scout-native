@@ -72,14 +72,28 @@ func TestSpellIcons(t *testing.T) {
 	for _, s := range card.Important {
 		seen[s.Spell] = s.Icon
 	}
-	for _, k := range []string{"Q", "W", "E", "R"} {
-		if !strings.HasPrefix(seen[k], "spell/") {
+	for _, k := range []string{"P", "Q", "W", "E", "R"} {
+		want := "spell/"
+		if k == "P" {
+			want = "passive/"
+		}
+		if !strings.HasPrefix(seen[k], want) {
 			t.Errorf("icône de %s manquante ou invalide: %q", k, seen[k])
 		}
 	}
-	// Anivia est curated avec une entrée passive : elle doit pointer vers img/passive.
-	if p, ok := seen["P"]; ok && !strings.HasPrefix(p, "passive/") {
-		t.Errorf("icône du passif invalide: %q", p)
+	d2, err := getDetail("Ahri")
+	if err != nil {
+		return
+	}
+	card2 := normalize(d2)
+	var hasP bool
+	for _, s := range card2.Important {
+		if s.Spell == "P" && strings.HasPrefix(s.Icon, "passive/") && s.Name != "" {
+			hasP = true
+		}
+	}
+	if !hasP {
+		t.Errorf("Ahri (non curated) doit exposer le passif avec icône")
 	}
 }
 

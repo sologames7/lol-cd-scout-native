@@ -250,6 +250,11 @@ type LiveSummoner struct {
 
 type LivePlayer struct {
 	RiotID       string         `json:"riotId"`
+	Name         string         `json:"name"` // pseudo affiché ; champion si streamer mode
+	Hidden       bool           `json:"hidden,omitempty"`
+	Rank         string         `json:"rank,omitempty"` // "D2", "Master 120"
+	Tier         string         `json:"tier,omitempty"` // "diamond" pour la bordure
+	DeepLoL      string         `json:"deeplol,omitempty"`
 	IsMe         bool           `json:"isMe,omitempty"`
 	Champion     string         `json:"champion"`
 	Key          int            `json:"key"`
@@ -505,6 +510,19 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 		out.Key, _ = strconv.Atoi(base.Key)
 		out.Icon = base.Image.Full
 		if detail, err := getDetail(base.ID); err == nil {
+			if f := detail.Passive.Image.Full; f != "" || detail.Passive.Name != "" {
+				name := detail.Passive.Name
+				if name == "" {
+					name = "Passif"
+				}
+				icon := ""
+				if f != "" {
+					icon = "passive/" + f
+				}
+				out.Spells = append(out.Spells, LiveSpell{
+					Spell: "P", Name: name, Icon: icon, Desc: plainText(detail.Passive.Description),
+				})
+			}
 			letters := []string{"Q", "W", "E", "R"}
 			for i, s := range detail.Spells {
 				if i >= len(letters) {
@@ -549,6 +567,7 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 		cd := summonerBaseCD[slug] * hasteFactor(sh)
 		out.Summoners = append(out.Summoners, LiveSummoner{Slug: slug, Name: raw.DisplayName, CD: cd})
 	}
+	applyIdentity(&out)
 	return out
 }
 
@@ -725,6 +744,9 @@ func getLiveState() LiveState {
 			}
 			state.Objectives = buildObjectives(&raw)
 			updateGold(&state)
+			if creds, err := getCreds(); err == nil {
+				kickHarvest(creds, "InProgress")
+			}
 		}
 	}
 	if res != nil {

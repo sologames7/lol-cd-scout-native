@@ -4,6 +4,8 @@ Set-Location $PSScriptRoot
 $env:Path += ";C:\Program Files\Go\bin"
 
 try { Invoke-RestMethod -Method POST "http://127.0.0.1:27182/api/quit" | Out-Null } catch {}
+Start-Sleep -Milliseconds 250
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match 'hud-profile-v' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 
 go build -ldflags="-s -w -H=windowsgui" -o lol-cd-scout-native.exe .
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

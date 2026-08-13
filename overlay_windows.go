@@ -2,14 +2,10 @@
 
 package main
 
-// HUD en jeu : Chromium --app plein écran, sans cadre (caption DWM
-// désactivée, WS_POPUP). Color-key #000001 (DirectComposition / GPU
-// compositing coupés, sinon Chrome ignore la clé). WS_EX_TRANSPARENT
-// hors des panneaux (hits JS) : clics dans le vide → League. Topmost,
-// visible en partie seulement tant que ² est maintenu (sauf LOCK).
-// Pas d'injection gameplay. Après copie Flash : frappe Unicode dans le
-// chat League (le client ignore le presse-papier OS). Overlay visible par-dessus
-// le jeu uniquement en fenêtré sans bordure.
+// HUD en jeu : Chromium --app plein écran, sans cadre. Color-key #000001.
+// WS_EX_TRANSPARENT hors des widgets opaques : curseur + clic droit League.
+// Clic droit jamais menu Chrome (pass-through + contextmenu bloqué + --disable-dev-tools).
+// Curseur Windows masqué (cursor:none) quand la souris est sur un panneau.
 
 import (
 	"errors"
@@ -47,6 +43,8 @@ var (
 	procGetCursorPos               = user32.NewProc("GetCursorPos")
 	procScreenToClient             = user32.NewProc("ScreenToClient")
 	procSetLayeredWindowAttributes = user32.NewProc("SetLayeredWindowAttributes")
+	procSetClassLongPtrW           = user32.NewProc("SetClassLongPtrW")
+	procSetCursor                  = user32.NewProc("SetCursor")
 )
 
 const (
@@ -97,7 +95,10 @@ const (
 	vkShift          = 0x10
 	vkControl        = 0x11
 	vkMenu           = 0x12
+	vkRButton        = 0x02
+	vkMButton        = 0x04
 	vkOEM3           = 0xC0 // ² sur AZERTY (Backquote US, au-dessus de Tab)
+	gclpHCursor      = int32(-12)
 	inputEventBuffer = 32
 )
 
@@ -257,17 +258,16 @@ func dressHUD(hwnd syscall.Handle, place bool) {
 	setLong(hwnd, gwlStyle, style)
 
 	ex := getLong(hwnd, gwlExStyle)
-	pass := ex & wsExTransparent
 	ex |= wsExToolWindow | wsExNoActivate | wsExLayered
-	ex &^= wsExAppWindow | wsExNoRedirBmp
+	ex &^= wsExAppWindow | wsExNoRedirBmp | wsExTransparent
 	hudPin.mu.Lock()
 	if !hudPin.noActivate {
 		ex &^= wsExNoActivate
 	}
 	hudPin.mu.Unlock()
-	ex |= pass
 	setLong(hwnd, gwlExStyle, ex)
 	procSetLayeredWindowAttributes.Call(uintptr(hwnd), hudChromaKey, 255, lwaColorKey)
+	procSetClassLongPtrW.Call(uintptr(hwnd), idx(gclpHCursor), 0)
 
 	dwmAttr(hwnd, dwmwaNcRenderingPolicy, dwmNcRpDisabled)
 	dwmAttr(hwnd, dwmwaTransitionsForcedOff, 1)
@@ -297,6 +297,10 @@ type winPoint struct{ X, Y int32 }
 func cursorOnHud() bool {
 	hwnd := hudHWND()
 	if hwnd == 0 {
+		return false
+	}
+	// Clic droit / milieu : toujours League (ping, caméra) — jamais le menu Chrome.
+	if keyDown(vkRButton) || keyDown(vkMButton) {
 		return false
 	}
 	hudPin.mu.Lock()
@@ -333,6 +337,9 @@ func hudSyncPassThrough() {
 	}
 	if want != ex {
 		setLong(hwnd, gwlExStyle, want)
+	}
+	if on {
+		procSetCursor.Call(0)
 	}
 }
 
@@ -428,13 +435,30 @@ func hudBeginDrag() {
 
 func hudCloseWindow() {
 	hwnd := hudHWND()
-	if hwnd == 0 {
-		return
+	if hwnd != 0 {
+		procPostMessageW.Call(uintptr(hwnd), wmClose, 0, 0)
 	}
-	procPostMessageW.Call(uintptr(hwnd), wmClose, 0, 0)
 	hudPin.mu.Lock()
 	hudPin.hwnd, hudPin.found, hudPin.placed = 0, false, false
 	hudPin.mu.Unlock()
+	killHUDChrome()
+}
+
+func hudProfileDir() string {
+	profile := filepath.Join(os.TempDir(), "cdscout-hud-profile-v5")
+	if local := os.Getenv("LOCALAPPDATA"); local != "" {
+		profile = filepath.Join(local, "lol-cd-scout", "hud-profile-v5")
+	}
+	return profile
+}
+
+func killHUDChrome() {
+	// Chrome --app survit à os.Exit : tuer tout process dont la ligne de commande
+	// contient notre profil (unique), pas le Chrome personnel.
+	ps := `Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match 'hud-profile-v' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }`
+	cmd := exec.Command("powershell", "-NoProfile", "-WindowStyle", "Hidden", "-Command", ps)
+	cmd.SysProcAttr = windowsHiddenProcAttr()
+	_ = cmd.Run()
 }
 
 func sysMetric(index int) int {
@@ -475,10 +499,7 @@ func hudOpen(url string) error {
 		return errors.New("aucun navigateur Chromium détecté (Chrome, Edge, Brave)")
 	}
 	w, h, x, y := hudGeometry()
-	profile := filepath.Join(os.TempDir(), "cdscout-hud-profile-v4")
-	if local := os.Getenv("LOCALAPPDATA"); local != "" {
-		profile = filepath.Join(local, "lol-cd-scout", "hud-profile-v4")
-	}
+	profile := hudProfileDir()
 	cmd := exec.Command(exe,
 		"--app="+url,
 		"--user-data-dir="+profile,
@@ -489,7 +510,8 @@ func hudOpen(url string) error {
 		"--disable-windows10-custom-titlebar",
 		"--disable-direct-composition",
 		"--disable-gpu-compositing",
-		"--disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,Windows11MicaTitlebar",
+		"--disable-dev-tools",
+		"--disable-features=Translate,MediaRouter,CalculateNativeWinOcclusion,Windows11MicaTitlebar,DevToolsAvailability",
 		"--autoplay-policy=no-user-gesture-required",
 	)
 	cmd.SysProcAttr = windowsHiddenProcAttr()

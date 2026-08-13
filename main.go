@@ -59,28 +59,38 @@ type ChampionCard struct {
 }
 
 type AllyFocus struct {
-	Role string `json:"role"`
-	ID   int    `json:"id"`
+	Role    string `json:"role"`
+	ID      int    `json:"id"`
+	Name    string `json:"name,omitempty"`
+	Hidden  bool   `json:"hidden,omitempty"`
+	Rank    string `json:"rank,omitempty"`
+	Tier    string `json:"tier,omitempty"`
+	DeepLoL string `json:"deeplol,omitempty"`
+	RiotID  string `json:"riotId,omitempty"`
 }
 
 type teamMember struct {
-	CellID             int    `json:"cellId"`
-	ChampionID         int    `json:"championId"`
-	ChampionPickIntent int    `json:"championPickIntent"`
-	AssignedPosition   string `json:"assignedPosition"`
+	CellID             int       `json:"cellId"`
+	ChampionID         int       `json:"championId"`
+	ChampionPickIntent int       `json:"championPickIntent"`
+	AssignedPosition   string    `json:"assignedPosition"`
+	SummonerID         flexInt64 `json:"summonerId"`
+	PUUID              string    `json:"puuid"`
+	NameVisibilityType string    `json:"nameVisibilityType"`
 }
 
 type Snapshot struct {
-	Connected bool        `json:"connected"`
-	Phase     string      `json:"phase"`
-	Enemies   []int       `json:"enemies"`
-	Allies    []int       `json:"allies,omitempty"`
-	AllyFocus []AllyFocus `json:"allyFocus,omitempty"`
-	Error     string      `json:"error,omitempty"`
-	Lockfile  string      `json:"lockfile,omitempty"`
-	Version   string      `json:"version,omitempty"`
-	App       string      `json:"app,omitempty"`
-	Update    *UpdateInfo `json:"update,omitempty"`
+	Connected  bool          `json:"connected"`
+	Phase      string        `json:"phase"`
+	Enemies    []int         `json:"enemies"`
+	Allies     []int         `json:"allies,omitempty"`
+	AllyFocus  []AllyFocus   `json:"allyFocus,omitempty"`
+	EnemyScout []PlayerScout `json:"enemyScout,omitempty"`
+	Error      string        `json:"error,omitempty"`
+	Lockfile   string        `json:"lockfile,omitempty"`
+	Version    string        `json:"version,omitempty"`
+	App        string        `json:"app,omitempty"`
+	Update     *UpdateInfo   `json:"update,omitempty"`
 }
 
 type lcuCreds struct {
@@ -113,6 +123,7 @@ type champDetail struct {
 		Full string `json:"full"`
 	} `json:"image"`
 	Passive struct {
+		Name        string `json:"name"`
 		Description string `json:"description"`
 		Image       struct {
 			Full string `json:"full"`
@@ -301,6 +312,18 @@ func spellIconPath(full string) string {
 	return "spell/" + full
 }
 
+func passiveFromDetail(d champDetail) Spell {
+	icon := ""
+	if f := d.Passive.Image.Full; f != "" {
+		icon = "passive/" + f
+	}
+	name := d.Passive.Name
+	if name == "" {
+		name = "Passif"
+	}
+	return Spell{Spell: "P", Name: name, CD: "—", Icon: icon, Desc: plainText(d.Passive.Description), Importance: 4}
+}
+
 func isBasicSpell(key string) bool {
 	return key == "Q" || key == "W" || key == "E" || key == "R"
 }
@@ -318,11 +341,7 @@ func normalize(d champDetail) ChampionCard {
 			Cost: burn(s.CostBurn), Range: burn(s.RangeBurn), Importance: 5,
 		}
 	}
-	passiveIcon := ""
-	if f := d.Passive.Image.Full; f != "" {
-		passiveIcon = "passive/" + f
-	}
-	passiveDesc := plainText(d.Passive.Description)
+	passive := passiveFromDetail(d)
 	summary := ""
 	window := ""
 	source := "ddragon"
@@ -350,16 +369,24 @@ func normalize(d champDetail) ChampionCard {
 				}
 				s.Icon, s.Desc, s.Cost, s.Range = a.Icon, a.Desc, a.Cost, a.Range
 			} else if s.Spell == "P" {
-				s.Icon, s.Desc = passiveIcon, passiveDesc
+				if s.Name == "" {
+					s.Name = passive.Name
+				}
+				s.Icon, s.Desc = passive.Icon, passive.Desc
 			}
 			curatedByKey[s.Spell] = s
 			curatedOrder = append(curatedOrder, s)
 		}
 	}
-	// Always expose every basic ability; keep curated extras (ex: P) and notes.
+	// Passif d'abord, puis extras curated, puis Q/W/E/R.
 	important := []Spell{}
+	if s, ok := curatedByKey["P"]; ok {
+		important = append(important, s)
+	} else {
+		important = append(important, passive)
+	}
 	for _, s := range curatedOrder {
-		if !isBasicSpell(s.Spell) {
+		if s.Spell != "P" && !isBasicSpell(s.Spell) {
 			important = append(important, s)
 		}
 	}
@@ -610,12 +637,9 @@ func getSnapshot() Snapshot {
 	snap.Connected, snap.Phase, snap.Lockfile = true, phase, creds.Lockfile
 	if phase == "ChampSelect" {
 		var session struct {
-			LocalPlayerCellID int `json:"localPlayerCellId"`
-			TheirTeam         []struct {
-				ChampionID         int `json:"championId"`
-				ChampionPickIntent int `json:"championPickIntent"`
-			} `json:"theirTeam"`
-			MyTeam []teamMember `json:"myTeam"`
+			LocalPlayerCellID int          `json:"localPlayerCellId"`
+			TheirTeam         []teamMember `json:"theirTeam"`
+			MyTeam            []teamMember `json:"myTeam"`
 		}
 		status, err := lcuGET(creds, "/lol-champ-select/v1/session", &session)
 		if err == nil {
@@ -630,6 +654,10 @@ func getSnapshot() Snapshot {
 		} else if status != 404 {
 			snap.Error = err.Error()
 		}
+	}
+	if snap.Connected {
+		kickHarvest(creds, phase)
+		attachDraftScout(&snap)
 	}
 	snapCache, snapAt = snap, time.Now()
 	return snap
@@ -688,7 +716,11 @@ func apiSearch(w http.ResponseWriter, r *http.Request) {
 
 func apiQuit(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
-	go func() { time.Sleep(100 * time.Millisecond); os.Exit(0) }()
+	go func() {
+		hudCloseWindow()
+		time.Sleep(80 * time.Millisecond)
+		os.Exit(0)
+	}()
 }
 
 // hudURL renvoie l'URL de la page en mode HUD compact (fenêtre épinglée).
@@ -836,6 +868,7 @@ func main() {
 	mux.HandleFunc("/api/hud/close", apiHUDClose)
 	mux.HandleFunc("/api/input", apiInput)
 	mux.HandleFunc("/api/clipboard", apiClipboard)
+	mux.HandleFunc("/api/open", apiOpen)
 	ln, err := listenLocal()
 	if err != nil {
 		return

@@ -14,7 +14,7 @@
 .ring-wrap{position:relative;width:128px;height:128px;margin:4px auto 2px;cursor:pointer;border:0;background:none;padding:0;display:block}.ring-wrap svg{position:absolute;inset:0;transform:rotate(-90deg);overflow:visible}.ring-bg{fill:none;stroke:rgba(255,255,255,.09);stroke-width:6}.ring-fg{fill:none;stroke:#fbbf24;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset .25s linear}.ring-wrap.cd .ring-fg{stroke:#f87171}.ring-wrap.up .ring-fg{stroke:#fbbf24;filter:drop-shadow(0 0 7px rgba(251,191,36,.55))}.ring-wrap.dead .ring-fg{stroke:rgba(248,113,113,.8);filter:drop-shadow(0 0 7px rgba(248,113,113,.4))}
 .ring-portrait{position:absolute;inset:9px;width:110px;height:110px;border-radius:999px;object-fit:cover;background:#0b1220}.ring-wrap.cd .ring-portrait{filter:brightness(.5) saturate(.7)}.ring-wrap.dead .ring-portrait{filter:grayscale(.85) brightness(.4)}
 .ring-center{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}.ring-center strong{font-size:23px;font-weight:900;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.95),0 0 4px rgba(0,0,0,.8)}.ring-wrap.up .ring-center strong{color:var(--accent);font-size:18px}.ring-wrap.idle .ring-center strong{font-size:14px;color:#e7eefb}.ring-wrap.dead .ring-center strong{color:#fda4a4}.ring-center small{font-size:8px;font-weight:900;letter-spacing:.2em;color:#dbe6f5;text-shadow:0 1px 8px rgba(0,0,0,.95)}
-.chips{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}.qchip{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:54px;padding:5px 5px 4px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text)}.qchip b{font-size:9px;color:var(--muted);letter-spacing:.06em}.qchip .qval{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}button.qchip{cursor:pointer}button.qchip:hover{border-color:rgba(255,255,255,.25)}.qchip.rchip{border-color:rgba(248,113,113,.3)}.qchip.tracking{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.7);color:#fecaca}.qchip.tracking b{color:#fda4a4}.qchip.up{background:rgba(91,231,196,.14);border-color:rgba(91,231,196,.65);color:var(--accent)}.qchip.up b{color:var(--accent)}.qchip.ci.on{background:rgba(122,162,255,.16);border-color:rgba(122,162,255,.65);color:#bcd0ff}.qchip.ci.on b{color:#bcd0ff}.qchip img{width:38px;height:38px;border-radius:7px;display:block}.qi{position:relative;display:block;line-height:0}.qi i{position:absolute;left:-4px;top:-4px;font-style:normal;font-size:9px;font-weight:900;line-height:1;padding:1px 3px;border-radius:4px;background:#0b1220;border:1px solid var(--border);color:var(--muted)}.qchip.tracking .qi i{color:#fda4a4;border-color:rgba(248,113,113,.7)}.qchip.up .qi i{color:var(--accent);border-color:rgba(91,231,196,.65)}
+.chips{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}.qchip{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:54px;padding:5px 5px 4px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--text)}.qchip b{font-size:9px;color:var(--muted);letter-spacing:.06em}.qchip .qval{font-size:18px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.1}button.qchip{cursor:pointer}button.qchip:hover{border-color:rgba(255,255,255,.25)}.qchip.rchip{border-color:rgba(248,113,113,.3)}.qchip.tracking{background:rgba(248,113,113,.16);border-color:rgba(248,113,113,.7);color:#fecaca}.qchip.tracking b{color:#fda4a4}.qchip.up{background:rgba(91,231,196,.14);border-color:rgba(91,231,196,.65);color:var(--accent)}.qchip.up b{color:var(--accent)}.qchip.ci.on{background:rgba(122,162,255,.16);border-color:rgba(122,162,255,.65);color:#bcd0ff}.qchip.ci.on b{color:#bcd0ff}.qchip.pchip{min-width:44px;border-color:rgba(122,162,255,.28)}.qi{position:relative;display:block;line-height:0}.qi i{position:absolute;left:-4px;top:-4px;font-style:normal;font-size:9px;font-weight:900;line-height:1;padding:1px 3px;border-radius:4px;background:#0b1220;border:1px solid var(--border);color:var(--muted)}.qchip.tracking .qi i{color:#fda4a4;border-color:rgba(248,113,113,.7)}.qchip.up .qi i{color:var(--accent);border-color:rgba(91,231,196,.65)}
 .items-row{display:flex;gap:4px;justify-content:center;min-height:21px;flex-wrap:wrap}.items-row img{width:21px;height:21px;border-radius:5px;background:#0b1220;border:1px solid var(--border)}
 .gold-row{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-top:14px;align-items:stretch}@media(max-width:1250px){.gold-row{grid-template-columns:1fr}}
 .gold-main{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:14px;display:flex;gap:16px;align-items:stretch}.gold-chart{flex:1;min-width:0}.gold-chart svg{display:block;width:100%;height:120px}.gold-cap{display:flex;justify-content:space-between;font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--muted);margin-bottom:7px}
@@ -61,18 +61,21 @@ input{transition:border-color .15s,box-shadow .15s}input:focus{box-shadow:0 0 0 
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#22304a;border-radius:99px;border:2px solid var(--bg)}::-webkit-scrollbar-track{background:transparent}
 /* ---- HUD overlay plein écran : panneaux flottants, fond clé #000001 ---- */
 #hud{display:none}
-html.hudmode,body.hudmode{background:#000001!important;overflow:hidden}
+html.hudmode,body.hudmode{background:#000001!important;overflow:hidden;cursor:none!important;user-select:none!important;-webkit-user-select:none!important}
+html.hudmode,html.hudmode *{cursor:none!important;-webkit-user-drag:none}
 body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 #hud{position:fixed;inset:0;padding:0;font-size:12px;overflow:hidden;background:transparent;pointer-events:none;-webkit-app-region:no-drag}
-.hud-pane{position:absolute;width:max-content;min-width:200px;max-width:280px;pointer-events:auto;display:flex;flex-direction:column;gap:4px}
+.hud-pane{position:absolute;width:max-content;min-width:200px;max-width:280px;pointer-events:none;display:flex;flex-direction:column;gap:4px}
 .hud-pane[data-hud="top"]{min-width:0;max-width:none}
+.hud-tools,.hud-top,.hud-objs,.hud-rows,.hud-gold,.hud-wait,#alert,#sp-tip{pointer-events:auto}
 .hud-tools{display:flex;align-items:center;gap:3px;width:max-content}
 .hud-pane .hud-drag,.hud-pane .hud-eye{width:22px;height:22px;padding:0;border-radius:6px;background:#243044;color:#8d9bb0;font-size:13px;line-height:1;flex-shrink:0;border:1px solid var(--border)}
-.hud-pane .hud-drag{cursor:grab}.hud-pane .hud-drag:active{cursor:grabbing}
-.hud-pane .hud-eye{cursor:pointer;font-size:12px}.hud-pane .hud-eye:hover{color:#dbe6f5;background:#1d2942}
+.hud-pane .hud-drag{cursor:none}.hud-pane .hud-drag:active{cursor:none}
+.hud-pane .hud-eye{cursor:none;font-size:12px}.hud-pane .hud-eye:hover{color:#dbe6f5;background:#1d2942}
 .hud-pane.off{min-width:0;max-width:none;width:auto}
 .hud-pane.off>.hud-objs,.hud-pane.off>.hud-rows,.hud-pane.off>.hud-gold,.hud-pane.off>.hud-wait{display:none!important}
-.hud-pane.off .hud-top>:not(.hud-drag):not(.hud-eye){display:none!important}
+.hud-pane.off .hud-top>:not(.hud-drag):not(.hud-eye):not(.hud-btns){display:none!important}
+.hud-pane.off .hud-btns>:not(.x){display:none!important}
 .hud-pane.off .hud-eye{color:#64748b}
 .hud-top{display:flex;align-items:center;gap:6px;min-width:0;padding:4px 6px;border-radius:10px;background:#101827;border:1px solid var(--border)}
 .hud-logo{display:none}
@@ -100,10 +103,10 @@ body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 .hr.ally,.hr.me{border-color:rgba(251,191,36,.55)}.hr.dead{border-color:rgba(248,113,113,.55);background:#18100e}
 .hr-main{flex:none;width:100%;min-width:0;display:flex;align-items:center;gap:6px;padding:5px 6px 3px;background:none;border:0;border-radius:0;color:var(--text);cursor:pointer;text-align:left;-webkit-app-region:no-drag}
 .hr-main:hover{background:rgba(255,255,255,.05)}
-.hr-pic{width:28px;height:28px;border-radius:7px;object-fit:cover;background:#243044;flex-shrink:0;border:2px solid #fbbf24}
+.hr-pic{width:28px;height:28px;border-radius:7px;object-fit:cover;background:#243044;flex-shrink:0;border:2px solid #5b6a82}
 .hr.dead .hr-pic{filter:grayscale(.35) contrast(.9)}
 .hr-slot{font-size:8px;font-weight:900;color:#5b6a82;width:8px;flex-shrink:0}
-.hr-id{min-width:0;flex:1}.hr-id>b{display:block;font-family:'Space Grotesk',Inter,sans-serif;font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hr-id{min-width:0;flex:1}.hr-who{display:flex;align-items:center;gap:3px;min-width:0}.hr-id>b,.hr-who>b{display:block;min-width:0;flex:1;font-family:'Space Grotesk',Inter,sans-serif;font-size:12.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hr-id i.hr-meta{font-style:normal;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
 .hr-dead{display:none;font-style:normal;font-size:10px;font-weight:900;letter-spacing:.08em;color:#fda4a4}
 .hr.dead .hr-meta{display:none}.hr.dead .hr-dead{display:block}
@@ -115,7 +118,7 @@ body.hudmode .shell{display:none}body.hudmode #hud{display:block}
 .hr-tm.cd .hv{color:#fca5a5}.hr-tm.up .hv{color:var(--accent)}
 .hr-spells{display:flex;width:100%;border-top:1px solid rgba(255,255,255,.06)}
 .hr-sk{flex:1;width:auto;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:4px 1px 5px;border:0;border-left:1px solid var(--border);border-radius:0;background:rgba(255,255,255,.03);color:#e7eefb;-webkit-app-region:no-drag}
-.hr-sk:first-child{border-left:0}
+.hr-p{background:rgba(122,162,255,.07)}.hr-p .hv{display:none}
 .hr-sk[data-tip]{cursor:help}
 .hr-sk .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:10.5px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:#cdd8ea}
 .hr-sk img{width:20px;height:20px;border-radius:4px;display:block;background:#243044}
@@ -141,7 +144,7 @@ body.hudmode .sp-tip p{font-size:11px}
 .hud-gold svg{flex:1;height:22px;display:block}
 .hud-allies .hr{background:#121820}
 .hud-allies .hr-main{padding:3px 6px;gap:6px}.hud-allies .hr-pic{width:22px;height:22px;border-radius:6px}
-.hud-allies .hr-id>b{font-size:11px}.hud-allies .hr-id i{font-size:8px}
+.hud-allies .hr-id>b,.hud-allies .hr-who>b{font-size:11px}.hud-allies .hr-id i{font-size:8px}
 .hud-allies .hr-tm .hv{font-size:13px}.hud-allies .hr-fi{width:16px;height:16px}
 .hud-allies .hr-spells{display:none}
 .hud-foot{display:none}
@@ -160,6 +163,14 @@ html.hudmode #hud .hr-tm.cd .hr-fi{filter:saturate(.55) contrast(.92)}
 @keyframes alertIn{from{opacity:0;transform:translate(-50%,-14px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @keyframes pulseHot{0%,100%{box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 26px rgba(248,113,113,.18)}50%{box-shadow:0 18px 50px rgba(0,0,0,.6),0 0 54px rgba(248,113,113,.42)}}
 body.hudmode .alert{top:8px;padding:9px 16px;border-radius:13px}body.hudmode .alert b{font-size:17px}body.hudmode .alert span{font-size:10.5px}
+.t-iron{--tc:#8a7f70}.t-bronze{--tc:#c88a5a}.t-silver{--tc:#c5d0dc}.t-gold{--tc:#f0c75e}.t-platinum{--tc:#5ecfc0}.t-emerald{--tc:#3dcf7a}.t-diamond{--tc:#57c3ff}.t-master{--tc:#c47bff}.t-grandmaster{--tc:#e84d4d}.t-challenger{--tc:#f4d58a}
+.pic-frame{width:50px;height:50px;padding:2px;border-radius:14px;background:#4a5568;flex-shrink:0}.pic-frame[class*="t-"]{background:var(--tc)}.pic-frame .portrait{width:100%;height:100%;border-radius:12px;display:block}
+.rank-tag{font-size:10px;font-weight:900;letter-spacing:.06em;color:var(--tc,#f0c75e);margin-left:auto;align-self:flex-start}
+a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:none;border-bottom:1px solid rgba(91,231,196,.45)}a.deeplol:hover{border-bottom-color:var(--accent)}
+.tile-name a.deeplol{font-size:15px;font-weight:900;color:inherit;border-bottom-color:rgba(91,231,196,.35)}
+.ring-portrait{border:3px solid #4a5568}
+.hr-pic[class*="t-"],.ring-portrait[class*="t-"]{border-color:var(--tc)}
+.hr-dl{display:inline-grid;place-items:center;margin-left:4px;width:14px;height:14px;border-radius:3px;background:#243044;color:var(--accent);font-size:9px;font-weight:900;border:1px solid #3d4a5c;vertical-align:middle}
 </style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><button id="demo" class="secondary">Démo draft</button><button id="demo-live" class="secondary">Démo en jeu</button><button id="hud-open" class="secondary" title="Ouvre le HUD compact épinglé au-dessus de League">HUD en jeu</button><button id="quit" class="secondary">Quitter</button></section><section class="hero"><div><span class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis + SUPP / JGL / MID alliés apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">…</strong></div></section><main>
 <section id="live" class="hidden"><div id="obj-bar" class="obj-bar"></div><div id="live-cards" class="tiles"></div><div class="gold-row"><div id="gold-main" class="gold-main"></div><div id="gold-roles" class="gold-grid"></div></div><div class="live-hint">Clique l'<strong>anneau</strong> d'un ennemi (ou <strong>Alt+1–5</strong> sur le HUD) quand il Flash → timer + les Flash ennemis encore en CD s'écrivent dans le chat League (ouvre le chat avec <strong>Entrée</strong> avant, le jeu refuse Ctrl+V). Clique le chip <strong>R</strong> quand il ult, re-clique pour annuler. <strong>CI</strong> = Cosmic Insight (+18 haste invocateur). CD Q/W/E au rang max plausible, rang de R exact, haste des items incluse (runes inconnues). Or <em>estimé</em> (CS + kills + assists + or passif) : Riot n'expose pas l'or exact des autres joueurs, la tendance est fiable.</div><div class="section-title" style="margin-top:16px"><h3>Alliés</h3><span id="live-ally-count">—</span></div><div id="live-allies" class="tiles"></div></section>
 <section id="cs-enemies"><div class="section-title"><h3>Ennemis détectés</h3><span id="enemy-count">0/5</span></div><nav id="champ-nav" class="champ-nav hidden" aria-label="Filtrer les ennemis"></nav><div id="cards" class="cards"></div><div id="empty" class="empty"><div class="empty-icon">⌁</div><strong>Aucun champion ennemi détecté</strong><span>Utilise la recherche, la démo draft ou la démo en jeu pour tester l'interface.</span></div></section>
@@ -179,11 +190,20 @@ body.hudmode .alert{top:8px;padding:9px 16px;border-radius:13px}body.hudmode .al
 const $=id=>document.getElementById(id);let roster=[],visible=new Set(),focusKey=null,allyRoster=[],draftPool=[],timer,version='',lastPhase='';
 // ?hud=1 : fenêtre compacte épinglée au-dessus de League (le titre sert à la retrouver côté Go).
 const HUDMODE=new URLSearchParams(location.search).has('hud');
-if(HUDMODE){document.documentElement.classList.add('hudmode');document.body.classList.add('hudmode');document.title='CD Scout HUD'}
+if(HUDMODE){document.documentElement.classList.add('hudmode');document.body.classList.add('hudmode');document.title='CD Scout HUD';
+const eat=e=>{e.preventDefault();e.stopPropagation()};
+document.addEventListener('contextmenu',eat,true);
+document.addEventListener('auxclick',e=>{if(e.button!==0)eat(e)},true);
+document.addEventListener('selectstart',eat,true);
+document.addEventListener('dragstart',eat,true)}
 const demo=[34,53,25,238];const demoAllies=[{role:'SUPP',id:89},{role:'JGL',id:64},{role:'MID',id:103}];
 const demoLiveIds=[266,64,103,222,89,58,121,238,51,53];
 const demoLiveFb={266:['Aatrox','Aatrox.png'],64:['Lee Sin','LeeSin.png'],103:['Ahri','Ahri.png'],222:['Jinx','Jinx.png'],89:['Leona','Leona.png'],58:['Renekton','Renekton.png'],121:['Kha\'Zix','Khazix.png'],238:['Zed','Zed.png'],51:['Caitlyn','Caitlyn.png'],53:['Blitzcrank','Blitzcrank.png']};
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+const tierClass=t=>{t=String(t||'').toLowerCase();return(!t||t==='none'||t==='unranked')?'':'t-'+t};
+const playerLabel=p=>p.hidden?(p.champion||p.name||''):(p.name||p.playerName||p.riotId||p.champion||'');
+function openDeepLoL(url){if(!url)return;if(HUDMODE){fetch('/api/open?url='+encodeURIComponent(url),{method:'POST'}).catch(()=>{});return}window.open(url,'_blank','noopener')}
+const mixScout=(c,s)=>!s?c:{...c,playerName:s.name,hidden:s.hidden,rank:s.rank,tier:s.tier,deeplol:s.deeplol,riotId:s.riotId||c.riotId};
 const iconUrl=c=>`https://ddragon.leagueoflegends.com/cdn/${version}/img/champion/${encodeURIComponent(c.icon)}`;
 const spellIcon=s=>s&&s.icon?`https://ddragon.leagueoflegends.com/cdn/${version}/img/${s.icon.split('/').map(encodeURIComponent).join('/')}`:'';
 const spellBadge=(s,cls)=>{const u=spellIcon(s);return u?`<span class="${cls}"><img src="${u}" alt="" loading="lazy"><i>${esc(s.spell)}</i></span>`:''};
@@ -219,16 +239,16 @@ function refreshDraftKeys(){const keys=new Set();for(const c of (draftPool.lengt
 function inDraft(name){const keys=refreshDraftKeys();const n=norm(name);if(keys.has(n))return true;for(const k of keys){if(Math.min(k.length,n.length)>=5&&(n.startsWith(k)||k.startsWith(n)))return true}return false}
 function chips(list,cls){const items=[...(list||[])].map(n=>({n,hit:inDraft(n)})).sort((a,b)=>Number(b.hit)-Number(a.hit));return items.map(({n,hit})=>`<span class="chip ${cls}${hit?' in-draft':''}" title="${hit?'Dans la draft':''}">${esc(n)}</span>`).join('')}
 function matchups(c){const hard=c.counters||[],diff=c.hardMatchups||[];if(!hard.length&&!diff.length)return'';const blocks=[];if(hard.length)blocks.push(`<div class="matchup-block"><div class="matchup-label">Counters</div><div class="matchup-chips">${chips(hard,'hard')}</div></div>`);if(diff.length)blocks.push(`<div class="matchup-block"><div class="matchup-label">Matchups difficiles</div><div class="matchup-chips">${chips(diff,'diff')}</div></div>`);return`<div class="matchups">${blocks.join('')}</div>`}
-function card(c,i,opts={}){const role=opts.role||c.role;const ally=!!role;const spells=(c.important||[]).map(s=>`<div class="spell" data-tip="${spellTip(s,c.key,{cd:s.cd,note:s.note||''})}">${spellBadge(s,'spell-key')||`<span class="spell-key">${esc(s.spell)}</span>`}<div><div class="spell-name">${esc(s.name)}</div>${s.note?`<div class="spell-note">${esc(s.note)}</div>`:''}</div><span class="spell-cd">${esc(s.cd||'—')}</span></div>`).join('');const badge=role?`<span class="role-badge">${esc(role)}</span>`:`<span class="source">${c.source==='curated'?'curated':'auto'}</span>`;const label=role?esc(c.name):`${i+1}. ${esc(c.name)}`;return `<article class="card ${ally?'ally':''} ${c.key===focusKey?'focus':''}" data-key="${c.key}"><div class="card-head"><img class="portrait" src="${iconUrl(c)}"><div><h4>${label}</h4><div class="title">${esc(c.title)}</div></div>${badge}</div><div class="spells">${spells}</div><div class="summary"><span>À retenir</span><strong>${esc(c.summary)}</strong></div>${c.window?`<div class="window">${esc(c.window)}</div>`:''}${matchups(c)}</article>`}
+function card(c,i,opts={}){const role=opts.role||c.role;const ally=!!role;const spells=(c.important||[]).map(s=>`<div class="spell" data-tip="${spellTip(s,c.key,{cd:s.cd,note:s.note||''})}">${spellBadge(s,'spell-key')||`<span class="spell-key">${esc(s.spell)}</span>`}<div><div class="spell-name">${esc(s.name)}</div>${s.note?`<div class="spell-note">${esc(s.note)}</div>`:''}</div><span class="spell-cd">${esc(s.cd||'—')}</span></div>`).join('');const badge=role?`<span class="role-badge">${esc(role)}</span>`:`<span class="source">${c.source==='curated'?'curated':'auto'}</span>`;const label=role?esc(c.name):`${i+1}. ${esc(c.name)}`;const who=c.hidden?'':(c.playerName||c.riotId||'');const tc=tierClass(c.tier);const sub=[who,c.rank].filter(Boolean).join(' · ');const link=(!c.hidden&&c.deeplol)?` <a class="deeplol" href="${esc(c.deeplol)}" target="_blank" rel="noopener noreferrer">DeepLoL</a>`:'';return `<article class="card ${ally?'ally':''} ${c.key===focusKey?'focus':''}" data-key="${c.key}"><div class="card-head"><div class="pic-frame ${tc}"><img class="portrait" src="${iconUrl(c)}" alt=""></div><div><h4>${label}</h4><div class="title">${sub?esc(sub)+' · ':''}${esc(c.title)}${link}</div></div>${badge}</div><div class="spells">${spells}</div><div class="summary"><span>À retenir</span><strong>${esc(c.summary)}</strong></div>${c.window?`<div class="window">${esc(c.window)}</div>`:''}${matchups(c)}</article>`}
 function visibleCards(){return roster.filter(c=>visible.has(c.key))}
 function renderNav(){const nav=$('champ-nav');nav.classList.toggle('hidden',!roster.length);nav.innerHTML=roster.map(c=>`<button type="button" class="champ-toggle ${visible.has(c.key)?'on':''}" data-key="${c.key}" title="${esc(c.name)}" aria-pressed="${visible.has(c.key)}"><img src="${iconUrl(c)}" alt="${esc(c.name)}"><span class="tick">✓</span></button>`).join('');nav.querySelectorAll('.champ-toggle').forEach(btn=>btn.onclick=()=>{const key=+btn.dataset.key;if(visible.has(key)){visible.delete(key);if(focusKey===key)focusKey=null}else visible.add(key);render()})}
-function renderAllies(){const list=allyRoster;$('ally-count').textContent=list.length?list.map(c=>c.role).join(' · '):'SUPP · JGL · MID';$('ally-empty').classList.toggle('hidden',list.length>0);$('ally-cards').innerHTML=list.map((c,i)=>card(c,i,{role:c.role})).join('');$('ally-cards').querySelectorAll('.card').forEach(x=>x.onclick=()=>{focusKey=+x.dataset.key;render()})}
-function render(){const cards=visibleCards();$('enemy-count').textContent=`${cards.length}/${roster.length||5}`;$('empty').classList.toggle('hidden',roster.length>0);renderNav();$('cards').innerHTML=cards.map(card).join('');document.querySelectorAll('#cards .card').forEach(x=>x.onclick=()=>{focusKey=+x.dataset.key;render()});renderAllies()}
+function renderAllies(){const list=allyRoster;$('ally-count').textContent=list.length?list.map(c=>c.role).join(' · '):'SUPP · JGL · MID';$('ally-empty').classList.toggle('hidden',list.length>0);$('ally-cards').innerHTML=list.map((c,i)=>card(c,i,{role:c.role})).join('');$('ally-cards').querySelectorAll('.card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;render()})}
+function render(){const cards=visibleCards();$('enemy-count').textContent=`${cards.length}/${roster.length||5}`;$('empty').classList.toggle('hidden',roster.length>0);renderNav();$('cards').innerHTML=cards.map(card).join('');document.querySelectorAll('#cards .card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;render()});renderAllies()}
 function setRoster(cards,reset){const prev=new Set(roster.map(c=>c.key));const next=new Set();for(const c of cards){if(reset||!prev.has(c.key)||visible.has(c.key))next.add(c.key)}roster=cards;visible=next;if(focusKey!=null&&!visible.has(focusKey)&&!allyRoster.some(a=>a.key===focusKey))focusKey=null;render()}
 function setAllies(cards){allyRoster=cards;if(focusKey!=null&&!visible.has(focusKey)&&!allyRoster.some(a=>a.key===focusKey))focusKey=null;render()}
 async function fetchCards(ids){if(!ids.length)return[];const r=await fetch('/api/cards?ids='+ids.join(','));return await r.json()}
 async function cards(ids,reset){if(!ids.length){draftPool=[];setRoster([]);return}const list=await fetchCards(ids);draftPool=list;setRoster(list,reset)}
-async function loadAuto(s){const enemies=s.enemies||[];const focus=s.allyFocus||[];const allyIds=focus.map(a=>a.id);const allAllyIds=s.allies||[];const wanted=[...new Set([...enemies,...allyIds,...allAllyIds])];const all=wanted.length?await fetchCards(wanted):[];const byKey=Object.fromEntries(all.map(c=>[c.key,c]));draftPool=all;setRoster(enemies.map(id=>byKey[id]).filter(Boolean),false);setAllies(focus.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean))}
+async function loadAuto(s){const enemies=s.enemies||[];const focus=s.allyFocus||[];const allyIds=focus.map(a=>a.id);const allAllyIds=s.allies||[];const wanted=[...new Set([...enemies,...allyIds,...allAllyIds])];const all=wanted.length?await fetchCards(wanted):[];const byKey=Object.fromEntries(all.map(c=>[c.key,c]));const scout={};for(const p of s.enemyScout||[])scout[p.id]=p;for(const a of focus)scout[a.id]=a;draftPool=all;setRoster(enemies.map(id=>byKey[id]).filter(Boolean).map(c=>mixScout(c,scout[c.key])),false);setAllies(focus.map(a=>{const c=byKey[a.id];return c?mixScout({...c,role:a.role},scout[a.id]):null}).filter(Boolean))}
 let updSig='';
 function renderUpdate(u){const el=$('upd');if(!el)return;const st=u&&u.state||'idle';const sig=st+'|'+(u&&u.latest||'')+'|'+(u&&u.percent||0)+'|'+(u&&u.error||'');if(sig===updSig)return;updSig=sig;
 if(st!=='downloading'&&st!=='ready'&&!(st==='error'&&u.latest)){el.className='upd hidden';el.innerHTML='';return}
@@ -278,11 +298,12 @@ const ringS=(p.summoners||[])[ringSi];
 const ringKey=`${P}|S${ringSi}`,ringCd=ringS?summCD(p,ringS):0;
 const ringLabel=ringS?(ringS.slug==='SummonerFlash'?'FLASH':String(ringS.name||ringS.slug||'').toUpperCase().slice(0,9)):'—';
 const chips=(p.spells||[]).map(s=>{
-const isR=s.spell==='R',k=`${P}|R`,tr=isR&&liveTracks[k];
+const isP=s.spell==='P',isR=s.spell==='R',k=`${P}|R`,tr=isR&&liveTracks[k];
 const note=((sc&&sc.important)||[]).find(x=>x.spell===s.spell&&x.note);
-const tip=spellTip(s,p.key,{cd:s.cd?fmtCD(s.cd):'',meta:[`Rang ${s.rank||'?'}${s.est?' (max plausible)':''}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint:isR&&s.cd?'Clique le chip quand il ult (re-clique pour annuler).':''});
+const tip=spellTip(s,p.key,{cd:isP?'':(s.cd?fmtCD(s.cd):''),meta:isP?[]:[`Rang ${s.rank||'?'}${s.est?' (max plausible)':''}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint:isR&&s.cd?'Clique le chip quand il ult (re-clique pour annuler).':''});
 const val=tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${s.cd?fmtCD(s.cd):'—'}</span>`;
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
+if(isP)return `<div class="qchip pchip" data-tip="${tip}">${head}</div>`;
 return isR&&s.cd?`<button type="button" class="qchip rchip${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${s.cd}" data-tip="${tip}">${head}${val}</button>`
 :`<div class="qchip" data-tip="${tip}">${head}${val}</div>`}).join('');
 const others=(p.summoners||[]).map((s,si)=>{if(si===ringSi)return'';const k=`${P}|S${si}`,tr=liveTracks[k],cd=summCD(p,s);
@@ -291,7 +312,10 @@ const ciChip=`<button type="button" class="qchip ci${ciSet.has(P)?' on':''}" dat
 const items=(p.items||[]).map(id=>`<img src="${itemIcon(id)}" alt="" loading="lazy">`).join('');
 const tag=(ally?(p.isMe?'MOI':'ALLIÉ'):`ENNEMI ${i+1}`)+(POS[p.position]?' · '+POS[p.position]:'');
 const deadEnd=p.isDead?(gameNow()+p.respawn):0;
-return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${esc(p.champion)}</div><div class="tile-sub">Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div></div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait" src="${iconUrl(p)}" alt=""><div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
+const who=playerLabel(p);
+const nameHtml=(!p.hidden&&p.deeplol)?`<a class="deeplol" href="${esc(p.deeplol)}" target="_blank" rel="noopener noreferrer">${esc(who)}</a>`:esc(who);
+const subChamp=(!p.hidden&&p.champion&&p.champion!==who)?esc(p.champion)+' · ':'';
+return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${nameHtml}</div><div class="tile-sub">${subChamp}${p.rank?esc(p.rank)+' · ':''}Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div></div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait ${tierClass(p.tier)}" src="${iconUrl(p)}" alt=""><div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
 function renderLive(){
 if(HUDMODE)return renderHud();
 const on=liveOn();
@@ -398,22 +422,25 @@ const fs=(p.summoners||[])[si],fkey=`${P}|S${si}`,fcd=fs?summCD(p,fs):0;
 const flab=fs?(fs.slug==='SummonerFlash'?'FLASH':String(fs.name||fs.slug||'SORT').toUpperCase().slice(0,7)):'—';
 const fIcon=fs&&fs.slug?`<img class="hr-fi" src="${summIcon(fs.slug)}" alt="">`:'';
 const spells=(p.spells||[]).map(s=>{
-const isR=s.spell==='R',cd=s.cd||0;
+const isP=s.spell==='P',isR=s.spell==='R',cd=s.cd||0;
 const note=((sc&&sc.important)||[]).find(x=>x.spell===s.spell&&x.note);
 const hint=isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'';
-const tip=spellTip(s,p.key,{cd:cd?fmtSec(cd):'',meta:[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
+const tip=spellTip(s,p.key,{cd:isP?'':(cd?fmtSec(cd):''),meta:isP?[]:[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
+if(isP)return `<div class="hr-sk hr-p" data-tip="${tip}">${head}</div>`;
 return isR&&cd
 ?`<button type="button" class="hr-sk hr-r" data-track="${esc(P)}|R" data-cd="${cd}" data-tm="${esc(P)}|R" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}<span class="hv">${fmtSec(cd)}</span></button>`
 :`<div class="hr-sk" data-tip="${tip}">${head}<span class="hv">${fmtSec(cd)}</span></div>`}).join('');
 const others=(p.summoners||[]).map((s,j)=>j===si?'':`${s.name||s.slug||''} ${mmss(summCD(p,s))}`).filter(Boolean).join(' · ');
 const items=(p.items||[]).map(id=>`<img src="${itemIcon(id)}" alt="" loading="lazy">`).join('');
 const pos=POS[p.position]||'';
-const meta=`${p.level}${pos?' '+pos:''}${p.abilityHaste?' '+p.abilityHaste:''}`;
+const meta=`${p.level}${pos?' '+pos:''}${p.rank?' '+p.rank:''}${p.abilityHaste?' '+p.abilityHaste:''}`;
+const who=playerLabel(p);
+const dl=(!p.hidden&&p.deeplol)?`<span class="hr-dl" data-url="${esc(p.deeplol)}" title="Profil DeepLoL">↗</span>`:'';
 return `<div class="hr${ally?' ally':''}${p.isMe?' me':''}" data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}">`+
 `<button type="button" class="hr-main" data-track="${esc(fkey)}" data-cd="${fcd}" title="${esc(flab)} — clic${ally?'':' ou Alt+'+(i+1)}">`+
-`<img class="hr-pic" src="${iconUrl(p)}" alt=""><span class="hr-slot">${ally?'':i+1}</span>`+
-`<span class="hr-id"><b>${esc(p.champion)}</b><i class="hr-meta">${esc(meta)}</i><span class="hr-dead">MORT <b data-dead-t="1">—</b></span></span>`+
+`<img class="hr-pic ${tierClass(p.tier)}" src="${iconUrl(p)}" alt=""><span class="hr-slot">${ally?'':i+1}</span>`+
+`<span class="hr-id"><span class="hr-who"><b>${esc(who)}</b>${dl}</span><i class="hr-meta">${esc(meta)}</i><span class="hr-dead">MORT <b data-dead-t="1">—</b></span></span>`+
 `<span class="hr-tm" data-tm="${esc(fkey)}" data-base="${fcd}" data-kind="summ">${fIcon}<span class="hv">—</span></span></button>`+
 (ally?'':`<div class="hr-spells">${spells}</div>`)+
 `<div class="hr-more">${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS${others?' · '+others:''}${items?' &nbsp;'+items:''}</div></div>`}
@@ -442,6 +469,7 @@ $('hud-allies').innerHTML=hudAll.length?'<div class="hud-lab">ALLIÉS</div>'+hud
 pane('hud-pane-allies',!hudAll.length);
 hudGold(liveState.gold);
 document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)});
+document.querySelectorAll('#hud .hr-dl').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();openDeepLoL(el.dataset.url)});
 tickHud();reportHudHits()}
 function tickHud(){
 const on=liveOn();
@@ -482,7 +510,7 @@ function loadHudLayout(){let saved={};try{saved=JSON.parse(localStorage.getItem(
 function saveHudLayout(){const o={};document.querySelectorAll('[data-hud]').forEach(el=>{o[el.dataset.hud]={x:parseInt(el.style.left,10)||el.offsetLeft,y:parseInt(el.style.top,10)||el.offsetTop,off:el.classList.contains('off')}});localStorage.setItem(HUD_LAYOUT_KEY,JSON.stringify(o))}
 function syncHudEye(pane){const b=pane.querySelector('.hud-eye');if(!b)return;const off=pane.classList.contains('off');b.title=off?'Afficher':'Masquer';b.setAttribute('aria-pressed',off?'true':'false')}
 function bindHudEye(){document.querySelectorAll('.hud-eye').forEach(btn=>{btn.onclick=e=>{e.preventDefault();e.stopPropagation();const pane=btn.closest('[data-hud]');if(!pane)return;pane.classList.toggle('off');syncHudEye(pane);saveHudLayout();reportHudHits()}})}
-function reportHudHits(){if(!HUDMODE)return;const rs=[...document.querySelectorAll('[data-hud],#alert:not(.hidden),#sp-tip:not(.hidden)')].filter(el=>el.offsetWidth&&el.offsetHeight&&!el.classList.contains('hidden')).map(el=>{const r=el.getBoundingClientRect();return{x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}});
+function reportHudHits(){if(!HUDMODE)return;const rs=[...document.querySelectorAll('.hud-tools,.hud-top,.hobj,.hr,.hud-gold:not(.hidden),.hud-wait,#alert:not(.hidden),#sp-tip:not(.hidden)')].filter(el=>el.offsetWidth&&el.offsetHeight&&!el.classList.contains('hidden')&&el.closest('[data-hud]')&&!el.closest('[data-hud]').classList.contains('hidden')).map(el=>{const r=el.getBoundingClientRect();return{x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)}});
 fetch('/api/hud/hits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(rs)}).catch(()=>{})}
 function bindHudDrag(){document.querySelectorAll('.hud-drag[data-move]').forEach(btn=>{btn.onmousedown=e=>{if(e.button)return;e.preventDefault();e.stopPropagation();
 const pane=btn.closest('[data-hud]');if(!pane)return;const ox=e.clientX-pane.offsetLeft,oy=e.clientY-pane.offsetTop;
@@ -504,6 +532,8 @@ $('hud-sound').onclick=()=>{soundOn=!soundOn;localStorage.setItem('cdscout.sound
 $('hud-hold').onclick=()=>setHold(!hudHoldOn);
 $('hud-reset').onclick=()=>{localStorage.removeItem(HUD_LAYOUT_KEY);document.querySelectorAll('[data-hud]').forEach(el=>el.classList.remove('off'));applyHudLayout(hudDefaults());reportHudHits()};
 $('hud-close').onclick=()=>{fetch('/api/hud/close',{method:'POST'}).catch(()=>{});window.close()};
+setInterval(async()=>{try{if((await fetch('/api/status',{cache:'no-store'})).ok)return}catch(_){}
+window.close()},2500);
 $('hud-clock').onclick=()=>{copyFlashCallout();if(liveOn())tickHud()};
 $('hud-demo').onclick=()=>startLiveDemo();
 pollInput();setInterval(pollInput,140);reportHudHits();setInterval(reportHudHits,800)}
@@ -515,15 +545,17 @@ if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0')return;
 autoHudDone=true;
 try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)return;await fetch('/api/hud/open',{method:'POST'})}catch(_){}}
 function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}renderLive()}
-function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;return['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}})}
+function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;
+const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
+return (p?[{spell:'P',name:p.name||'Passif',icon:p.icon||'',desc:p.desc||'',cost:'',range:'',cd:0,rank:'P'}]:[]).concat(qwer)}
 function demoMkGold(tEnd,metas){const bias=[t=>-t*.55-180*Math.sin(t/210),t=>420+820*Math.sin(t/380)+(t>620?350:0),t=>90*Math.sin(t/95)+(t>740?480:-80),t=>t*1.35+220*Math.sin(t/190),t=>70*Math.sin(t/150)+t*.12];const hist=[];for(let t=0;t<=tEnd;t+=10){const roles=bias.map((f,i)=>{const d=Math.round(f(t)+((i*41+t)%19-9)*14),base=500+t*8.4;return[Math.max(0,Math.round(base+d/2)),Math.max(0,Math.round(base-d/2))]});hist.push({t,ally:roles.reduce((s,p)=>s+p[0],0),enemy:roles.reduce((s,p)=>s+p[1],0),roles})}return{estimated:true,roles:metas,history:hist}}
 async function startLiveDemo(){if(!version){try{const s=await(await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version}catch(_){}}
 let cards=[];try{cards=await fetchCards(demoLiveIds)}catch(_){}
 const by=Object.fromEntries(cards.map(c=>[c.key,c]));for(const c of cards)liveScout[c.key]=c;
-const mk=(id,pos,riot,o)=>{const c=by[id],fb=demoLiveFb[id]||[String(id),'Aatrox.png'];return{riotId:riot,isMe:!!o.me,champion:(c&&c.name)||fb[0],key:id,icon:(c&&c.icon)||fb[1],position:pos,level:o.lv,isDead:!!o.dead,respawn:o.respawn||0,kills:o.k,deaths:o.d,assists:o.a,cs:o.cs,abilityHaste:o.ah,summHaste:o.sh||0,items:o.items,spells:demoMkSpells(c,o.cds),summoners:o.sums}};
+const mk=(id,pos,riot,o)=>{const c=by[id],fb=demoLiveFb[id]||[String(id),'Aatrox.png'];const champ=(c&&c.name)||fb[0];const hidden=!!o.hidden||!riot||String(riot).split('#')[0].toLowerCase()===champ.toLowerCase();const name=hidden?champ:riot;const deeplol=hidden?'':(o.deeplol||`https://www.deeplol.gg/summoner/euw/${encodeURIComponent(String(riot).replace('#','-'))}`);return{riotId:riot,name,hidden,rank:o.rank||'',tier:o.tier||'',deeplol,isMe:!!o.me,champion:champ,key:id,icon:(c&&c.icon)||fb[1],position:pos,level:o.lv,isDead:!!o.dead,respawn:o.respawn||0,kills:o.k,deaths:o.d,assists:o.a,cs:o.cs,abilityHaste:o.ah,summHaste:o.sh||0,items:o.items,spells:demoMkSpells(c,o.cds),summoners:o.sums}};
 const F=(cd=300)=>({slug:'SummonerFlash',name:'Flash',cd});
-const allies=[mk(266,'TOP','Toplaner#EUW',{lv:13,k:2,d:3,a:1,cs:141,ah:25,items:[3071,3047,3068,3053,1028],cds:[11,14,8,80],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(64,'JUNGLE','Jungler#EUW',{lv:12,k:4,d:2,a:6,cs:118,ah:20,items:[6692,3111,3814,3134,1036],cds:[8,12,9,70],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(103,'MIDDLE','Moi#EUW',{me:1,lv:13,k:5,d:2,a:4,cs:156,ah:40,sh:10,items:[3157,3020,4645,6655,1058],cds:[6,8,10,95],sums:[F(270),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(222,'BOTTOM','ADC#EUW',{lv:12,k:6,d:1,a:7,cs:172,ah:0,items:[3031,3006,3085,3036,1038],cds:[7,9,5,70],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(89,'UTILITY','Support#EUW',{lv:11,k:1,d:4,a:9,cs:32,ah:30,items:[3190,3111,3109,3067,1001],cds:[12,10,14,60],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
-const enemies=[mk(58,'TOP','Renek#EUW',{lv:13,k:3,d:2,a:2,cs:148,ah:20,items:[3071,3047,3053,3068,1031],cds:[10,12,8,90],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(121,'JUNGLE','Kha#EUW',{lv:12,k:3,d:4,a:3,cs:110,ah:18,dead:1,respawn:22,items:[3142,3111,3814,1036],cds:[5,8,7,80],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(238,'MIDDLE','Zed#EUW',{lv:13,k:4,d:5,a:2,cs:149,ah:24,items:[3142,3020,3814,3134,1053],cds:[5,18,4,90],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(51,'BOTTOM','Cait#EUW',{lv:12,k:3,d:3,a:4,cs:165,ah:0,items:[3031,3006,3094,1038,1042],cds:[8,10,12,80],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(53,'UTILITY','Blitz#EUW',{lv:11,k:0,d:5,a:8,cs:28,ah:25,items:[3190,3111,3067,1028,1001],cds:[18,12,10,50],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
+const allies=[mk(266,'TOP','Toplaner#EUW',{lv:13,k:2,d:3,a:1,cs:141,ah:25,rank:'E1',tier:'emerald',items:[3071,3047,3068,3053,1028],cds:[11,14,8,80],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(64,'JUNGLE','Jungler#EUW',{lv:12,k:4,d:2,a:6,cs:118,ah:20,rank:'D4',tier:'diamond',items:[6692,3111,3814,3134,1036],cds:[8,12,9,70],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(103,'MIDDLE','Moi#EUW',{me:1,lv:13,k:5,d:2,a:4,cs:156,ah:40,sh:10,rank:'D2',tier:'diamond',items:[3157,3020,4645,6655,1058],cds:[6,8,10,95],sums:[F(270),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(222,'BOTTOM','ADC#EUW',{lv:12,k:6,d:1,a:7,cs:172,ah:0,rank:'P2',tier:'platinum',items:[3031,3006,3085,3036,1038],cds:[7,9,5,70],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(89,'UTILITY','Support#EUW',{lv:11,k:1,d:4,a:9,cs:32,ah:30,rank:'G1',tier:'gold',items:[3190,3111,3109,3067,1001],cds:[12,10,14,60],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
+const enemies=[mk(58,'TOP','Renek#EUW',{lv:13,k:3,d:2,a:2,cs:148,ah:20,rank:'D3',tier:'diamond',items:[3071,3047,3053,3068,1031],cds:[10,12,8,90],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(121,'JUNGLE','Kha#EUW',{lv:12,k:3,d:4,a:3,cs:110,ah:18,dead:1,respawn:22,rank:'E2',tier:'emerald',items:[3142,3111,3814,1036],cds:[5,8,7,80],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(238,'MIDDLE','Zed#EUW',{lv:13,k:4,d:5,a:2,cs:149,ah:24,rank:'Master 80',tier:'master',items:[3142,3020,3814,3134,1053],cds:[5,18,4,90],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(51,'BOTTOM','Cait#EUW',{lv:12,k:3,d:3,a:4,cs:165,ah:0,rank:'D2',tier:'diamond',items:[3031,3006,3094,1038,1042],cds:[8,10,12,80],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(53,'UTILITY','Blitzcrank',{hidden:1,lv:11,k:0,d:5,a:8,cs:28,ah:25,rank:'G3',tier:'gold',items:[3190,3111,3067,1028,1001],cds:[18,12,10,50],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
 const t=1055,metas=[{label:'TOP',allyChamp:allies[0].champion,enemyChamp:enemies[0].champion},{label:'JGL',allyChamp:allies[1].champion,enemyChamp:enemies[1].champion},{label:'MID',allyChamp:allies[2].champion,enemyChamp:enemies[2].champion},{label:'BOT',allyChamp:allies[3].champion,enemyChamp:enemies[3].champion},{label:'SUPP',allyChamp:allies[4].champion,enemyChamp:enemies[4].champion}];
 window.__liveDemo=true;window.__manual=true;liveTracks={};ciSet=new Set([pid(enemies[4])]);firedAlerts=new Set();
 // 17:35 : larves déjà parties, âme au prochain drake, Baron dans ~2:25 (l'alerte -2 min tombe ~25 s après le lancement).
@@ -535,7 +567,8 @@ baron:{nextAt:1200,label:'Baron',leads:[120]}},gold:demoMkGold(t,metas)};
 liveAt=Date.now();
 const zed=enemies[2],si=(zed.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');
 liveTracks[`${pid(zed)}|S${si<0?0:si}`]={end:gameNow()+187,total:summCD(zed,zed.summoners[si<0?0:si])};
-liveTracks[`${pid(enemies[3])}|R`]={end:gameNow()+38,total:enemies[3].spells[3].cd};
+const caitR=(enemies[3].spells||[]).find(s=>s.spell==='R');
+if(caitR)liveTracks[`${pid(enemies[3])}|R`]={end:gameNow()+38,total:caitR.cd};
 const b=$('demo-live');b.textContent='Fermer démo';b.classList.add('active');
 $('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';
 renderLive()}
@@ -553,6 +586,7 @@ else{liveState=s;liveAt=Date.now();autoHudDone=false}
 }catch(_){if(!window.__liveDemo)liveState=null}
 renderLive()}
 document.onkeydown=e=>{if(document.activeElement===$('search'))return;
+if(HUDMODE&&(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&'IJKCijkc'.includes(e.key))||(e.ctrlKey&&(e.key==='u'||e.key==='U')))){e.preventDefault();return}
 if(HUDMODE&&(e.key==='²'||e.code==='Backquote')){e.preventDefault();tabUntil=Date.now()+450;return}
 const n=+e.key;if(!(n>=1&&n<=9))return;
 if(liveOn()){const p=(liveState.enemies||[])[n-1];if(!p)return;let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s));return}
