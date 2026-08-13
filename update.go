@@ -292,10 +292,9 @@ func apiUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusNoContent)
 	go func() {
-		time.Sleep(150 * time.Millisecond)
-		if ln, ok := currentListener.Load().(net.Listener); ok {
-			_ = ln.Close()
-		}
+		// Le listener n'est pas fermé ici : http.Serve rendrait la main, main()
+		// retournerait et le process mourrait avant le remplacement. La nouvelle
+		// instance patiente sur le port le temps que celle-ci sorte (listenLocal).
 		time.Sleep(200 * time.Millisecond)
 		if !applyStagedUpdate() {
 			// L'exe est resté intact : on relance la version actuelle.
