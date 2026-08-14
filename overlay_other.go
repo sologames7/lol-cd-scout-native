@@ -12,6 +12,8 @@ type inputEvent struct {
 	Slot int    `json:"slot"`
 }
 
+func setDPIAware() {}
+
 func hudSupported() bool { return false }
 
 func hudOpen(string) error { return errors.New("HUD épinglé réservé à Windows") }
@@ -26,16 +28,26 @@ func hudSetHold(bool) {}
 
 func hudSetHits([]hudHit) {}
 
-func hudSetSolid(bool) {}
-
 func hudSetBounds(int, int) {}
 
-func hudResetPos() {}
+func hudResetPos() {
+	hudGeomReplace(hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(1920, 1080)})
+}
 
 func hudBeginDrag() {}
+
+func hudBeginWidgetDrag(hudDragReq) {}
 
 func hudCloseWindow() {}
 
 func autoOpenHudForGame(string) {}
 
 func inputSince(uint64) (bool, uint64, []inputEvent) { return false, 0, []inputEvent{} }
+
+func hudGeomSnapshot() hudGeomDisk {
+	return hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(1920, 1080)}
+}
+
+func hudGeomReplace(g hudGeomDisk) {}
+
+func hudDragLiveCopy() (hudDragReq, bool) { return hudDragReq{}, false }

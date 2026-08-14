@@ -2,14 +2,17 @@
 
 package main
 
-// HUD en jeu : widget natif WS_POPUP, visible, click-through hors des blocs.
-// Styles figés (jamais de WS_EX_TRANSPARENT au survol : ça vide WebView2).
-// Trous : SetWindowRgn + WM_NCHITTEST d'après /api/hud/hits.
-// Alt+1–5 Flash, Alt+Maj+1–5 ult, Tab / ² pour le tracker.
+// HUD en jeu : canvas plein écran WS_POPUP, widgets indépendants.
+// Click-through hors des blocs : SetWindowRgn sur le parent ET les HWND enfants
+// WebView2 (Chrome_WidgetWin_* / Intermediate D3D Window) + WM_NCHITTEST.
+// Le hit-test Windows interroge l'enfant d'abord : une RGN parent seule ne perce pas Chromium.
+// Fond contrôleur A:0 (pas de slab navy). Jamais toggler WS_EX_TRANSPARENT / LAYERED au survol.
+// Alt+1–5 Flash, Alt+Maj+1–5 ult, Tab cartes.
 
 import (
 	"encoding/json"
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -29,12 +32,15 @@ var (
 	user32                    = syscall.NewLazyDLL("user32.dll")
 	gdi32                     = syscall.NewLazyDLL("gdi32.dll")
 	dwmapi                    = syscall.NewLazyDLL("dwmapi.dll")
+	kernel32                  = syscall.NewLazyDLL("kernel32.dll")
 	procIsWindow              = user32.NewProc("IsWindow")
 	procEnumWindows           = user32.NewProc("EnumWindows")
+	procEnumChildWindows      = user32.NewProc("EnumChildWindows")
+	procGetClassNameW         = user32.NewProc("GetClassNameW")
 	procGetWindowTextW        = user32.NewProc("GetWindowTextW")
+	procOutputDebugStringW    = kernel32.NewProc("OutputDebugStringW")
 	procSetWindowPos          = user32.NewProc("SetWindowPos")
 	procGetAsyncKeyState      = user32.NewProc("GetAsyncKeyState")
-	procVkKeyScanW            = user32.NewProc("VkKeyScanW")
 	procGetSystemMetrics      = user32.NewProc("GetSystemMetrics")
 	procShowWindow            = user32.NewProc("ShowWindow")
 	procPostMessageW          = user32.NewProc("PostMessageW")
@@ -57,9 +63,6 @@ var (
 	procDeleteObject          = gdi32.NewProc("DeleteObject")
 	procSetWindowRgn          = user32.NewProc("SetWindowRgn")
 	procDwmSetWindowAttribute = dwmapi.NewProc("DwmSetWindowAttribute")
-	procSetWindowsHookExW     = user32.NewProc("SetWindowsHookExW")
-	procUnhookWindowsHookEx   = user32.NewProc("UnhookWindowsHookEx")
-	procCallNextHookEx        = user32.NewProc("CallNextHookEx")
 	ole32                     = syscall.NewLazyDLL("ole32.dll")
 	procCoInitializeEx        = ole32.NewProc("CoInitializeEx")
 	procCoUninitialize        = ole32.NewProc("CoUninitialize")
@@ -109,14 +112,12 @@ const (
 	vkShift      = 0x10
 	vkControl    = 0x11
 	vkMenu       = 0x12
-	vkOEM3       = 0xC0
 
 	wmNCHitTest   = 0x0084
 	htClient      = 1
 	htTransparent = ^uintptr(0) // HTTRANSPARENT = -1
 
-	whKeyboardLL = 13
-	nullBrush    = 5
+	nullBrush = 5
 
 	smCXScreen = 0
 	smCYScreen = 1
@@ -133,21 +134,6 @@ const (
 )
 
 var hudWndProcCB = syscall.NewCallback(hudWndProc)
-var toggleHookCB = syscall.NewCallback(toggleHookProc)
-
-var (
-	toggleHookHandle uintptr
-	toggleVKOnce     sync.Once
-	toggleVK         int
-)
-
-type kbdLLHook struct {
-	VkCode    uint32
-	ScanCode  uint32
-	Flags     uint32
-	Time      uint32
-	ExtraInfo uintptr
-}
 
 type winPoint struct{ X, Y int32 }
 type winRect struct{ Left, Top, Right, Bottom int32 }
@@ -177,19 +163,35 @@ type winMsg struct {
 	Private uint32
 }
 
+func setDPIAware() {
+	if p := user32.NewProc("SetProcessDpiAwarenessContext"); p.Find() == nil {
+		p.Call(^uintptr(3)) // PER_MONITOR_AWARE_V2
+		return
+	}
+	shcore := syscall.NewLazyDLL("shcore.dll")
+	if p := shcore.NewProc("SetProcessDpiAwareness"); p.Find() == nil {
+		p.Call(2) // PROCESS_PER_MONITOR_DPI_AWARE
+		return
+	}
+	user32.NewProc("SetProcessDPIAware").Call()
+}
+
 func hudSupported() bool { return true }
 
 func dwmAttr(hwnd syscall.Handle, attr uint32, value uint32) {
 	procDwmSetWindowAttribute.Call(uintptr(hwnd), uintptr(attr), uintptr(unsafe.Pointer(&value)), 4)
 }
 
-func hudSetControllerOpaque(cr *edge.Chromium) {
+func hudSetControllerTransparent(cr *edge.Chromium) {
 	if cr == nil {
 		return
 	}
 	if c := cr.GetController(); c != nil {
 		if c2 := c.GetICoreWebView2Controller2(); c2 != nil {
-			_ = c2.PutDefaultBackgroundColor(edge.COREWEBVIEW2_COLOR{A: 255, R: 18, G: 28, B: 44})
+			// A:0 : pas de slab navy. Si CSS opacity ne laisse pas voir la map
+			// à travers les widgets, fallback = WS_EX_LAYERED dans CreateWindowEx
+			// (jamais via SetWindowLong) + SetLayeredWindowAttributes.
+			_ = c2.PutDefaultBackgroundColor(edge.COREWEBVIEW2_COLOR{A: 0, R: 18, G: 28, B: 44})
 		}
 	}
 }
@@ -230,6 +232,63 @@ func findWindow(titlePart string) syscall.Handle {
 	enumNeedle, enumFound = titlePart, 0
 	procEnumWindows.Call(enumProcCB, 0)
 	return enumFound
+}
+
+var (
+	hudChildMu      sync.Mutex
+	hudChildFound   []syscall.Handle
+	hudChildNames   []string
+	hudChildLogOnce sync.Once
+	hudChildEnumCB  = syscall.NewCallback(hudEnumChildProc)
+)
+
+func hudIsWebViewChildClass(cls string) bool {
+	switch {
+	case strings.HasPrefix(cls, "Chrome_WidgetWin_"):
+		return true
+	case cls == "Intermediate D3D Window":
+		return true
+	case strings.HasPrefix(cls, "Chrome_RenderWidgetHostHWND"):
+		return true
+	default:
+		return false
+	}
+}
+
+func hudEnumChildProc(hwnd syscall.Handle, _ uintptr) uintptr {
+	buf := make([]uint16, 256)
+	n, _, _ := procGetClassNameW.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+	if n == 0 {
+		return 1
+	}
+	cls := syscall.UTF16ToString(buf[:n])
+	hudChildNames = append(hudChildNames, cls)
+	if hudIsWebViewChildClass(cls) {
+		hudChildFound = append(hudChildFound, hwnd)
+	}
+	return 1
+}
+
+func hudWebViewChildHWNDs(parent syscall.Handle) []syscall.Handle {
+	if !windowAlive(parent) {
+		return nil
+	}
+	hudChildMu.Lock()
+	defer hudChildMu.Unlock()
+	hudChildFound = hudChildFound[:0]
+	hudChildNames = hudChildNames[:0]
+	procEnumChildWindows.Call(uintptr(parent), hudChildEnumCB, 0)
+	names := append([]string(nil), hudChildNames...)
+	out := append([]syscall.Handle(nil), hudChildFound...)
+	if len(names) > 0 {
+		hudChildLogOnce.Do(func() {
+			msg, err := syscall.UTF16PtrFromString("cdscout hud WebView2 children: " + strings.Join(names, ", "))
+			if err == nil {
+				procOutputDebugStringW.Call(uintptr(unsafe.Pointer(msg)))
+			}
+		})
+	}
+	return out
 }
 
 var hudPin = struct {
@@ -284,9 +343,8 @@ func autoOpenHudForGame(key string) {
 }
 
 var hudHits = struct {
-	mu    sync.Mutex
-	rs    []hudHit
-	solid bool
+	mu sync.Mutex
+	rs []hudHit
 }{}
 
 func hudSetHits(rs []hudHit) {
@@ -305,35 +363,15 @@ func hudSetHits(rs []hudHit) {
 	}
 }
 
-func hudSetSolid(on bool) {
-	hudHits.mu.Lock()
-	if hudHits.solid == on {
-		hudHits.mu.Unlock()
-		return
-	}
-	hudHits.solid = on
-	hudHits.mu.Unlock()
-	if h := hudHWND(); windowAlive(h) {
-		procPostMessageW.Call(uintptr(h), wmHudHits, 0, 0)
-	}
-}
-
-func applyHudRegion(hwnd syscall.Handle) {
-	if !windowAlive(hwnd) {
-		return
-	}
-	hudHits.mu.Lock()
-	solid := hudHits.solid
-	rs := append([]hudHit(nil), hudHits.rs...)
-	hudHits.mu.Unlock()
-	if solid || len(rs) == 0 {
-		procSetWindowRgn.Call(uintptr(hwnd), 0, 1)
-		return
+func hudBuildRgn(rs []hudHit) uintptr {
+	if len(rs) == 0 {
+		rgn, _, _ := procCreateRectRgn.Call(0, 0, 1, 1)
+		return rgn
 	}
 	r0 := rs[0]
 	rgn, _, _ := procCreateRectRgn.Call(uintptr(r0.X), uintptr(r0.Y), uintptr(r0.X+r0.W), uintptr(r0.Y+r0.H))
 	if rgn == 0 {
-		return
+		return 0
 	}
 	for _, h := range rs[1:] {
 		part, _, _ := procCreateRectRgn.Call(uintptr(h.X), uintptr(h.Y), uintptr(h.X+h.W), uintptr(h.Y+h.H))
@@ -343,17 +381,36 @@ func applyHudRegion(hwnd syscall.Handle) {
 		procCombineRgn.Call(rgn, rgn, part, rgnOr)
 		procDeleteObject.Call(part)
 	}
-	procSetWindowRgn.Call(uintptr(hwnd), rgn, 1)
+	return rgn
+}
+
+func applyHudRegion(hwnd syscall.Handle) {
+	if !windowAlive(hwnd) {
+		return
+	}
+	hudHits.mu.Lock()
+	rs := append([]hudHit(nil), hudHits.rs...)
+	hudHits.mu.Unlock()
+	// SetWindowRgn prend ownership de l'HRGN : une copie par HWND (parent + enfants Chromium).
+	targets := append([]syscall.Handle{hwnd}, hudWebViewChildHWNDs(hwnd)...)
+	for _, h := range targets {
+		if !windowAlive(h) {
+			continue
+		}
+		rgn := hudBuildRgn(rs)
+		if rgn == 0 {
+			continue
+		}
+		procSetWindowRgn.Call(uintptr(h), rgn, 1)
+	}
 }
 
 func hudNCHitTest(hwnd syscall.Handle, lParam uintptr) uintptr {
 	hudHits.mu.Lock()
-	solid := hudHits.solid
 	rs := hudHits.rs
 	hudHits.mu.Unlock()
-	if solid || len(rs) == 0 {
-		r, _, _ := procDefWindowProcW.Call(uintptr(hwnd), wmNCHitTest, 0, lParam)
-		return r
+	if len(rs) == 0 {
+		return htTransparent
 	}
 	pt := winPoint{
 		X: int32(int16(lParam)),
@@ -413,31 +470,93 @@ var hudSize = struct {
 	readyOnce sync.Once
 }{w: hudMiniW, h: hudMiniH}
 
-func hudSetBounds(w, h int) {
+var hudWidgets = struct {
+	mu sync.Mutex
+	g  hudGeomDisk
+}{}
+
+var hudDragLive = struct {
+	mu sync.Mutex
+	on bool
+	r  hudDragReq
+}{}
+
+func hudScreenSize() (int, int) {
+	sw, sh := sysMetric(smCXScreen), sysMetric(smCYScreen)
+	if sw < 1 {
+		sw = 1920
+	}
+	if sh < 1 {
+		sh = 1080
+	}
+	return sw, sh
+}
+
+func hudSetBounds(_, _ int) {
+	sw, sh := hudScreenSize()
 	hudSize.mu.Lock()
-	hudSize.w, hudSize.h = w, h
-	hwnd := syscall.Handle(0)
-	hudPin.mu.Lock()
-	hwnd = hudPin.hwnd
-	hudPin.mu.Unlock()
+	hudSize.w, hudSize.h = sw, sh
+	hudSize.x, hudSize.y, hudSize.hasPos = 0, 0, true
 	hudSize.mu.Unlock()
-	if windowAlive(hwnd) {
-		procPostMessageW.Call(uintptr(hwnd), wmHudBounds, 0, 0)
+	if h := hudHWND(); windowAlive(h) {
+		procPostMessageW.Call(uintptr(h), wmHudBounds, 0, 0)
 	}
 }
 
 func hudResetPos() {
-	hwnd := hudHWND()
-	if windowAlive(hwnd) {
-		procPostMessageW.Call(uintptr(hwnd), wmHudReset, 0, 0)
+	sw, sh := hudScreenSize()
+	g := hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
+	hudGeomReplace(g)
+	hudEvalGeom(g)
+	if h := hudHWND(); windowAlive(h) {
+		procPostMessageW.Call(uintptr(h), wmHudBounds, 0, 0)
 	}
 }
 
-func hudBeginDrag() {
+func hudBeginDrag() {}
+
+func hudBeginWidgetDrag(req hudDragReq) {
+	if !validHudWidgetID(req.ID) {
+		return
+	}
 	hwnd := hudHWND()
 	if windowAlive(hwnd) {
-		procPostMessageW.Call(uintptr(hwnd), wmHudDrag, 0, 0)
+		go hudWidgetDragLoop(hwnd, req)
 	}
+}
+
+func hudEval(js string) {
+	hudPin.mu.Lock()
+	web := hudPin.web
+	hudPin.mu.Unlock()
+	if web != nil && js != "" {
+		web.Eval(js)
+	}
+}
+
+func hudEvalMove(id string, g hudWidgetGeom) {
+	b, err := json.Marshal(map[string]any{"id": id, "x": g.X, "y": g.Y, "scale": g.scaleOr1()})
+	if err != nil {
+		return
+	}
+	hudEval("window.__hudMove&&window.__hudMove(" + string(b) + ")")
+}
+
+func hudEvalGeom(g hudGeomDisk) {
+	b, err := json.Marshal(g)
+	if err != nil {
+		return
+	}
+	hudEval("window.__hudApplyGeom&&window.__hudApplyGeom(" + string(b) + ")")
+}
+
+func hudDragLiveCopy() (hudDragReq, bool) {
+	hudDragLive.mu.Lock()
+	defer hudDragLive.mu.Unlock()
+	if !hudDragLive.on {
+		return hudDragReq{}, false
+	}
+	return hudDragLive.r, true
 }
 
 func hudCloseWindow() {
@@ -465,29 +584,66 @@ func hudGeomPath() string {
 	return filepath.Join(filepath.Dir(hudProfileDir()), "hud-geom.json")
 }
 
-type hudGeomDisk struct {
-	X int `json:"x"`
-	Y int `json:"y"`
+func hudGeomSnapshot() hudGeomDisk {
+	sw, sh := hudScreenSize()
+	hudWidgets.mu.Lock()
+	g := hudGeomMerge(hudWidgets.g, sw, sh)
+	hudWidgets.mu.Unlock()
+	return g
 }
 
-func loadHudGeom() (x, y int, ok bool) {
+func hudGeomReplace(g hudGeomDisk) {
+	sw, sh := hudScreenSize()
+	g = hudGeomMerge(g, sw, sh)
+	hudWidgets.mu.Lock()
+	hudWidgets.g = g
+	hudWidgets.mu.Unlock()
+	saveHudGeomFile(g)
+}
+
+func hudWidgetsPut(id string, w hudWidgetGeom) {
+	if !validHudWidgetID(id) {
+		return
+	}
+	sw, sh := hudScreenSize()
+	w = clampHudWidget(w, sw, sh)
+	hudWidgets.mu.Lock()
+	if hudWidgets.g.Widgets == nil {
+		hudWidgets.g.Widgets = map[string]hudWidgetGeom{}
+	}
+	hudWidgets.g.V = 3
+	hudWidgets.g.Widgets[id] = w
+	hudWidgets.mu.Unlock()
+	hudDragLive.mu.Lock()
+	hudDragLive.on = true
+	hudDragLive.r = hudDragReq{ID: id, X: w.X, Y: w.Y, Scale: w.scaleOr1()}
+	hudDragLive.mu.Unlock()
+}
+
+func loadHudGeomFile() hudGeomDisk {
+	sw, sh := hudScreenSize()
 	b, err := os.ReadFile(hudGeomPath())
 	if err != nil {
-		return 0, 0, false
+		return hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
 	}
 	var g hudGeomDisk
 	if json.Unmarshal(b, &g) != nil {
-		return 0, 0, false
+		return hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
 	}
-	return g.X, g.Y, true
+	return hudGeomMerge(g, sw, sh)
 }
 
-func saveHudGeom(hwnd syscall.Handle) {
-	var rc winRect
-	procGetWindowRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&rc)))
+func saveHudGeomFile(g hudGeomDisk) {
 	_ = os.MkdirAll(filepath.Dir(hudGeomPath()), 0o755)
-	b, _ := json.Marshal(hudGeomDisk{X: int(rc.Left), Y: int(rc.Top)})
+	b, err := json.Marshal(g)
+	if err != nil {
+		return
+	}
 	_ = os.WriteFile(hudGeomPath(), b, 0o644)
+}
+
+func saveHudGeom(_ syscall.Handle) {
+	saveHudGeomFile(hudGeomSnapshot())
 }
 
 func webview2Available() bool {
@@ -570,8 +726,6 @@ func hudUIThread(url string) {
 
 	procCoInitializeEx.Call(0, coInitApartment)
 	defer procCoUninitialize.Call()
-	installToggleHook()
-	defer uninstallToggleHook()
 
 	hwnd, err := createHudWindow()
 	if err != nil {
@@ -603,13 +757,14 @@ func hudUIThread(url string) {
 		_ = settings.PutAreBrowserAcceleratorKeysEnabled(false)
 		_ = settings.PutIsSwipeNavigationEnabled(false)
 	}
-	hudSetControllerOpaque(cr)
+	hudSetControllerTransparent(cr)
 	// Cette WebView2 n'affiche que le widget : hudmode même si l'URL perd ?hud=1.
 	cr.Init(`(function(){document.documentElement.classList.add('hudmode');function b(){if(document.body)document.body.classList.add('hudmode');document.title='CD Scout HUD'}if(document.body)b();else document.addEventListener('DOMContentLoaded',b)})()`)
 	cr.NavigationCompletedCallback = func(*edge.ICoreWebView2, *edge.ICoreWebView2NavigationCompletedEventArgs) {
-		hudSetControllerOpaque(cr)
+		hudSetControllerTransparent(cr)
 		cr.Resize()
 		cr.Eval(`document.documentElement.classList.add('hudmode');if(document.body)document.body.classList.add('hudmode');document.title='CD Scout HUD'`)
+		hudEvalGeom(hudGeomSnapshot())
 		if h := hudHWND(); windowAlive(h) {
 			procPostMessageW.Call(uintptr(h), wmHudHits, 0, 0)
 		}
@@ -653,14 +808,13 @@ func createHudWindow() (syscall.Handle, error) {
 	}
 	procRegisterClassExW.Call(uintptr(unsafe.Pointer(&wc)))
 
-	sw, sh := sysMetric(smCXScreen), sysMetric(smCYScreen)
-	w, h := hudMiniW, hudMiniH
-	x, y := hudDefaultPos(w, h, sw, sh)
-	if px, py, ok := loadHudGeom(); ok {
-		x, y, w, h = clampHudGeom(px, py, w, h, sw, sh)
-	}
+	sw, sh := hudScreenSize()
+	g := loadHudGeomFile()
+	hudWidgets.mu.Lock()
+	hudWidgets.g = g
+	hudWidgets.mu.Unlock()
 	hudSize.mu.Lock()
-	hudSize.x, hudSize.y, hudSize.w, hudSize.h, hudSize.hasPos = x, y, w, h, true
+	hudSize.x, hudSize.y, hudSize.w, hudSize.h, hudSize.hasPos = 0, 0, sw, sh, true
 	hudSize.mu.Unlock()
 
 	ex := uintptr(wsExTopmost | wsExToolWindow | wsExNoActivate)
@@ -670,7 +824,7 @@ func createHudWindow() (syscall.Handle, error) {
 		uintptr(unsafe.Pointer(className)),
 		uintptr(unsafe.Pointer(title)),
 		style,
-		uintptr(x), uintptr(y), uintptr(w), uintptr(h),
+		0, 0, uintptr(sw), uintptr(sh),
 		0, 0, uintptr(inst), 0,
 	)
 	if hwnd == 0 {
@@ -717,7 +871,6 @@ func hudWndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr
 		applyHudBounds(hwnd)
 		return 0
 	case wmHudDrag:
-		go hudDragLoop(hwnd)
 		return 0
 	case wmHudHits:
 		applyHudRegion(hwnd)
@@ -726,16 +879,7 @@ func hudWndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr
 		applyHudTopmost(hwnd)
 		return 0
 	case wmHudReset:
-		sw, sh := sysMetric(smCXScreen), sysMetric(smCYScreen)
-		hudSize.mu.Lock()
-		w, h := hudSize.w, hudSize.h
-		hudSize.mu.Unlock()
-		x, y := hudDefaultPos(w, h, sw, sh)
-		hudSize.mu.Lock()
-		hudSize.x, hudSize.y, hudSize.hasPos = x, y, true
-		hudSize.mu.Unlock()
 		applyHudBounds(hwnd)
-		saveHudGeom(hwnd)
 		return 0
 	case wmHudClose, wmClose:
 		procDestroyWindow.Call(uintptr(hwnd))
@@ -752,32 +896,25 @@ func applyHudBounds(hwnd syscall.Handle) {
 	if !windowAlive(hwnd) {
 		return
 	}
+	sw, sh := hudScreenSize()
 	var rc winRect
 	procGetWindowRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&rc)))
 	curX, curY := int(rc.Left), int(rc.Top)
 	curW, curH := int(rc.Right-rc.Left), int(rc.Bottom-rc.Top)
-
-	hudSize.mu.Lock()
-	w, h := hudSize.w, hudSize.h
-	x, y := curX, curY
-	if hudSize.hasPos && hudSize.reset {
-		x, y = hudSize.x, hudSize.y
-		hudSize.reset = false
-	}
-	hudSize.mu.Unlock()
-
-	sw, sh := sysMetric(smCXScreen), sysMetric(smCYScreen)
-	x, y, w, h = clampHudGeom(x, y, w, h, sw, sh)
-	if x == curX && y == curY && w == curW && h == curH {
+	if curX == 0 && curY == 0 && curW == sw && curH == sh {
 		return
 	}
-	procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
+	hudSize.mu.Lock()
+	hudSize.x, hudSize.y, hudSize.w, hudSize.h, hudSize.hasPos = 0, 0, sw, sh, true
+	hudSize.mu.Unlock()
+	procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, 0, 0, uintptr(sw), uintptr(sh), swpNoActivate)
 	hudPin.mu.Lock()
 	web := hudPin.web
 	hudPin.mu.Unlock()
 	if web != nil {
 		web.Resize()
 	}
+	applyHudRegion(hwnd)
 }
 
 func applyHudTopmost(hwnd syscall.Handle) {
@@ -790,34 +927,64 @@ func applyHudTopmost(hwnd syscall.Handle) {
 	procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, 0, 0, 0, 0, swpNoSize|swpNoMove|swpNoActivate)
 }
 
-func hudDragLoop(hwnd syscall.Handle) {
-	if !windowAlive(hwnd) {
+func clientCursor(hwnd syscall.Handle) (x, y int, ok bool) {
+	var pt winPoint
+	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
+	procScreenToClient.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&pt)))
+	return int(pt.X), int(pt.Y), true
+}
+
+func hudWidgetDragLoop(hwnd syscall.Handle, req hudDragReq) {
+	if !windowAlive(hwnd) || !validHudWidgetID(req.ID) {
 		return
 	}
-	hudSetSolid(true)
-	defer hudSetSolid(false)
-	var pt winPoint
-	var rc winRect
-	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
-	procGetWindowRect.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&rc)))
-	offX := int(pt.X - rc.Left)
-	offY := int(pt.Y - rc.Top)
+	cx0, cy0, ok := clientCursor(hwnd)
+	if !ok {
+		return
+	}
+	start := hudWidgetGeom{X: req.X, Y: req.Y, Scale: req.Scale}
+	if start.Scale <= 0 {
+		start.Scale = 1
+	}
+	d0 := math.Hypot(float64(cx0-start.X), float64(cy0-start.Y))
+	if d0 < 8 {
+		d0 = 8
+	}
 	procReleaseCapture.Call()
+	hudDragLive.mu.Lock()
+	hudDragLive.on = true
+	hudDragLive.r = req
+	hudDragLive.mu.Unlock()
+	defer func() {
+		hudDragLive.mu.Lock()
+		hudDragLive.on = false
+		hudDragLive.mu.Unlock()
+		saveHudGeom(hwnd)
+	}()
 	for keyDown(vkLButton) {
 		if !windowAlive(hwnd) {
 			return
 		}
-		procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
-		x, y := int(pt.X)-offX, int(pt.Y)-offY
-		sw, sh := sysMetric(smCXScreen), sysMetric(smCYScreen)
-		hudSize.mu.Lock()
-		w, h := hudSize.w, hudSize.h
-		hudSize.mu.Unlock()
-		x, y, w, h = clampHudGeom(x, y, w, h, sw, sh)
-		procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, uintptr(x), uintptr(y), uintptr(w), uintptr(h), swpNoActivate)
+		cx, cy, ok := clientCursor(hwnd)
+		if !ok {
+			time.Sleep(12 * time.Millisecond)
+			continue
+		}
+		g := start
+		if req.Mode == "resize" {
+			d1 := math.Hypot(float64(cx-start.X), float64(cy-start.Y))
+			g.Scale = start.Scale * d1 / d0
+		} else {
+			g.X = start.X + (cx - cx0)
+			g.Y = start.Y + (cy - cy0)
+		}
+		hudWidgetsPut(req.ID, g)
+		hudWidgets.mu.Lock()
+		cur := hudWidgets.g.Widgets[req.ID]
+		hudWidgets.mu.Unlock()
+		hudEvalMove(req.ID, cur)
 		time.Sleep(12 * time.Millisecond)
 	}
-	saveHudGeom(hwnd)
 }
 
 func pinLoop() {
@@ -828,55 +995,14 @@ func pinLoop() {
 			return
 		}
 		applyHudTopmost(hwnd)
+		// L'enfant Chromium peut être recréé ; reclipper depuis le thread UI.
+		procPostMessageW.Call(uintptr(hwnd), wmHudHits, 0, 0)
 	}
 }
 
 func keyDown(vk int) bool {
 	r, _, _ := procGetAsyncKeyState.Call(uintptr(vk))
 	return r&0x8000 != 0
-}
-
-func vkToggleKey() int {
-	toggleVKOnce.Do(func() {
-		r, _, _ := procVkKeyScanW.Call(uintptr('²'))
-		if int16(r) != -1 && r&0xFF != 0 {
-			toggleVK = int(r & 0xFF)
-			return
-		}
-		toggleVK = vkOEM3
-	})
-	return toggleVK
-}
-
-func toggleHookProc(nCode int, wParam, lParam uintptr) uintptr {
-	if nCode >= 0 && lParam != 0 {
-		k := (*kbdLLHook)(unsafe.Pointer(lParam))
-		if k.VkCode == uint32(vkToggleKey()) {
-			return 1 // avale ² : une frappe de verrou, jamais dans le chat League
-		}
-	}
-	r, _, _ := procCallNextHookEx.Call(0, uintptr(nCode), wParam, lParam)
-	return r
-}
-
-func installToggleHook() {
-	if toggleHookHandle != 0 {
-		return
-	}
-	var inst windows.Handle
-	if err := windows.GetModuleHandleEx(0, nil, &inst); err != nil {
-		return
-	}
-	h, _, _ := procSetWindowsHookExW.Call(whKeyboardLL, toggleHookCB, uintptr(inst), 0)
-	toggleHookHandle = h
-}
-
-func uninstallToggleHook() {
-	if toggleHookHandle == 0 {
-		return
-	}
-	procUnhookWindowsHookEx.Call(toggleHookHandle)
-	toggleHookHandle = 0
 }
 
 type inputEvent struct {
@@ -904,16 +1030,9 @@ func inputStart() {
 
 	go func() {
 		prev := [5]bool{}
-		prevToggle := false
-		vkTog := vkToggleKey()
 		for {
 			alt, shift := keyDown(vkMenu), keyDown(vkShift)
 			tab := keyDown(vkTab)
-			tog := keyDown(vkTog)
-			if tog && !prevToggle {
-				hudSetHold(!hudHold())
-			}
-			prevToggle = tog
 			for i := 0; i < 5; i++ {
 				down := keyDown(0x31 + i)
 				if down && !prev[i] && alt {

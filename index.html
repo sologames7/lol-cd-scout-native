@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoL CD Scout</title>
-<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD'}})()</script>
+<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD';try{var v=parseFloat(localStorage.getItem('cdscout.hudopacity'));if(v>=0.25&&v<=1)document.documentElement.style.setProperty('--hud-opacity',String(v))}catch(e){}}})()</script>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Chakra+Petch:wght@600;700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -51,14 +51,15 @@ h1{font-size:34px;letter-spacing:-.02em;background:linear-gradient(120deg,#fff 3
 .danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#6b1515;color:#fecaca;border:1px solid rgba(248,113,113,.42);padding:0 14px;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
 .danger:hover{background:#8b1c1c;border-color:rgba(248,113,113,.7);color:#fff}
 .danger svg{flex-shrink:0;display:block}
-@media(max-width:720px){.demo-dd{width:100%}.demo-dd>button,.danger,.toolbar #train-open,.toolbar #quiz-open,.toolbar #hl-open{height:42px;width:100%;justify-content:center}.demo-menu{left:0;right:0}}
+@media(max-width:720px){.demo-dd{width:100%}.demo-dd>button,.danger,.toolbar #train-open,.toolbar #quiz-open,.toolbar #hl-open,.toolbar #idea-open{height:42px;width:100%;justify-content:center}.demo-menu{left:0;right:0}}
 .train{display:flex;flex-direction:column;gap:10px}
 .train-hint{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
 .train-wrap{position:relative;height:min(72vh,820px);border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#0b1220}
 .train-wrap iframe{display:block;width:100%;height:100%;border:0;background:#0b1220}
 .hl-feeds{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px}
 .hl-feeds .secondary{height:32px;font-size:12px;padding:0 12px}
-input{transition:border-color .15s,box-shadow .15s}input:focus{box-shadow:0 0 0 3px rgba(91,231,196,.12)}
+input,textarea{transition:border-color .15s,box-shadow .15s}input:focus,textarea:focus{box-shadow:0 0 0 3px rgba(91,231,196,.12)}
+textarea{width:100%;border:1px solid var(--border);background:#0d1524;color:var(--text);outline:none;border-radius:14px;padding:13px 15px;min-height:128px;resize:vertical;font:inherit;line-height:1.45}textarea:focus{border-color:rgba(91,231,196,.5)}
 @keyframes pulseSoon{0%,100%{box-shadow:0 0 8px rgba(251,191,36,.1)}50%{box-shadow:0 0 22px rgba(251,191,36,.35)}}
 .obj.soon{animation:pulseSoon 1.6s ease-in-out infinite}
 @keyframes pulseUp{0%,100%{filter:drop-shadow(0 0 5px rgba(251,191,36,.45))}50%{filter:drop-shadow(0 0 13px rgba(251,191,36,.85))}}
@@ -80,69 +81,79 @@ input{transition:border-color .15s,box-shadow .15s}input:focus{box-shadow:0 0 0 
 .sp-tip-clip video{width:100%;height:100%;object-fit:cover;display:block}
 .sp-tip-clip small{color:var(--muted);font-size:10.5px}
 ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#22304a;border-radius:99px;border:2px solid var(--bg)}::-webkit-scrollbar-track{background:transparent}
-/* ---- HUD widget natif : blocs séparés, Tab déplie ennemis / alliés / or ---- */
+/* ---- HUD canvas plein écran : widgets indépendants, drag + resize ratio ---- */
 #hud{display:none}
-html.hudmode,body.hudmode{background:#121c2c!important;overflow:hidden;margin:0;width:max-content;height:max-content;cursor:default;user-select:none!important;-webkit-user-select:none!important}
-html.hudmode .shell,body.hudmode .shell{display:none!important}html.hudmode #hud,body.hudmode #hud{display:flex}
-#hud{flex-direction:column;gap:10px;padding:0;width:360px;box-sizing:border-box;font-size:14px;overflow:visible;background:transparent;border:0;border-radius:0}
-html.hudmode.expanded #hud{width:440px}
-.hud-block{background:#121c2c;border:1px solid rgba(255,255,255,.22);border-radius:14px;padding:10px;box-sizing:border-box}
-.hud-mini{display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap}
-.hud-flashes{display:flex;gap:6px}
-html.hudmode.idle #hud-flashes,html.hudmode.idle #hud-objs{display:none!important}
-html.hudmode:not(.expanded) #hud-track-bar,html.hudmode:not(.expanded) #hud-enemies,html.hudmode:not(.expanded) #hud-allies,html.hudmode:not(.expanded) #hud-gold{display:none!important}
-html.hudmode.expanded #hud-track-bar,html.hudmode.expanded #hud-enemies,html.hudmode.expanded #hud-allies{display:flex!important}
-html.hudmode.expanded #hud-gold:not(.hidden){display:flex!important}
+html.hudmode,body.hudmode{background:transparent!important;overflow:hidden;margin:0;width:100%;height:100%;cursor:default;user-select:none!important;-webkit-user-select:none!important}
+html.hudmode .shell,body.hudmode .shell{display:none!important}
+html.hudmode #hud,body.hudmode #hud{display:block;position:fixed;inset:0;width:100vw;height:100vh;padding:0;margin:0;background:transparent;border:0;overflow:hidden;font-size:14px;opacity:var(--hud-opacity,1)}
+html.hudmode #hud-vis-menu{opacity:1}
+html.hudmode.hud-vis-open #hud{opacity:1}
+html.hudmode.hud-vis-open #hud>.hud-widget:not(#hud-w-menu),html.hudmode.hud-vis-open #sp-tip{opacity:var(--hud-opacity,1)}
+html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait,html.hudmode.hud-vis-open #hud-w-menu>.hud-grip{opacity:var(--hud-opacity,1)}
+.hud-widget{position:absolute;left:0;top:0;z-index:12;transform-origin:top left;box-sizing:border-box;overflow:visible;width:max-content;max-width:none}
+.hud-widget.hidden,.hud-widget.hud-off{display:none!important}
+.hud-grip{position:absolute;left:2px;top:2px;z-index:8;display:flex;align-items:center;gap:4px;margin:0;opacity:0;pointer-events:none;transition:opacity .12s}
+.hud-widget:hover>.hud-grip,.hud-widget.hud-grip-on>.hud-grip{opacity:1;pointer-events:auto}
+.hud-block{background:#121c2c;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px;box-sizing:border-box}
+.hud-mini{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.hud-flashes{display:flex;flex-direction:row;align-items:flex-start;gap:6px;width:max-content}
+html.hudmode.idle #hud-flashes,html.hudmode.idle #hud-w-objs{display:none!important}
+html.hudmode:not(.hud-tab-on) #hud-w-tab-enemies,html.hudmode:not(.hud-tab-on) #hud-w-tab-allies{display:none!important}
 html.hudmode:not(.idle) .hud-wait{display:none!important}
 html.hudmode.idle .hud-wait{padding:10px;gap:6px}html.hudmode.idle .hud-wait span{display:none}html.hudmode.idle .hud-wait strong{font-size:14px}
-.hud-drag{width:26px;height:26px;padding:0;border-radius:8px;background:#243044;color:#8d9bb0;font-size:15px;line-height:1;flex-shrink:0;border:1px solid var(--border);cursor:grab}
-.hud-drag:active{cursor:grabbing}
-.hud-next{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0}
-.hud-next img{width:26px;height:26px;object-fit:contain}
-.hud-next b{font-family:'Chakra Petch',Inter,sans-serif;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
-html.hudmode.idle .hud-next{display:none}
+.hud-drag,.hud-resize{width:26px;height:26px;padding:0;border-radius:8px;background:#243044;color:#8d9bb0;font-size:15px;line-height:1;flex-shrink:0;border:1px solid var(--border);cursor:grab}
+.hud-resize{cursor:nwse-resize;font-size:13px}
+.hud-drag:active{cursor:grabbing}.hud-resize:active{cursor:nwse-resize}
 html.hudmode .hud-btns{display:flex}
-.hf{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px;padding:5px 2px 4px;border:0;border-radius:10px;background:rgba(20,29,46,.7);color:#e7eefb;cursor:pointer}
-.hf .rk{width:42px;height:42px;border-radius:10px;padding:2px}
-.hf .rk-crest{width:16px;height:16px}
-.hf .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-.hf.cd .hv{color:#fca5a5}.hf.up .hv{color:var(--accent)}
+.hf{display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px;border:0;border-radius:8px;background:rgba(20,29,46,.7);color:#e7eefb;flex-shrink:0;width:max-content;box-sizing:border-box}
+.hf-top{display:flex;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
+.hf .rk{width:40px;height:40px;border-radius:8px;padding:1px;flex-shrink:0;aspect-ratio:1}
+.hf .rk-crest{width:12px;height:12px}
+.hf-spells{display:flex;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
+.hf-sum{position:relative;width:36px;height:36px;padding:0;border:0;border-radius:6px;background:#1a2438;overflow:hidden;cursor:pointer;flex-shrink:0;aspect-ratio:1}
+.hf-sum img,.hf-sum .hr-fi{width:36px;height:36px;display:block;border-radius:6px;object-fit:cover;flex-shrink:0}
+.hf-sum .hv,.hf-ult .hv{position:absolute;left:0;right:0;bottom:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15;text-align:center;color:#fff;text-shadow:0 1px 3px #000;background:linear-gradient(transparent,rgba(0,0,0,.72))}
+.hf-sum.cd img{filter:grayscale(1) brightness(.55)}.hf-sum.cd .hv{color:#f87171;text-shadow:0 1px 2px #000}
+.hf-sum.up{box-shadow:0 0 0 1px var(--accent)}
+.hf-ult{position:relative;width:36px;height:36px;padding:0;border:0;border-radius:99px;background:#1a2438;cursor:pointer;flex-shrink:0;aspect-ratio:1}
+.hf-ult svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.hf-ult-bg{fill:none;stroke:rgba(255,255,255,.16);stroke-width:2}
+.hf-ult-fg{fill:none;stroke:#fbbf24;stroke-width:2;stroke-linecap:round}
+.hf-ult.cd .hf-ult-fg{stroke:#f87171}.hf-ult.cd .hv{color:#f87171}
+.hf-ult.up .hf-ult-fg{stroke:var(--accent)}
+.hf-ult .hv{background:none;bottom:50%;transform:translateY(50%);font-size:11px;letter-spacing:.04em}
 .hf.dead .rk{filter:grayscale(.45) contrast(.88)}
 .hud-top{display:flex;align-items:center;gap:6px;min-width:0}
 .hud-logo{display:none}
-.hud-clock{font-family:'Chakra Petch',Inter,sans-serif;font-size:30px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;cursor:pointer;-webkit-app-region:no-drag}.hud-clock.copied{color:var(--accent)}
+.hud-clock{font-family:'Chakra Petch',Inter,sans-serif;font-size:15px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;cursor:pointer;-webkit-app-region:no-drag}.hud-clock.copied{color:var(--accent)}
 .hud-state{width:9px;height:9px;padding:0;border-radius:99px;background:#64748b;border:0;overflow:hidden;text-indent:-99px;flex-shrink:0}
 .hud-state.on{background:var(--accent);box-shadow:0 0 8px rgba(91,231,196,.6)}
 .hud-btns{margin-left:auto;display:flex;gap:4px;flex-shrink:0;-webkit-app-region:no-drag}
 .hbtn{height:26px;padding:0 8px;font-size:11px;font-weight:900;letter-spacing:.06em;border-radius:8px;background:#141d2e;color:#93a3ba;border:1px solid var(--border);white-space:nowrap;-webkit-app-region:no-drag}
 .hbtn:hover{background:#1d2942;color:#dbe6f5}.hbtn.on{background:rgba(91,231,196,.14);border-color:rgba(91,231,196,.55);color:var(--accent)}
 .hbtn.x{color:#fda4a4}.hbtn.x:hover{background:rgba(248,113,113,.2);color:#fff}
-.hud-objs{display:flex;flex-direction:column;gap:6px}
-.hobj{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(16,24,39,.55);min-width:0}
-.hobj img{width:32px;height:32px;object-fit:contain;flex-shrink:0;background:#1a2438;border-radius:8px}
-.hobj .on-name{font-size:12px;font-weight:800;letter-spacing:.08em;color:#cdd8ea;text-transform:uppercase}
-.hobj strong{margin-left:auto;flex-shrink:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:22px;font-variant-numeric:tabular-nums;color:#e7eefb}
+.hud-objs{display:flex;flex-direction:column;gap:3px;width:max-content;max-width:168px}
+.hobj{display:flex;align-items:center;gap:6px;padding:3px 7px;border-radius:8px;border:1px solid var(--border);background:rgba(16,24,39,.55);min-width:0;white-space:nowrap}
+.hobj img{width:20px;height:20px;object-fit:contain;flex-shrink:0;background:#1a2438;border-radius:5px}
+.hobj .on-name{font-size:10px;font-weight:800;letter-spacing:.04em;color:#cdd8ea;text-transform:uppercase}
+.hobj strong{margin-left:auto;flex-shrink:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:14px;font-variant-numeric:tabular-nums;color:#e7eefb;padding-left:8px}
 .hobj.o-grubs{border-color:rgba(167,139,250,.32)}.hobj.o-dragon{border-color:rgba(91,231,196,.3)}.hobj.o-herald{border-color:rgba(122,162,255,.3)}.hobj.o-baron{border-color:rgba(192,132,252,.35)}
 .hobj.warn{border-color:rgba(251,191,36,.6);background:#231d0d}.hobj.warn strong{color:#fbbf24}
 .hobj.hot{border-color:rgba(248,113,113,.75);background:#2a1113;animation:pulseSoon 1.2s ease-in-out infinite}.hobj.hot strong{color:#fca5a5}
-.hobj.live{border-color:rgba(91,231,196,.7)}.hobj.live strong{color:var(--accent);font-size:13px;letter-spacing:.04em}
-.hobj.gone{background:#0c121c}.hobj.gone strong{font-size:12px;color:var(--muted)}
-.hud-rows{display:flex;flex-direction:column;gap:8px;flex-shrink:0;min-width:0}
-.hud-lab{font-size:11px;font-weight:900;letter-spacing:.18em;color:#5b6a82;padding:2px 2px 0}
-.hud-track-bar{display:flex;align-items:center;gap:8px}
-.hud-track-bar strong{font-family:'Space Grotesk',Inter,sans-serif;font-size:14px;letter-spacing:.14em;color:#dbe6f5}
-.hr{display:flex;flex-direction:column;align-items:stretch;gap:0;min-width:0;border-radius:10px;border:1px solid rgba(251,191,36,.4);background:rgba(20,16,12,.82);overflow:hidden;position:relative}
+.hobj.live{border-color:rgba(91,231,196,.7)}.hobj.live strong{color:var(--accent);font-size:11px;letter-spacing:.02em}
+.hobj.gone{background:#0c121c}.hobj.gone strong{font-size:11px;color:var(--muted)}
+.hr{display:flex;flex-direction:column;align-items:stretch;gap:0;min-width:max-content;border-radius:10px;border:1px solid rgba(251,191,36,.4);background:rgba(20,16,12,.82);overflow:visible;position:relative;flex-shrink:0}
 .hr.ally,.hr.me{border-color:rgba(251,191,36,.55)}.hr.dead{border-color:rgba(248,113,113,.55);background:#18100e}
 .hr[class*="t-"]{box-shadow:inset 3px 0 0 var(--tc)}
-.hr-head,.hr-main{flex:none;width:100%;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 8px 5px;background:none;border:0;border-radius:0;color:var(--text);text-align:left;-webkit-app-region:no-drag}
+.hr-head,.hr-main{flex:none;flex-shrink:0;width:100%;min-width:0;display:flex;align-items:center;gap:8px;padding:7px 8px 5px;background:none;border:0;border-radius:0;color:var(--text);text-align:left;-webkit-app-region:no-drag}
 .hr-runes{display:flex;flex-direction:column;gap:2px;flex-shrink:0}
 .hr-runes img{width:16px;height:16px;border-radius:4px;background:#0b1220;border:1px solid var(--border);display:block}
 .hr-pic{width:36px;height:36px;border-radius:8px;object-fit:cover;background:#243044;flex-shrink:0;border:0}
-.rk{position:relative;width:40px;height:40px;flex-shrink:0;border-radius:10px;padding:2px;box-sizing:border-box;background:linear-gradient(145deg,var(--rk-a,#8b98aa),var(--rk-b,#2a3344) 40%,var(--rk-a,#8b98aa) 62%,var(--rk-b,#1c2433));box-shadow:0 0 0 1px #000,0 0 8px color-mix(in srgb,var(--rk-a,#5b6a82) 42%,transparent)}
-.rk::after{content:'';position:absolute;inset:2px;border-radius:6px;border:1px solid rgba(255,255,255,.22);pointer-events:none;z-index:1}
+.rk{position:relative;width:40px;height:40px;flex-shrink:0;aspect-ratio:1;border-radius:8px;padding:1px;box-sizing:border-box;background:linear-gradient(145deg,var(--rk-a,#8b98aa),var(--rk-b,#2a3344) 40%,var(--rk-a,#8b98aa) 62%,var(--rk-b,#1c2433));box-shadow:0 0 0 1px #000,0 0 4px color-mix(in srgb,var(--rk-a,#5b6a82) 28%,transparent)}
+.rk::after{content:'';position:absolute;inset:1px;border-radius:6px;border:1px solid rgba(255,255,255,.16);pointer-events:none;z-index:1}
 .rk img:not(.rk-crest){width:100%;height:100%;border-radius:6px;object-fit:cover;display:block;border:0;background:#243044}
 .rk-crest{position:absolute;right:0;bottom:0;width:15px;height:15px;z-index:2;pointer-events:none;object-fit:contain;filter:drop-shadow(0 1px 2px #000)}
-.rk.t-master,.rk.t-grandmaster,.rk.t-challenger{box-shadow:0 0 0 1px #000,0 0 11px color-mix(in srgb,var(--rk-a) 60%,transparent)}
+.rk.t-master,.rk.t-grandmaster,.rk.t-challenger{box-shadow:0 0 0 1px #000,0 0 6px color-mix(in srgb,var(--rk-a) 45%,transparent)}
 .hr.dead .rk{filter:grayscale(.35) contrast(.9)}
 .hr-slot{font-size:10px;font-weight:900;color:#5b6a82;width:10px;flex-shrink:0}
 .hr-id{min-width:0;flex:1}.hr-who{display:flex;align-items:center;gap:4px;min-width:0}.hr-id>b,.hr-who>b{display:block;min-width:0;flex:1;font-family:'Space Grotesk',Inter,sans-serif;font-size:15px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -155,16 +166,16 @@ html.hudmode .hud-btns{display:flex}
 .hr-tm.cd .hr-fi{filter:saturate(.55);border-color:rgba(248,113,113,.7)}
 .hr-tm .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;min-width:3ch;text-align:right}
 .hr-tm.cd .hv{color:#fca5a5}.hr-tm.up .hv{color:var(--accent)}
-.hr-spells{display:flex;width:100%;border-top:1px solid rgba(255,255,255,.06)}
-.hr-sk{flex:1;width:auto;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px 6px;border:0;border-left:1px solid var(--border);border-radius:0;background:rgba(255,255,255,.03);color:#e7eefb;-webkit-app-region:no-drag}
+.hr-spells{display:flex;width:100%;min-width:max-content;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;flex-wrap:nowrap}
+.hr-sk{flex:0 0 auto;width:36px;min-width:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px 6px;border:0;border-left:1px solid var(--border);border-radius:0;background:rgba(255,255,255,.03);color:#e7eefb;-webkit-app-region:no-drag}
 .hr-spells .hr-sk:first-child{border-left:0}
 .hr-p{background:rgba(122,162,255,.07)}
 .hr-sk .hv{font-family:'Chakra Petch',Inter,sans-serif;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1;color:#cdd8ea}
-.hr-sk img{width:26px;height:26px;border-radius:6px;display:block;background:#243044}
+.hr-sk img{width:26px;height:26px;border-radius:6px;display:block;background:#243044;object-fit:cover;flex-shrink:0;aspect-ratio:1}
 .hr-sk .qi{position:relative;display:block;line-height:0}
 .hr-sk .qi i{position:absolute;left:-3px;top:-3px;font-style:normal;font-size:7.5px;font-weight:900;line-height:1;padding:1px 3px;border-radius:3px;background:#0d1524;border:1px solid var(--border);color:#8d9bb0}
 .hr-r{background:rgba(248,113,113,.07)}
-.hr-sk.hr-sum{flex:.92;background:rgba(91,231,196,.06)}
+.hr-sk.hr-sum{flex:0 0 auto;background:rgba(91,231,196,.06)}
 .hr-sk.hr-sum .hr-fi,.hr-sk.hr-sum img{width:26px;height:26px;border:0;background:#243044}
 .hr-sk[data-tip]{cursor:help}
 button.hr-sk{cursor:pointer}button.hr-sk:hover{background:rgba(255,255,255,.08)}
@@ -176,25 +187,61 @@ button.hr-sk[data-tip]{cursor:pointer}
 body.hudmode .sp-tip{width:min(280px,calc(100vw - 10px));padding:8px;gap:6px;background:#0c101c}
 body.hudmode .sp-tip-clip{height:110px}
 body.hudmode .sp-tip p{font-size:11px}
-.hr-more{display:none;padding:0 8px 5px 40px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;gap:5px;align-items:center;flex-wrap:wrap}
-.hr-more img{width:18px;height:18px;border-radius:4px;background:#0b1220;border:1px solid var(--border)}
-#hud.detail .hr-more{display:flex;width:100%}
-.hud-gold{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:1px solid var(--border);background:#121c2c}
-.hud-gold .hg-lab{font-size:11px;font-weight:900;letter-spacing:.16em;color:#5b6a82;flex-shrink:0}
-.hud-gold strong{font-family:'Chakra Petch',Inter,sans-serif;font-size:22px;font-variant-numeric:tabular-nums}
-.hud-gold.pos strong{color:var(--accent)}.hud-gold.neg strong{color:#f87171}
-.hud-gold svg{flex:1;height:28px;display:block}
-.hud-allies .hr{background:#121820}
-.hud-allies .hr-head,.hud-allies .hr-main{padding:5px 8px;gap:8px}.hud-allies .rk{width:32px;height:32px;border-radius:8px;padding:2px}.hud-allies .rk-crest{width:13px;height:13px}
-.hud-allies .hr-id>b,.hud-allies .hr-who>b{font-size:13px}.hud-allies .hr-id i{font-size:10px}
-.hud-allies .hr-runes img{width:14px;height:14px}
-.hud-allies .hr-sk{padding:4px 2px 5px}.hud-allies .hr-sk img{width:20px;height:20px}.hud-allies .hr-sk .hv{font-size:15px}
-.hud-allies .hr-sk.hr-sum{display:none}
 .hud-foot{display:none}
 .hud-wait{display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);padding:16px 12px;border-radius:12px;background:rgba(16,24,39,.45)}
 .hud-wait strong{font-family:'Space Grotesk',Inter,sans-serif;font-size:16px;color:#dbe6f5}.hud-wait span{font-size:11px;line-height:1.45}
 html.hudmode #hud .hr.dead .rk{filter:grayscale(.35) contrast(.9)}
 html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter:saturate(.55)}
+/* Cartes Tab : fond invisible, hauteur = row scoreboard League (--tab-row-h, 52 px @ 1080p) */
+:root{--tab-row-h:52px}
+.hud-tab{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;z-index:18}
+.hud-tab .hud-grip{pointer-events:none}
+.hud-tab:hover .hud-grip,.hud-tab.hud-grip-on .hud-grip{pointer-events:auto}
+.hud-tab-list{display:flex;flex-direction:column;background:transparent;pointer-events:none;gap:4px}
+.hud-tab-row{min-height:var(--tab-row-h);height:auto;display:flex;flex-direction:row!important;align-items:center;gap:6px;padding:3px 4px;margin:0;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible;pointer-events:auto;border-radius:0;min-width:max-content}
+.hud-tab-row .hr-spells{width:auto;border:0;gap:3px;flex:0}
+.hud-tab-row .hr-sk{width:40px;min-width:40px;flex:none;padding:0;border:0;background:transparent;gap:1px}
+.hud-tab-row .hr-sk img,.hud-tab-row .hr-sk .hr-fi{width:36px;height:36px;border-radius:6px}
+.hud-tab-row .hr-sk .hv{font-size:11px;line-height:1}
+.hud-tab-row .hr-sk .qi i{display:block;left:0;top:0;font-size:8px;padding:1px 3px;text-transform:lowercase}
+.hud-tab-row .hr-p .qi i{text-transform:none}
+#hud-w-tab-enemies .hud-tab-row{justify-content:flex-end}
+#hud-w-alert{z-index:40}#hud-w-item{z-index:38}#hud-w-menu{z-index:22}#hud-w-objs{z-index:16}
+/* Permanent : barre horizontale, sorts 2× plus grands */
+#hud-w-menu{width:max-content}
+#hud-w-menu .hud-block{padding:5px;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
+#hud-w-menu .hud-mini{flex-direction:row;align-items:center;gap:8px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
+#hud-w-menu .hud-clock{font-size:16px;text-align:left;width:auto}
+#hud-w-menu .hud-state{align-self:center}
+#hud-w-menu .hud-btns{display:flex;margin:0 0 0 auto;width:auto;gap:4px}
+#hud-w-menu .hbtn{height:22px;padding:0 7px;font-size:10px;letter-spacing:0;border-radius:6px;width:auto}
+#hud-w-menu .hud-flashes{width:max-content;padding:5px;gap:6px}
+#hud-w-menu .hf{width:auto;padding:4px}
+#hud-w-menu .hud-wait{width:max-content;min-width:180px;padding:8px 12px}
+#hud-w-menu .hud-wait strong{font-size:13px}
+.hud-vis{position:relative;flex-shrink:0}
+.hud-vis-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:40;width:236px;max-height:min(72vh,420px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
+.hud-vis-lab{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#64758c;padding:8px 8px 3px}
+.hud-vis-lab:first-child{padding-top:2px}
+.hud-vis-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 8px;border-radius:7px;font-size:12px;font-weight:700;color:#dbe6f5;white-space:nowrap}
+.hud-vis-row:hover{background:rgba(255,255,255,.05)}
+.hud-vis-opac{flex-wrap:nowrap;gap:8px;margin-top:2px}
+.hud-vis-opac input[type=range]{width:88px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+.hud-vis-opac b{font-size:10px;font-variant-numeric:tabular-nums;color:#8d9bb0;min-width:3.4ch;text-align:right;font-weight:800}
+.hud-sw{position:relative;width:30px;height:16px;padding:0;border-radius:99px;background:#243044;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
+.hud-sw::after{content:'';position:absolute;left:2px;top:1px;width:12px;height:12px;border-radius:99px;background:#8d9bb0;transition:left .12s,background .12s}
+.hud-sw.on{background:rgba(91,231,196,.22);border-color:rgba(91,231,196,.5)}
+.hud-sw.on::after{left:14px;background:var(--accent)}
+html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult,html.hudmode .hr-sk,html.hudmode .hr-fi{flex-shrink:0}
+html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult{aspect-ratio:1}
+html.hudmode img{object-fit:cover}
+html.hudmode .rk-crest,html.hudmode .hobj img{object-fit:contain}
+@keyframes hudBannerIn{from{transform:translateX(100vw);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes hudBannerOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100vw);opacity:0}}
+html.hudmode #hud-w-alert.hud-in .alert{animation:hudBannerIn .4s cubic-bezier(.2,.9,.3,1) both}
+html.hudmode #hud-w-alert.hud-out .alert{animation:hudBannerOut .35s ease-in both}
+html.hudmode #hud-w-item.hud-in .item-pop{animation:hudBannerIn .35s cubic-bezier(.2,.9,.3,1) both}
+html.hudmode #hud-w-item.hud-out .item-pop{animation:hudBannerOut .3s ease-in both}
 /* ---- Alertes d'objectif : bannière PNG Foot 2 Rue (art + texte FR) ---- */
 .alert{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:row;align-items:center;gap:12px;padding:8px 16px 8px 8px;border:5px solid #111;border-radius:20px;background:#f6e27a;box-shadow:6px 6px 0 #111;text-align:left;max-width:min(96vw,970px);animation:alertIn .28s cubic-bezier(.2,1.3,.4,1)}
 .alert.hidden{display:none!important}
@@ -210,9 +257,9 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 @keyframes alertIn{from{opacity:0;transform:translate(-50%,-16px) scale(.92) rotate(-1.5deg)}to{opacity:1;transform:translate(-50%,0) scale(1) rotate(0)}}
 @keyframes alertPop{0%,100%{box-shadow:6px 6px 0 #111}50%{box-shadow:8px 8px 0 #111,0 0 0 4px rgba(255,255,255,.35)}}
 @keyframes bannerPop{0%,100%{filter:drop-shadow(6px 6px 0 #111)}50%{filter:drop-shadow(8px 8px 0 #111)}}
-html.hudmode .alert,body.hudmode .alert{position:relative;left:auto;top:auto;transform:none;max-width:100%;margin:0;padding:5px 8px 5px 5px;border-width:3px;border-radius:12px;box-shadow:3px 3px 0 #111;gap:7px;animation:none}
-html.hudmode .alert.has-banner,body.hudmode .alert.has-banner{padding:0;border:0;background:transparent;box-shadow:none}
-html.hudmode .alert-banner,body.hudmode .alert-banner{filter:drop-shadow(3px 3px 0 #111)}
+html.hudmode .alert,body.hudmode .alert{position:relative;left:auto;top:auto;transform:none;max-width:min(420px,70vw);margin:0;padding:5px 8px 5px 5px;border-width:3px;border-radius:14px;box-shadow:3px 3px 0 #111;gap:7px;overflow:hidden}
+html.hudmode .alert.has-banner,body.hudmode .alert.has-banner{padding:0;border:0;background:transparent;box-shadow:none;border-radius:14px;overflow:hidden}
+html.hudmode .alert-banner,body.hudmode .alert-banner{filter:drop-shadow(3px 3px 0 #111);border-radius:14px}
 html.hudmode .alert-art,body.hudmode .alert-art{width:48px;height:48px;border-width:3px;border-radius:10px;box-shadow:2px 2px 0 #111}
 html.hudmode .alert b,body.hudmode .alert b{font-size:11px}html.hudmode .alert span,body.hudmode .alert span{font-size:9.5px}
 .item-pop{position:fixed;right:18px;bottom:22px;z-index:85;display:flex;align-items:center;gap:10px;padding:7px 14px 7px 7px;border:4px solid #111;border-radius:18px;background:#fff6d8;box-shadow:4px 4px 0 #111;max-width:min(92vw,340px)}
@@ -223,14 +270,14 @@ html.hudmode .alert b,body.hudmode .alert b{font-size:11px}html.hudmode .alert s
 .item-pop .ip-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
 .item-pop .ip-txt b{font-family:'Space Grotesk',Inter,sans-serif;font-size:14px;color:#111;line-height:1.15}
 .item-pop .ip-txt span{font-size:11px;font-weight:700;color:#4a3a18}
-.item-pop.pop .ip-champ{animation:champCatch .55s cubic-bezier(.2,1.5,.35,1)}
-.item-pop.pop .ip-item{animation:itemFly .5s cubic-bezier(.15,.9,.3,1.2)}
+html.hudmode .item-pop.pop .ip-face{animation:champCatch .55s cubic-bezier(.2,1.5,.35,1)}
+html.hudmode .item-pop.pop .ip-item{animation:itemFly .5s cubic-bezier(.15,.9,.3,1.2)}
 @keyframes champCatch{0%{transform:scale(.35) rotate(-14deg);opacity:0}62%{transform:scale(1.14) rotate(5deg)}100%{transform:scale(1) rotate(0);opacity:1}}
 @keyframes itemFly{0%{transform:translate(-28px,-18px) scale(.2) rotate(-30deg);opacity:0}100%{transform:translate(0,0) scale(1) rotate(0);opacity:1}}
-html.hudmode .item-pop,body.hudmode .item-pop{position:relative;right:auto;bottom:auto;margin:0;padding:4px 8px 4px 4px;border-width:3px;border-radius:12px;box-shadow:2px 2px 0 #111;max-width:100%}
-html.hudmode .item-pop .ip-champ,body.hudmode .item-pop .ip-champ,html.hudmode .item-pop .ip-champ img.ip-face,body.hudmode .item-pop .ip-champ img.ip-face{width:36px;height:36px;border-radius:9px}
-html.hudmode .item-pop .ip-item,body.hudmode .item-pop .ip-item{width:18px;height:18px;border-width:2px;right:-5px;bottom:-5px}
-html.hudmode .item-pop .ip-txt b,body.hudmode .item-pop .ip-txt b{font-size:11px}html.hudmode .item-pop .ip-txt span,body.hudmode .item-pop .ip-txt span{font-size:9px}
+html.hudmode .item-pop,body.hudmode .item-pop{position:relative;right:auto;bottom:auto;margin:0;padding:6px 10px 6px 6px;border-width:3px;border-radius:14px;box-shadow:2px 2px 0 #111;max-width:100%;gap:8px}
+html.hudmode .item-pop .ip-champ,body.hudmode .item-pop .ip-champ{position:static;width:40px;height:40px}
+html.hudmode .item-pop .ip-champ img.ip-face,body.hudmode .item-pop img.ip-face,html.hudmode .item-pop .ip-item,body.hudmode .item-pop .ip-item{position:static;width:40px;height:40px;border-radius:10px;border:3px solid #111;right:auto;bottom:auto;box-shadow:none;object-fit:cover;flex-shrink:0}
+html.hudmode .item-pop .ip-txt b,body.hudmode .item-pop .ip-txt b{font-size:12px}html.hudmode .item-pop .ip-txt span,body.hudmode .item-pop .ip-txt span{font-size:10px}
 html.hudmode #page-alert,body.hudmode #page-alert,html.hudmode #page-item-pop,body.hudmode #page-item-pop{display:none!important}
 .t-iron{--tc:#8a7f70;--rk-a:#d7cbb8;--rk-b:#4a433a}.t-bronze{--tc:#c88a5a;--rk-a:#e0a070;--rk-b:#6b3a18}.t-silver{--tc:#c5d0dc;--rk-a:#e8eef4;--rk-b:#5c6774}.t-gold{--tc:#f0c75e;--rk-a:#ffe08a;--rk-b:#9a6b12}.t-platinum{--tc:#5ecfc0;--rk-a:#9af0e4;--rk-b:#1a6b62}.t-emerald{--tc:#3dcf7a;--rk-a:#7df0a8;--rk-b:#146b38}.t-diamond{--tc:#57c3ff;--rk-a:#9adcff;--rk-b:#155a88}.t-master{--tc:#c47bff;--rk-a:#e2b4ff;--rk-b:#6a2ea8}.t-grandmaster{--tc:#e84d4d;--rk-a:#ff8a8a;--rk-b:#8a1518}.t-challenger{--tc:#f4d58a;--rk-a:#fff3c4;--rk-b:#c9a227}
 .pic-frame{width:50px;height:50px;padding:2px;border-radius:14px;background:#4a5568;flex-shrink:0;position:relative}.pic-frame[class*="t-"]{background:linear-gradient(145deg,var(--rk-a,var(--tc)),var(--rk-b,#243044) 45%,var(--rk-a,var(--tc)))}.pic-frame .portrait{width:100%;height:100%;border-radius:12px;display:block}
@@ -252,9 +299,25 @@ a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:non
 .ring-portrait[class*="t-"]{border-color:var(--tc);box-shadow:0 0 0 1px #000,0 0 14px color-mix(in srgb,var(--tc) 45%,transparent)}
 .ring-crest{position:absolute;right:8px;bottom:8px;width:26px;height:26px;z-index:3;pointer-events:none;object-fit:contain;filter:drop-shadow(0 2px 4px #000)}
 .hr-dl{display:inline-grid;place-items:center;margin-left:4px;width:14px;height:14px;border-radius:3px;background:#243044;color:var(--accent);font-size:9px;font-weight:900;border:1px solid #3d4a5c;vertical-align:middle;cursor:pointer}
-body.quiz-on #live,body.quiz-on #cs-enemies,body.quiz-on #cs-allies,body.quiz-on #cs-draft,body.quiz-on #train,body.quiz-on #highlights{display:none!important}
+body.quiz-on #live,body.quiz-on #cs-enemies,body.quiz-on #cs-allies,body.quiz-on #cs-draft,body.quiz-on #train,body.quiz-on #highlights,body.quiz-on #idea{display:none!important}
 body.quiz-on #quiz{display:block}
 #quiz{display:none}
+body.idea-on #live,body.idea-on #cs-enemies,body.idea-on #cs-allies,body.idea-on #cs-draft,body.idea-on #train,body.idea-on #highlights,body.idea-on #quiz{display:none!important}
+body.idea-on #idea{display:block}
+#idea{display:none}
+.idea-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:22px 24px;max-width:820px;display:flex;flex-direction:column;gap:14px}
+.idea-card label{display:flex;flex-direction:column;gap:6px;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.idea-drop{border:1px dashed rgba(255,255,255,.18);border-radius:14px;padding:16px;text-align:center;color:var(--muted);cursor:pointer;background:rgba(255,255,255,.02);font-size:13px;font-weight:600;letter-spacing:0;text-transform:none}
+.idea-drop:hover,.idea-drop.drag{border-color:rgba(91,231,196,.5);color:var(--accent);background:rgba(91,231,196,.06)}
+.idea-drop img{max-height:180px;max-width:100%;border-radius:10px;display:block;margin:10px auto 0;border:1px solid var(--border)}
+.idea-drop small{display:block;margin-top:6px;font-size:11px;color:#66758c}
+.idea-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.idea-actions .secondary{height:42px}
+.idea-msg{font-size:13px;line-height:1.45;color:#dbe4f2;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04)}
+.idea-msg.ok{border-color:rgba(91,231,196,.35);background:rgba(91,231,196,.08)}
+.idea-msg.warn{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.08);color:#fde68a}
+.idea-msg.bad{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.08);color:#fecaca}
+.idea-msg a{color:var(--accent)}
 .quiz-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:22px 24px;max-width:820px}
 .quiz-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .quiz-kind{font-size:10px;font-weight:900;letter-spacing:.14em;padding:4px 8px;border-radius:999px;border:1px solid rgba(91,231,196,.35);background:rgba(91,231,196,.12);color:var(--accent)}
@@ -300,7 +363,7 @@ body.quiz-on #quiz{display:block}
 .draft-empty{color:var(--muted);font-size:12px}
 .draft-item .role-badge{margin-left:6px;float:none;align-self:auto}
 @media(max-width:900px){.draft-grid{grid-template-columns:1fr}}
-</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><div class="demo-dd" id="demo-dd"><button type="button" id="demo-toggle" class="secondary ghost" aria-expanded="false" aria-haspopup="true" title="Modes démo">Démo <i class="chev"></i></button><div id="demo-menu" class="demo-menu hidden" role="menu"><button type="button" id="demo" role="menuitem">Démo draft</button><button type="button" id="demo-live" role="menuitem">Démo en jeu</button></div></div><button id="hud-open" class="secondary" title="Ouvre le widget HUD (blocs permanents + tracker Tab)">HUD en jeu</button><button id="quiz-open" class="secondary" title="Série de 10 questions difficiles : CD exacts, sorts, passifs">Quiz</button><button type="button" id="hl-open" class="secondary" title="Replays YouTube des moments forts (iframe)">Moments forts</button><button type="button" id="train-open" class="secondary" title="Cours Skill Capped (iframe, ou le site si l'embed est bloqué)">S'entraîner</button><button id="quit" class="danger" title="Quitter CD Scout"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 3h10a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 2H5v14h9V5zm1 0h4v14h-4V5zM8.5 13a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>Quitter</button></section><section class="hero"><div><span id="hero-pill" class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis, alliés clés et propositions pick/ban apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
+</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><div class="demo-dd" id="demo-dd"><button type="button" id="demo-toggle" class="secondary ghost" aria-expanded="false" aria-haspopup="true" title="Modes démo">Démo <i class="chev"></i></button><div id="demo-menu" class="demo-menu hidden" role="menu"><button type="button" id="demo" role="menuitem">Démo draft</button><button type="button" id="demo-live" role="menuitem">Démo en jeu</button></div></div><button id="hud-open" class="secondary" title="Ouvre le widget HUD (blocs permanents + tracker Tab)">HUD en jeu</button><button id="quiz-open" class="secondary" title="Série de 10 questions difficiles : CD exacts, sorts, passifs">Quiz</button><button type="button" id="hl-open" class="secondary" title="Replays YouTube des moments forts (iframe)">Moments forts</button><button type="button" id="train-open" class="secondary" title="Cours Skill Capped (iframe, ou le site si l'embed est bloqué)">S'entraîner</button><button type="button" id="idea-open" class="secondary" title="Proposer une fonctionnalité (issue GitHub si c'est safe)">Idée</button><button id="quit" class="danger" title="Quitter CD Scout"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 3h10a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 2H5v14h9V5zm1 0h4v14h-4V5zM8.5 13a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>Quitter</button></section><section class="hero"><div><span id="hero-pill" class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis, alliés clés et propositions pick/ban apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
 <section id="train" class="train hidden"><div class="section-title"><h3>Entraînement Skill Capped</h3><a class="deeplol" id="train-ext" href="https://www.skill-capped.com/lol/browse/course" target="_blank" rel="noopener noreferrer">Ouvrir le site ↗</a></div><p class="train-hint">Cours et smurf commentaries. Si le cadre reste vide, Skill Capped bloque l'embed — le lien ouvre le site (compte requis).</p><div class="train-wrap"><iframe id="train-frame" title="Skill Capped" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe></div></section>
 <section id="highlights" class="train hidden"><div class="section-title"><h3>Moments forts</h3><a class="deeplol" id="hl-ext" href="https://www.youtube.com/results?search_query=League+of+Legends+outplay" target="_blank" rel="noopener noreferrer">Ouvrir YouTube ↗</a></div><p class="train-hint">Iframe YouTube : outplays (Daily LoL Plays) et extraits LoL Esports. Un champion de la draft met à jour le lien de recherche. L'onglet Profil charge DeepLoL si le joueur n'est pas anonyme (sinon le site bloque souvent l'embed).</p><div class="hl-feeds" id="hl-feeds"></div><nav class="champ-nav hidden" id="hl-champs" aria-label="Champion des extraits"></nav><div class="train-wrap"><iframe id="hl-frame" title="Moments forts" allow="fullscreen; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div></section>
 <section id="live" class="hidden"><div id="obj-bar" class="obj-bar"></div><div id="live-cards" class="tiles"></div><div class="gold-row"><div id="gold-main" class="gold-main"></div><div id="gold-roles" class="gold-grid"></div></div><div class="live-hint">Clique l'<strong>anneau</strong> d'un ennemi (ou <strong>Alt+1–5</strong> sur le HUD) quand il Flash → timer + les Flash ennemis encore en CD s'écrivent dans le chat League (ouvre le chat avec <strong>Entrée</strong> avant, le jeu refuse Ctrl+V). Clique le chip <strong>R</strong> quand il ult, re-clique pour annuler. <strong>CI</strong> = Cosmic Insight (+18 haste invocateur). CD Q/W/E au rang max plausible, rang de R exact, haste des items incluse (runes inconnues). Or <em>estimé</em> (CS + kills + assists + or passif) : Riot n'expose pas l'or exact des autres joueurs, la tendance est fiable.</div><div class="section-title" style="margin-top:16px"><h3>Alliés</h3><span id="live-ally-count">—</span></div><div id="live-allies" class="tiles"></div></section>
@@ -308,21 +371,38 @@ body.quiz-on #quiz{display:block}
 <section id="cs-enemies"><div class="section-title"><h3>Ennemis détectés</h3><span id="enemy-count">0/5</span></div><nav id="champ-nav" class="champ-nav hidden" aria-label="Filtrer les ennemis"></nav><div id="cards" class="cards"></div><div id="empty" class="empty"><div class="empty-icon">⌁</div><strong>Aucun champion ennemi détecté</strong><span>Utilise la recherche, la démo draft ou la démo en jeu pour tester l'interface.</span></div></section>
 <section id="cs-allies"><div class="section-title"><h3>Alliés clés</h3><span id="ally-count">SUPP · JGL · MID</span></div><div id="ally-cards" class="cards"></div><div id="ally-empty" class="empty"><div class="empty-icon">⌁</div><strong>Pas encore d’alliés SUPP / JGL / MID</strong><span>Dès que leurs picks sont visibles en champ select, leurs CD s’affichent ici.</span></div></section>
 <section id="quiz"><div id="quiz-card" class="quiz-card"></div></section>
-</main><footer><span>Souris sur le HUD = clic widget · ailleurs = le jeu · Alt+1–5 Flash · Tab / ²</span><span>Draft : CD sans haste · En jeu : haste des items incluse (runes inconnues).</span></footer></div>
+<section id="idea"><form id="idea-form" class="idea-card" autocomplete="off"><label>Titre<input id="idea-title" name="title" maxlength="100" required placeholder="Ex. Timer Nashor sur le HUD"></label><label>Description<textarea id="idea-body" name="body" maxlength="4000" required placeholder="Ce que tu veux, pourquoi, dans quel mode (draft / live / HUD)…"></textarea></label><div><div class="quiz-sub" style="margin-bottom:6px;letter-spacing:.1em;text-transform:uppercase;font-size:11px;font-weight:800">Image (optionnelle)</div><div class="idea-drop" id="idea-drop" tabindex="0">Clique ou dépose une capture (PNG / JPEG, max 2 Mo)<small id="idea-file-name"></small><img id="idea-preview" class="hidden" alt=""></div><input id="idea-image" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div><div class="idea-actions"><button type="submit" id="idea-send" class="secondary">Envoyer</button><span class="quiz-sub" id="idea-hint">Safe → issue GitHub. Sinon mail / SMS, pas de publication.</span></div><div id="idea-msg" class="hidden"></div></form></section>
+</main><footer><span>Souris sur le HUD = clic widget · ailleurs = le jeu · Alt+1–5 Flash · Tab cartes</span><span>Draft : CD sans haste · En jeu : haste des items incluse (runes inconnues).</span></footer></div>
 <div id="page-alert" class="alert hidden"></div>
 <div id="page-item-pop" class="item-pop hidden"></div>
 <div id="sp-tip" class="sp-tip hidden"></div>
 <div id="hud">
-<div class="hud-block hud-mini" id="hud-mini-bar"><button type="button" class="hud-drag" id="hud-drag" title="Déplacer">⠿</button><strong id="hud-clock" class="hud-clock" title="Clic : écrire les Flash ennemis dans le chat (ouvre le chat avant)">—</strong><span id="hud-state" class="hud-state" title="état">·</span><div id="hud-next" class="hud-next"></div><div class="hud-btns"><button type="button" id="hud-hold" class="hbtn" title="Verrouiller le tracker (²)">LOCK</button><button type="button" id="hud-sound" class="hbtn on" title="Alertes sonores">♪</button><button type="button" id="hud-reset" class="hbtn" title="Réinitialiser la position">RST</button><button type="button" id="hud-close" class="hbtn x" title="Quitter CD Scout">✕</button></div></div>
+<div class="hud-widget" id="hud-w-menu" data-hud="menu">
+<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="menu" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="menu" title="Redimensionner (ratio)">⤡</button></div>
+<div class="hud-block hud-mini" id="hud-mini-bar"><strong id="hud-clock" class="hud-clock" title="Clic : écrire les Flash ennemis dans le chat (ouvre le chat avant)">—</strong><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-btns"><button type="button" id="hud-sound" class="hbtn on" title="Alertes sonores">♪</button><button type="button" id="hud-reset" class="hbtn" title="Réinitialiser la disposition">RST</button><div class="hud-vis" id="hud-vis"><button type="button" id="hud-vis-btn" class="hbtn" title="Réglages overlay" aria-expanded="false" aria-haspopup="true">⚙</button><div id="hud-vis-menu" class="hud-vis-menu hidden" role="menu"></div></div><button type="button" id="hud-close" class="hbtn x" title="Fermer l'overlay">✕</button></div></div>
 <div id="hud-flashes" class="hud-block hud-flashes"></div>
-<div id="alert" class="alert hidden"></div>
-<div id="item-pop" class="item-pop hidden"></div>
-<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Souris sur un bloc = clic HUD · ailleurs = le jeu.<br>Alt+1–5 Flash · Tab / ² tracker.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
+<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Souris sur un bloc = clic HUD · ailleurs = le jeu.<br>Alt+1–5 Flash · Tab cartes.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
+</div>
+<div class="hud-widget" id="hud-w-objs" data-hud="objs">
+<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="objs" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="objs" title="Redimensionner (ratio)">⤡</button></div>
 <div id="hud-objs" class="hud-block hud-objs"></div>
-<div class="hud-block hud-track-bar" id="hud-track-bar"><button type="button" class="hud-drag" id="hud-track-drag" title="Déplacer le tracker">⠿</button><strong>ENNEMIS</strong></div>
-<div id="hud-enemies" class="hud-block hud-rows"></div>
-<div id="hud-gold" class="hud-block hud-gold hidden"></div>
-<div id="hud-allies" class="hud-block hud-rows hud-allies"></div>
+</div>
+<div class="hud-widget hidden" id="hud-w-alert" data-hud="alert">
+<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="alert" title="Déplacer">⠿</button></div>
+<div id="alert" class="alert hidden"></div>
+</div>
+<div class="hud-widget hidden" id="hud-w-item" data-hud="item">
+<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="item" title="Déplacer">⠿</button></div>
+<div id="item-pop" class="item-pop hidden"></div>
+</div>
+<div class="hud-widget hud-tab" id="hud-w-tab-enemies" data-hud="tabE">
+<div class="hud-grip" data-hud-hit><button type="button" class="hud-drag" data-hud-drag="tabE" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="tabE" title="Redimensionner (ratio)">⤡</button></div>
+<div id="hud-tab-enemies" class="hud-tab-list"></div>
+</div>
+<div class="hud-widget hud-tab" id="hud-w-tab-allies" data-hud="tabA">
+<div class="hud-grip" data-hud-hit><button type="button" class="hud-drag" data-hud-drag="tabA" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="tabA" title="Redimensionner (ratio)">⤡</button></div>
+<div id="hud-tab-allies" class="hud-tab-list"></div>
+</div>
 </div>
 <div id="upd" class="upd hidden"></div>
 <script>
@@ -410,13 +490,13 @@ if(st==='downloading'){el.className='upd';el.innerHTML=`<span class="utxt">Mise 
 if(st==='error'){el.className='upd err';el.innerHTML=`<span class="utxt">Mise à jour <b>${esc(u.latest)}</b> impossible : ${esc(u.error||'erreur inconnue')}</span>`;return}
 el.className='upd';el.innerHTML=`<span class="utxt">Version <b>${esc(u.latest)}</b> prête · elle s'installe au prochain lancement.</span><button type="button" id="upd-now">Redémarrer</button>`;
 $('upd-now').onclick=async()=>{el.innerHTML='<span class="utxt">Redémarrage…</span>';try{await fetch('/api/update',{method:'POST'})}catch(_){}setTimeout(()=>location.reload(),2500)}}
-async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(document.body.classList.contains('quiz-on')){$('dot').classList.toggle('on',!!s.connected||!!window.__liveDemo);$('status').textContent=window.__liveDemo?'Mode démo en jeu':(s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté'));$('phase').textContent=window.__liveDemo?'HUD sans partie':(s.phase||'—');lastPhase=s.phase||lastPhase;return}if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`+(s.myRole?` · toi ${s.myRole}`:''):'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.';if(!window.__manual)renderDraft(null)}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
+async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(document.body.classList.contains('quiz-on')||document.body.classList.contains('idea-on')){$('dot').classList.toggle('on',!!s.connected||!!window.__liveDemo);$('status').textContent=window.__liveDemo?'Mode démo en jeu':(s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté'));$('phase').textContent=window.__liveDemo?'HUD sans partie':(s.phase||'—');lastPhase=s.phase||lastPhase;return}if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`+(s.myRole?` · toi ${s.myRole}`:''):'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.';if(!window.__manual)renderDraft(null)}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
 function closeDemoMenu(){const m=$('demo-menu'),t=$('demo-toggle');if(!m||!t)return;m.classList.add('hidden');t.classList.remove('open');t.setAttribute('aria-expanded','false')}
 function setDemoLiveActive(on){const b=$('demo-live'),t=$('demo-toggle');if(b){b.textContent=on?'Fermer démo':'Démo en jeu';b.classList.toggle('active',!!on)}if(t)t.classList.toggle('active',!!on)}
 $('demo-toggle').onclick=e=>{e.stopPropagation();const m=$('demo-menu'),t=$('demo-toggle'),open=m.classList.contains('hidden');m.classList.toggle('hidden');t.classList.toggle('open',open);t.setAttribute('aria-expanded',open?'true':'false')};
 $('quit').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
-$('demo').onclick=async()=>{closeDemoMenu();if(quizOn())closeQuiz();if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés + propositions pick/ban (rôle BOT).';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean));loadDraft({enemies:demo.join(','),allies:demoAllies.map(a=>a.id).join(','),role:'BOT'})};
+$('demo').onclick=async()=>{closeDemoMenu();if(quizOn())closeQuiz();if(typeof ideaOn==='function'&&ideaOn())closeIdea();if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés + propositions pick/ban (rôle BOT).';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean));loadDraft({enemies:demo.join(','),allies:demoAllies.map(a=>a.id).join(','),role:'BOT'})};
 $('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){$('results').classList.add('hidden');return}const rs=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();$('results').innerHTML=rs.map(r=>`<div class="result" data-key="${r.key}"><span>${esc(r.name)}</span><small>${esc(r.title)}</small></div>`).join('');$('results').classList.toggle('hidden',!rs.length);document.querySelectorAll('.result').forEach(row=>row.onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;$('search').value='';$('results').classList.add('hidden');const c=await (await fetch('/api/card?key='+row.dataset.key)).json();focusKey=c.key;draftPool=[c];setRoster([c],true);setAllies([]);$('hero-title').textContent=c.name;$('hero-copy').textContent='Recherche manuelle.';loadDraft({enemies:String(c.key)})})},180)};
 document.onclick=e=>{if(!e.target.closest('.search-wrap'))$('results').classList.add('hidden');if(!e.target.closest('.demo-dd'))closeDemoMenu()};
 // ---- Mode En jeu (Live Client Data API, port 2999) ----
@@ -427,8 +507,9 @@ const itemIcon=id=>dd('item/'+id+'.png');
 const liveOn=()=>!!(liveState&&liveState.active);
 const gameNow=()=>liveOn()?liveState.gameTime+(Date.now()-liveAt)/1000:0;
 const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-const fmtCD=s=>!s?'—':(s>=120?mmss(s):String(Math.round(s*10)/10).replace('.',',')+'s');
 const fmtSec=s=>{if(!(s>0))return'—';s=Math.round(s*10)/10;return String(s).replace('.',',')+'s'};
+const fmtCD=fmtSec;
+const fmtCDTick=s=>{if(!(s>0))return'—';return Math.max(0,Math.round(s))+'s'};
 const pid=p=>`${p.riotId||''}#${p.key}`; // le riotId peut être vide (bots) : le champion, unique par partie, garantit une clé distincte
 function summCD(p,s){if(!s.cd)return 0;return ciSet.has(pid(p))?s.cd*(100+p.summHaste)/(100+p.summHaste+18):s.cd}
 function flashTrackKey(p){const si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');return si<0?'':`${pid(p)}|S${si}`}
@@ -479,7 +560,7 @@ const subChamp=(!p.hidden&&p.champion&&p.champion!==who)?esc(p.champion)+' · ':
 const scout=scoutBits(p);const pills=tagPills(p);return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${runeIcons(p,'tile-runes')}${nameHtml}</div><div class="tile-sub">${subChamp}${scout?scout+' · ':''}Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div>${pills?`<div class="tile-tags">${pills}</div>`:''}</div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait ${tierClass(p.tier)}" src="${iconUrl(p)}" alt="">${rankCrest(p,'ring-crest')}<div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
 function renderLive(){
 if(HUDMODE)return renderHud();
-if(document.body.classList.contains('quiz-on'))return;
+if(document.body.classList.contains('quiz-on')||document.body.classList.contains('idea-on'))return;
 const on=liveOn();
 $('live').classList.toggle('hidden',!on);$('cs-enemies').classList.toggle('hidden',on);$('cs-allies').classList.toggle('hidden',on);if(on){const d=$('cs-draft');if(d)d.classList.add('hidden')}
 syncTrain();syncHighlights();
@@ -533,13 +614,34 @@ else if(tr){const r=tr.end-now;if(r>0){cls='cd';txt=mmss(r);sub=w.dataset.slabel
 for(const c of['idle','cd','up','dead'])w.classList.toggle(c,cls===c);
 fg.style.strokeDashoffset=(RING_C*(1-frac)).toFixed(1);
 strong.textContent=txt;small.textContent=sub});
-document.querySelectorAll('#live [data-end]').forEach(el=>{el.textContent=mmss(+el.dataset.end-now)});
-document.querySelectorAll('#live [data-obj-next]').forEach(el=>{if(el.dataset.gone){el.textContent='PARTI';return}const r=+el.dataset.objNext-now;el.textContent=r>0?mmss(r):'SUR LA MAP';el.parentElement.classList.toggle('soon',r>0&&r<60)});
+document.querySelectorAll('#live [data-end]').forEach(el=>{
+const rest=+el.dataset.end-now,tr=el.closest('[data-track]');
+el.textContent=(tr&&!/\|S\d+$/.test(tr.dataset.track||''))?fmtCDTick(rest):mmss(rest)});
+document.querySelectorAll('#live [data-obj-next]').forEach(el=>{if(el.dataset.gone){el.textContent='PARTI';return}const r=+el.dataset.objNext-now;el.textContent=r>0?mmss(r):'en vie';el.parentElement.classList.toggle('soon',r>0&&r<60)});
 const lt=$('live-time');if(lt)lt.textContent=mmss(now);
 $('hero-title').textContent=(window.__liveDemo?'Démo · ':'En jeu · ')+mmss(now);
 checkAlerts(now);checkVoices()}
 // ---- Alertes d'objectif : anticipations fournies par le serveur (objectives[].leads) ----
-let soundOn=localStorage.getItem('cdscout.sound')!=='0',alertTimer=null,actx=null,firedAlerts=new Set();
+let soundOn=true,alertTimer=null,actx=null,firedAlerts=new Set();
+const HUD_OPT_KEY='cdscout.hudopt';
+const HUD_OPT_DEF={objs:true,tabE:true,tabA:true,banners:true,items:true,ganks:true,sound:true,voices:true};
+let hudOpt={...HUD_OPT_DEF};
+function hudOptOn(k){return hudOpt[k]!==false}
+function loadHudOpt(){
+let raw=null,vis={};
+try{raw=JSON.parse(localStorage.getItem(HUD_OPT_KEY)||'null')}catch(_){}
+try{vis=JSON.parse(localStorage.getItem('cdscout.hudvis')||'{}')||{}}catch(_){vis={}}
+hudOpt={...HUD_OPT_DEF};
+if(raw&&typeof raw==='object')Object.assign(hudOpt,raw);
+else{
+hudOpt.objs=vis.objs!==false;hudOpt.tabE=vis.tabE!==false;hudOpt.tabA=vis.tabA!==false;
+hudOpt.banners=vis.alert!==false;hudOpt.items=vis.item!==false;
+hudOpt.sound=localStorage.getItem('cdscout.sound')!=='0'}
+for(const k of Object.keys(HUD_OPT_DEF))if(typeof hudOpt[k]!=='boolean')hudOpt[k]=HUD_OPT_DEF[k];
+soundOn=hudOpt.sound}
+function saveHudOpt(){
+try{localStorage.setItem(HUD_OPT_KEY,JSON.stringify(hudOpt));localStorage.setItem('cdscout.sound',soundOn?'1':'0')}catch(_){}}
+loadHudOpt();
 const ALERT_SUB={grubs:'pousse ta vague et monte au pit',dragon:'prends la vision bot et regroupe-toi',baron:'vision mid + jungle, regroupe-toi',herald:'pit du baron'};
 function alertText(k,o,lead){
 let title=String(o.label||k).toUpperCase(),sub=ALERT_SUB[k]||'regroupe-toi';
@@ -558,7 +660,9 @@ if(rest>lead||rest<=lead-4)continue; // fenêtre de 4 s : un seul déclenchement
 const key=`${k}|${Math.round(o.nextAt)}|${lead}`;
 if(firedAlerts.has(key))continue;
 firedAlerts.add(key);
-const[t,s]=alertText(k,o,lead);fireAlert(t,s,2,false,objSfxKey(k,o),k,o)}}}
+const sfx=objSfxKey(k,o);
+if(hudOptOn('banners')){const[t,s]=alertText(k,o,lead);fireAlert(t,s,2,false,sfx,k,o)}
+else if(sfx)playObjSfx(sfx)}}}
 function alertEl(){return HUDMODE?$('alert'):$('page-alert')}
 function itemEl(){return HUDMODE?$('item-pop'):$('page-item-pop')}
 function bannerFile(k,o){
@@ -573,8 +677,17 @@ const el=alertEl();if(!el)return;
 const file=bannerFile(kind,obj||{});
 el.className='alert'+(level>=2?' hot':'')+(file?' has-banner':'');
 el.innerHTML=file?`<img class="alert-banner" src="/alerts/${file}.png" alt="${esc(title)}">`:`<div class="alert-copy"><b>${esc(title)}</b>${sub?`<span>${esc(sub)}</span>`:''}</div>`;
-clearTimeout(alertTimer);alertTimer=setTimeout(()=>{el.classList.add('hidden');if(HUDMODE)reportHudSize()},level>=2?9000:7000);
-if(HUDMODE)reportHudSize();
+el.classList.remove('hidden');
+clearTimeout(alertTimer);
+if(HUDMODE){
+const w=$('hud-w-alert');
+if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
+alertTimer=setTimeout(()=>{
+if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
+alertTimer=setTimeout(()=>{el.classList.add('hidden');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},380)
+},3000);
+reportHudHits()}
+else alertTimer=setTimeout(()=>{el.classList.add('hidden')},level>=2?9000:7000);
 if(silent)return;if(sfx)playObjSfx(sfx);else beep(level)}
 function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(_){return null}}if(actx.state==='suspended')actx.resume();return actx}
 function beep(level){if(!soundOn)return;const c=audioCtx();if(!c)return;
@@ -584,7 +697,7 @@ const t0=c.currentTime+t;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtT
 o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+d+.03)}}
 let objAudio=null,objClipTimer=null;
 function playObjSfx(kind){
-if(!kind||!voiceAudioOK())return;
+if(!kind||!soundOn)return;
 try{if(objClipTimer)clearTimeout(objClipTimer);if(objAudio){objAudio.pause();objAudio=null}}catch(_){}
 const a=new Audio('/api/objsfx?k='+encodeURIComponent(kind));a.volume=.42;objAudio=a;
 const clip={baron:2.1,dragon:2.4,elder:2.4,grubs:1.9,herald:1.9}[kind]||2;
@@ -599,19 +712,29 @@ function checkVoices(){
 if(HUDTRACK)return;
 const list=(liveState&&liveState.voices)||[];
 for(const v of list){if(!v||!v.id)continue;const k='v|'+v.id;if(firedAlerts.has(k))continue;firedAlerts.add(k);
-if(v.kind==='item'||v.kind==='shop'){showItemPop(v);cashRegister();if(v.voice)enqueueVoice(Object.assign({},v,{speak:''}))}
-else{const cur=alertEl();if(!(cur&&!cur.classList.contains('hidden')&&/\bobj-/.test(cur.className)))fireAlert(v.title||v.champion||'',v.sub,v.hot?2:1,true);enqueueVoice(v)}}}
+if(v.kind==='item'||v.kind==='shop'){if(!hudOptOn('items'))continue;showItemPop(v);cashRegister();if(v.voice)enqueueVoice(Object.assign({},v,{speak:''}))}
+else{if(!hudOptOn('ganks'))continue;const cur=alertEl();if(!(cur&&!cur.classList.contains('hidden')&&/\bobj-/.test(cur.className)))fireAlert(v.title||v.champion||'',v.sub,v.hot?2:1,true);enqueueVoice(v)}}}
 let itemPopTimer=null;
 function showItemPop(v){
 const el=itemEl();if(!el)return;
 const face=v.icon?iconUrl({icon:v.icon}):'';
 const item=v.itemId?itemIcon(v.itemId):'';
-el.className='item-pop';el.innerHTML=`<span class="ip-champ">${face?`<img class="ip-face" src="${face}" alt="">`:''}${item?`<img class="ip-item" src="${item}" alt="">`:''}</span><div class="ip-txt"><b>${esc(v.title||v.champion||'')}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div>`;
-void el.offsetWidth;el.classList.add('pop');
-clearTimeout(itemPopTimer);itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop');if(HUDMODE)reportHudSize()},3200);
-if(HUDMODE)reportHudSize()}
+el.className='item-pop';
+if(HUDMODE)el.innerHTML=`${face?`<img class="ip-face" src="${face}" alt="">`:''}${item?`<img class="ip-item" src="${item}" alt="">`:''}<div class="ip-txt"><b>${esc(v.title||v.champion||'')}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div>`;
+else el.innerHTML=`<span class="ip-champ">${face?`<img class="ip-face" src="${face}" alt="">`:''}${item?`<img class="ip-item" src="${item}" alt="">`:''}</span><div class="ip-txt"><b>${esc(v.title||v.champion||'')}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div>`;
+void el.offsetWidth;el.classList.add('pop');el.classList.remove('hidden');
+clearTimeout(itemPopTimer);
+if(HUDMODE){
+const w=$('hud-w-item');
+if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
+itemPopTimer=setTimeout(()=>{
+if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
+itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},320)
+},2800);
+reportHudHits()}
+else itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop')},3200)}
 function cashRegister(){
-if(!voiceAudioOK())return;const c=audioCtx();if(!c)return;const t0=c.currentTime;
+if(!soundOn)return;const c=audioCtx();if(!c)return;const t0=c.currentTime;
 try{const n=Math.floor(c.sampleRate*.12),buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
 for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(n*.32));
 const src=c.createBufferSource();src.buffer=buf;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;
@@ -621,8 +744,8 @@ for(const[f,off,dur]of[[784,.05,.2],[1174,.12,.24]]){const o=c.createOscillator(
 const t=t0+off;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.1,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
 o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.02)}}
 function voiceAudioOK(){if(!soundOn)return false;if(HUDMODE||window.__liveDemo)return true;return!(liveState&&liveState.hudOpen)}
-function stopVoices(){voiceQ=[];voiceBusy=false;try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}try{if(objClipTimer)clearTimeout(objClipTimer);if(objAudio){objAudio.pause();objAudio.src='';objAudio=null}}catch(_){}try{speechSynthesis.cancel()}catch(_){}clearTimeout(itemPopTimer);const ip=itemEl();if(ip){ip.classList.add('hidden');ip.classList.remove('pop')}}
-function enqueueVoice(v){if(!voiceAudioOK())return;voiceQ.push(v);pumpVoice()}
+function stopVoices(){voiceQ=[];voiceBusy=false;try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}try{if(objClipTimer)clearTimeout(objClipTimer);if(objAudio){objAudio.pause();objAudio.src='';objAudio=null}}catch(_){}try{speechSynthesis.cancel()}catch(_){}clearTimeout(itemPopTimer);const ip=itemEl();if(ip){ip.classList.add('hidden');ip.classList.remove('pop')}const iw=$('hud-w-item');if(iw){iw.classList.add('hidden');iw.classList.remove('hud-in','hud-out')}}
+function enqueueVoice(v){if(!hudOptOn('voices')||!voiceAudioOK())return;voiceQ.push(v);pumpVoice()}
 function pumpVoice(){
 if(voiceBusy||!voiceQ.length)return;if(!voiceAudioOK()){voiceQ=[];return}
 voiceBusy=true;const v=voiceQ.shift();audioCtx();
@@ -641,10 +764,116 @@ const apply=()=>{const fr=pick();if(fr)u.voice=fr;u.onend=done;u.onerror=done;sp
 if(pick())apply();else{const t=setTimeout(()=>{speechSynthesis.removeEventListener('voiceschanged',onV);apply()},400);
 function onV(){clearTimeout(t);speechSynthesis.removeEventListener('voiceschanged',onV);apply()}
 speechSynthesis.addEventListener('voiceschanged',onV)}}
-// ---- HUD compact (mode ?hud=1) ----
+// ---- HUD canvas (mode ?hud=1) : widgets indépendants ----
 const OBJ_ORDER=[['grubs','o-grubs'],['dragon','o-dragon'],['herald','o-herald'],['baron','o-baron']];
 const OBJ_ICON={grubs:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/grub.png',dragon:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/dragon.png',herald:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/riftherald.png',baron:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/baron.png'};
-let hudHoldOn=false,hudPinned=true,hudNoFocus=true,inputSeq=0,tabUntil=0;
+let hudPinned=true,hudNoFocus=true,inputSeq=0,tabUntil=0;
+// Layout Tab League (même constantes que overlay_geom.go) — baseline 1080p, scale = innerHeight/1080.
+const TAB_ROWS=5,TAB_ROW_H_1080=52,TAB_HEADER_H_1080=56,TAB_BOARD_W_1080=920,TAB_CARD_W=280,TAB_CARD_GAP=8;
+const HUD_WIDGET_IDS=['menu','objs','alert','item','tabE','tabA'];
+const HUD_EL={menu:'hud-w-menu',objs:'hud-w-objs',alert:'hud-w-alert',item:'hud-w-item',tabE:'hud-w-tab-enemies',tabA:'hud-w-tab-allies'};
+const HUD_OPACITY_KEY='cdscout.hudopacity';
+const HUD_OPT_WIDGETS=['objs','tabE','tabA'];
+const HUD_OPT_MENU=[{lab:'Widgets',items:[{id:'objs',name:'Objectifs'},{id:'tabE',name:'CD ennemis'},{id:'tabA',name:'CD alliés'}]},{lab:'Alertes',items:[{id:'banners',name:'Bannières'},{id:'items',name:'Achats'},{id:'ganks',name:'Ganks jungle'}]},{lab:'Audio',items:[{id:'sound',name:'Sons'},{id:'voices',name:'Voix jungle'}]}];
+let hudGeom={};
+const ULT_C=(2*Math.PI*9).toFixed(2);
+function tabMetrics(){
+const sh=innerHeight||1080,sw=innerWidth||1920;
+const playW=Math.min(sw,Math.round(sh*16/9)),playX=Math.round((sw-playW)/2);
+const rowH=Math.max(28,Math.round(TAB_ROW_H_1080*sh/1080));
+const headerH=Math.round(TAB_HEADER_H_1080*sh/1080);
+const boardH=headerH+TAB_ROWS*rowH,boardTop=Math.max(0,Math.round((sh-boardH)/2));
+const rowsTop=boardTop+headerH;
+const boardW=Math.max(400,Math.round(TAB_BOARD_W_1080*playW/1920));
+const boardLeft=playX+Math.round((playW-boardW)/2);
+const leftX=Math.max(0,boardLeft-TAB_CARD_W-TAB_CARD_GAP);
+const rightX=Math.min(sw-80,boardLeft+boardW+TAB_CARD_GAP);
+document.documentElement.style.setProperty('--tab-row-h',rowH+'px');
+return {rowH,rowsTop,leftX,rightX,sw,sh}}
+function hudDefaultGeom(){
+const m=tabMetrics(),pad=16,sw=m.sw,sh=m.sh;
+return {menu:{x:sw-420-pad,y:pad,scale:1},objs:{x:sw-158-pad,y:pad+320,scale:1},alert:{x:sw-400-pad,y:Math.round(sh/6),scale:1},item:{x:sw-240-pad,y:sh-108,scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
+function hudWidgetPos(id){const g=hudGeom[id]||hudDefaultGeom()[id]||{x:16,y:16,scale:1};return {x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1}}
+function applyHudWidget(id,g){
+const el=$(HUD_EL[id]);if(!el||!g)return;
+hudGeom[id]={x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1};
+el.style.left=hudGeom[id].x+'px';el.style.top=hudGeom[id].y+'px';
+el.style.transform='scale('+hudGeom[id].scale+')'}
+function applyHudGeom(g){
+if(g&&g.widgets)hudGeom=g.widgets;
+const def=hudDefaultGeom();
+for(const id of HUD_WIDGET_IDS)applyHudWidget(id,hudGeom[id]||def[id]);
+applyHudVis();
+reportHudHits()}
+window.__hudMove=function(p){if(!p||!p.id)return;applyHudWidget(p.id,{x:p.x,y:p.y,scale:p.scale});reportHudHits()};
+window.__hudApplyGeom=function(g){applyHudGeom(g)};
+function hudOpacityValue(){
+let v=parseFloat(document.documentElement.style.getPropertyValue('--hud-opacity'));
+if(!(v>=0.25&&v<=1)){try{v=parseFloat(localStorage.getItem(HUD_OPACITY_KEY))}catch(_){v=1}}
+if(!(v>=0.25&&v<=1))v=1;
+return v}
+function applyHudOpacity(v,save){
+v=Math.min(1,Math.max(0.25,+v||1));
+document.documentElement.style.setProperty('--hud-opacity',String(v));
+if(save)try{localStorage.setItem(HUD_OPACITY_KEY,String(v))}catch(_){}}
+function applyHudVis(){
+for(const id of HUD_OPT_WIDGETS){const el=$(HUD_EL[id]);if(el)el.classList.toggle('hud-off',!hudOptOn(id))}
+syncHudSoundBtn();
+const m=$('hud-vis-menu');
+if(m&&!m.classList.contains('hidden'))renderHudVisMenu();
+reportHudHits()}
+function syncHudSoundBtn(){const b=$('hud-sound');if(b)b.classList.toggle('on',!!soundOn)}
+function hideHudAlert(){
+clearTimeout(alertTimer);alertTimer=null;
+const el=alertEl();if(el)el.classList.add('hidden');
+const w=$('hud-w-alert');if(w)w.classList.add('hidden'),w.classList.remove('hud-in','hud-out')}
+function hideHudItem(){
+clearTimeout(itemPopTimer);itemPopTimer=null;
+const el=itemEl();if(el){el.classList.add('hidden');el.classList.remove('pop')}
+const w=$('hud-w-item');if(w)w.classList.add('hidden'),w.classList.remove('hud-in','hud-out')}
+function stopVoiceOnly(){
+voiceQ=[];voiceBusy=false;
+try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}
+try{speechSynthesis.cancel()}catch(_){}}
+function toggleHudOpt(id){
+hudOpt[id]=!hudOptOn(id);
+if(id==='sound'){soundOn=hudOpt.sound;if(!soundOn)stopVoices()}
+else if(id==='voices'&&!hudOpt.voices)stopVoiceOnly();
+else if(id==='banners'&&!hudOpt.banners)hideHudAlert();
+else if(id==='items'&&!hudOpt.items)hideHudItem();
+saveHudOpt();
+applyHudVis()}
+function renderHudVisMenu(){
+const m=$('hud-vis-menu');if(!m)return;
+let html='';
+for(const sec of HUD_OPT_MENU){
+html+=`<div class="hud-vis-lab">${esc(sec.lab)}</div>`;
+for(const it of sec.items){
+const on=hudOptOn(it.id);
+html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}}
+const pct=Math.round(hudOpacityValue()*100);
+html+=`<div class="hud-vis-lab">Affichage</div><div class="hud-vis-row hud-vis-opac"><span>Opacité</span><input type="range" id="hud-opacity" min="25" max="100" step="5" value="${pct}" aria-valuemin="25" aria-valuemax="100" aria-valuenow="${pct}"><b id="hud-opacity-val">${pct} %</b></div>`;
+m.innerHTML=html;
+m.querySelectorAll('[data-opt]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();toggleHudOpt(b.dataset.opt)});
+const sl=$('hud-opacity');
+if(sl)sl.oninput=()=>{const v=(+sl.value)/100;applyHudOpacity(v,true);const lab=$('hud-opacity-val');if(lab)lab.textContent=Math.round(v*100)+' %';sl.setAttribute('aria-valuenow',String(Math.round(v*100)))}}
+function closeHudVisMenu(){
+const m=$('hud-vis-menu'),b=$('hud-vis-btn');
+if(m)m.classList.add('hidden');
+if(b)b.setAttribute('aria-expanded','false');
+document.documentElement.classList.remove('hud-vis-open');
+if(document.body)document.body.classList.remove('hud-vis-open');
+reportHudHits()}
+function toggleHudVisMenu(e){
+if(e){e.preventDefault();e.stopPropagation()}
+const m=$('hud-vis-menu'),b=$('hud-vis-btn');if(!m||!b)return;
+const open=m.classList.contains('hidden');
+m.classList.toggle('hidden');
+b.setAttribute('aria-expanded',open?'true':'false');
+document.documentElement.classList.toggle('hud-vis-open',open);
+if(document.body)document.body.classList.toggle('hud-vis-open',open);
+if(open)renderHudVisMenu();
+reportHudHits()}
 function hudObj(k,cls){const o=(liveState.objectives||{})[k];if(!o)return'';
 const note=k==='dragon'&&(o.order||o.chaos)?`${o.order||0}–${o.chaos||0}${o.note?' · '+o.note:''}`:(o.note||'');
 const tip=esc((o.label||k)+(note?' '+note:''));
@@ -653,9 +882,9 @@ function hudSpellChip(s,p,P,ally,i){
 const cd=s.cd||0,isP=s.spell==='P',isR=s.spell==='R',k=`${P}|${s.spell}`;
 const note=((liveScout[p.key]&&liveScout[p.key].important)||[]).find(x=>x.spell===s.spell&&x.note);
 const hint=cd?(isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'Clic quand il l\'utilise (re-clique pour annuler).'):'';
-const tip=spellTip(s,p.key,{cd:cd?(cd>=120?mmss(cd):fmtSec(cd)):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
+const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
-const shown=cd?(cd>=120?mmss(cd):fmtSec(cd)):'';
+const shown=cd?fmtCD(cd):'';
 const cls='hr-sk'+(isP?' hr-p':'')+(isR?' hr-r':'');
 if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head}</div>`;
 return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}<span class="hv">${shown}</span></button>`}
@@ -664,64 +893,49 @@ const k=`${P}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
 const hint=isF&&!ally?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
 const icon=s.slug?`<img class="hr-fi" src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
 return `<button type="button" class="hr-sk hr-sum" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}<span class="hv">${cd?mmss(cd):'—'}</span></button>`}
-function hudRow(p,i,ally){
+function hudMenuSum(p,s,si,i){
+const k=`${pid(p)}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
+const hint=isF?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
+const icon=s.slug?`<img src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
+return `<button type="button" class="hf-sum" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}<span class="hv">—</span></button>`}
+function hudUltChip(p,i){
+const r=(p.spells||[]).find(s=>s.spell==='R');if(!r)return '';
+const k=`${pid(p)}|R`,cd=r.cd||0;
+return `<button type="button" class="hf-ult" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}"><svg viewBox="0 0 22 22"><circle class="hf-ult-bg" cx="11" cy="11" r="9"/><circle class="hf-ult-fg" cx="11" cy="11" r="9" stroke-dasharray="${ULT_C}" stroke-dashoffset="0"/></svg><span class="hv">R</span></button>`}
+function hudMenuChip(p,i){
+const dead=p.isDead?(gameNow()+p.respawn):0;
+const sums=(p.summoners||[]).map((s,si)=>hudMenuSum(p,s,si,i)).join('');
+const tc=tierClass(p.tier);
+return `<div class="hf${tc?' '+tc:''}" data-slot="${i+1}" data-dead="${dead}" title="${esc(playerLabel(p))}"><div class="hf-top">${rankPic(p,'hf-pic')}${hudUltChip(p,i)}</div><div class="hf-spells">${sums}</div></div>`}
+function hudTabRow(p,i,ally){
 const P=pid(p);
 const spells=(p.spells||[]).map(s=>hudSpellChip(s,p,P,ally,i)).join('');
 const sums=ally?'':(p.summoners||[]).map((s,si)=>hudSumChip(s,si,p,P,ally,i)).join('');
-const items=(p.items||[]).map(id=>`<img src="${itemIcon(id)}" alt="" loading="lazy">`).join('');
-const pos=POS[p.position]||'';
-const meta=`${p.level}${pos?' '+pos:''}`;
-const who=playerLabel(p);
-const dl=(!p.hidden&&p.deeplol)?`<span class="hr-dl" data-url="${esc(p.deeplol)}" title="Profil DeepLoL">↗</span>`:'';
-const bits=scoutBits(p,' ');
 const tc=tierClass(p.tier);
-return `<div class="hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}" data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}">`+
-`<div class="hr-head">`+
-`${rankPic(p,'hr-pic')}<span class="hr-slot">${ally?'':i+1}</span>${runeIcons(p)}`+
-`<span class="hr-id"><span class="hr-who"><b>${esc(who)}</b>${dl}</span><i class="hr-meta">${[meta,bits].filter(Boolean).join(' ')}</i>${tagPills(p,2)}<span class="hr-dead">MORT <b data-dead-t="1">—</b></span></span>`+
-`</div>`+
-`<div class="hr-spells">${spells}${sums}</div>`+
-`<div class="hr-more">${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS${items?' &nbsp;'+items:''}</div></div>`}
-function hudGold(g){const el=$('hud-gold');
-if(!g||!g.history||g.history.length<2){el.classList.add('hidden');return}
-const h=g.history,last=h[h.length-1],d=last.ally-last.enemy;
-let m=1;for(const s of h)m=Math.max(m,Math.abs(s.ally-s.enemy));
-const W=360,H=28,mid=H/2,dx=W/(h.length-1),y=v=>mid-(v/m)*(mid-2);
-const line=h.map((s,i)=>`${i?'L':'M'}${(i*dx).toFixed(1)},${y(s.ally-s.enemy).toFixed(1)}`).join('');
-const area=sign=>{let p=`M0,${mid}`;h.forEach((s,i)=>{const v=s.ally-s.enemy,c=sign>0?Math.max(0,v):Math.min(0,v);p+=`L${(i*dx).toFixed(1)},${y(c).toFixed(1)}`});return p+`L${W},${mid}Z`};
-el.className='hud-block hud-gold '+(d>=0?'pos':'neg');
-el.innerHTML=`<span class="hg-lab">OR</span><strong>${fmtDiff(d)}</strong><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${area(1)}" fill="rgba(91,231,196,.25)"/><path d="${area(-1)}" fill="rgba(248,113,113,.25)"/><path d="${line}" fill="none" stroke="${d>=0?'#5be7c4':'#f87171'}" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>`}
-function hudFlashChip(p,i){
-let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
-const fs=(p.summoners||[])[si],fkey=`${pid(p)}|S${si}`,fcd=fs?summCD(p,fs):0;
-const dead=p.isDead?(gameNow()+p.respawn):0;
-return `<button type="button" class="hf${tierClass(p.tier)?' '+tierClass(p.tier):''}" data-track="${esc(fkey)}" data-cd="${fcd}" data-tm="${esc(fkey)}" data-base="${fcd}" data-kind="summ" data-dead="${dead}" title="${esc(playerLabel(p))} · Flash">${rankPic(p,'hf-pic')}<span class="hv">—</span></button>`}
-function hudNextHTML(){
-const now=gameNow();let best=null,bestRest=1e9;
-for(const[k] of OBJ_ORDER){const o=(liveState.objectives||{})[k];if(!o||o.gone)continue;const rest=o.nextAt-now;if(rest<bestRest){bestRest=rest;best={k,o,rest}}}
-if(!best)return '';
-const t=best.rest>0?mmss(best.rest):'MAP';
-return `<img src="${OBJ_ICON[best.k]||''}" alt=""><b>${t}</b>`}
+return `<div class="hud-tab-row hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}" data-hud-hit data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}" title="${esc(playerLabel(p))}"><div class="hr-spells">${spells}${sums}</div></div>`}
 function syncHudExpand(){
-const expand=hudHoldOn||(!!tabUntil&&Date.now()<tabUntil);
-document.documentElement.classList.toggle('expanded',expand);
-document.body.classList.toggle('expanded',expand);
+const tab=!!tabUntil&&Date.now()<tabUntil;
+document.documentElement.classList.toggle('hud-tab-on',tab);
+document.body.classList.toggle('hud-tab-on',tab);
 document.documentElement.classList.toggle('idle',!liveOn());
 document.body.classList.toggle('idle',!liveOn());
-reportHudSize()}
+reportHudHits()}
+function bindHudTracks(){
+document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)})}
 function renderHud(){
 const on=liveOn();
 $('hud-state').title=on?(window.__liveDemo?'DÉMO':'EN JEU'):'ATTENTE';
 $('hud-state').classList.toggle('on',on);
-if(!on){$('hud-objs').innerHTML='';$('hud-enemies').innerHTML='';$('hud-allies').innerHTML='';$('hud-flashes').innerHTML='';$('hud-next').innerHTML='';$('hud-gold').classList.add('hidden');$('hud-clock').textContent='—';syncHudExpand();return}
+if(!on){$('hud-objs').innerHTML='';$('hud-flashes').innerHTML='';
+const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');if(te)te.innerHTML='';if(ta)ta.innerHTML='';
+$('hud-clock').textContent='—';syncHudExpand();return}
 $('hud-objs').innerHTML=OBJ_ORDER.map(([k,c])=>hudObj(k,c)).join('');
-$('hud-enemies').innerHTML=(liveState.enemies||[]).map((p,i)=>hudRow(p,i,false)).join('');
-$('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudFlashChip(p,i)).join('');
+$('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudMenuChip(p,i)).join('');
 const hudAll=liveState.allies||[];
-$('hud-allies').innerHTML=hudAll.length?'<div class="hud-lab">ALLIÉS</div>'+hudAll.map((p,i)=>hudRow(p,i,true)).join(''):'';
-hudGold(liveState.gold);
-document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)});
-document.querySelectorAll('#hud .hr-dl').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();openDeepLoL(el.dataset.url)});
+const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');
+if(te)te.innerHTML=(liveState.enemies||[]).map((p,i)=>hudTabRow(p,i,false)).join('');
+if(ta)ta.innerHTML=hudAll.map((p,i)=>hudTabRow(p,i,true)).join('');
+bindHudTracks();
 tickHud();syncHudExpand()}
 function tickHud(){
 syncHudExpand();
@@ -731,72 +945,99 @@ const now=gameNow();
 if(pruneTracks(now)){renderHud();return}
 if(Date.now()<copiedUntil){$('hud-clock').textContent='CHAT';$('hud-clock').classList.add('copied')}
 else{$('hud-clock').textContent=mmss(now);$('hud-clock').classList.remove('copied')}
-$('hud-next').innerHTML=hudNextHTML();
 document.querySelectorAll('#hud-objs .hobj').forEach(el=>{const s=el.querySelector('strong');
 if(el.dataset.gone){s.textContent='—';return}
 const rest=+el.dataset.next-now;
-s.textContent=rest>0?mmss(rest):'MAP';
+s.textContent=rest>0?mmss(rest):'en vie';
 el.classList.toggle('live',rest<=0);
 el.classList.toggle('hot',rest>0&&rest<=45);
 el.classList.toggle('warn',rest>45&&rest<=120)});
-document.querySelectorAll('#hud .hr, #hud .hf').forEach(row=>{
+document.querySelectorAll('#hud .hr, #hud .hf, #hud .hf-ult').forEach(row=>{
 const dead=+row.dataset.dead||0,isDead=dead>now;
 row.classList.toggle('dead',isDead);
 if(isDead){const b=row.querySelector('[data-dead-t]');if(b)b.textContent=Math.ceil(dead-now)+'s'}
 const tms=row.hasAttribute('data-tm')?[row]:[...row.querySelectorAll('[data-tm]')];
 tms.forEach(el=>{
 const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,val=el.querySelector('.hv');
-if(!val)return;
 el.classList.remove('cd','up');
-if(row.classList.contains('hf'))row.classList.remove('cd','up');
-if(tr&&tr.end-now>0){el.classList.add('cd');if(row.classList.contains('hf'))row.classList.add('cd');val.textContent=el.dataset.kind==='spell'?fmtCD(tr.end-now):mmss(tr.end-now)}
-else val.textContent=base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—'})});
-$('hud').classList.toggle('detail',!!tabUntil&&Date.now()<tabUntil);
+if(tr&&tr.end-now>0){el.classList.add('cd');if(val)val.textContent=el.dataset.kind==='spell'?fmtCDTick(tr.end-now):mmss(tr.end-now);
+const fg=el.querySelector('.hf-ult-fg');if(fg){const frac=Math.max(0,(tr.end-now)/(tr.total||base||1));fg.style.strokeDashoffset=(ULT_C*(1-frac)).toFixed(2)}}
+else{if(val)val.textContent=base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—';
+const fg=el.querySelector('.hf-ult-fg');if(fg){fg.style.strokeDashoffset='0';if(base>0)el.classList.add('up')}}})});
 checkAlerts(now);checkVoices()}
-// Raccourcis globaux lus côté Go : Tab (aperçu), ² (verrou), Alt+1..5 (Flash), Alt+Maj+1..5 (ult).
 function applyHotkey(e){const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
 if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd);return}
 let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
 const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s))}
-function hudBtns(s){hudHoldOn=!!s.hold;const b=$('hud-hold');if(b)b.classList.toggle('on',hudHoldOn);syncHudExpand()}
 let lastHudW=0,lastHudH=0;
-function reportHudSize(){if(!HUDMODE)return;const el=$('hud');if(!el)return;
-const w=Math.max(280,Math.ceil(el.offsetWidth)),h=Math.max(72,Math.ceil(el.offsetHeight));
-if(w!==lastHudW||h!==lastHudH){lastHudW=w;lastHudH=h;
+function reportHudSize(){if(!HUDMODE)return;
+const w=innerWidth||0,h=innerHeight||0;
+if(w!==lastHudW||h!==lastHudH){lastHudW=w;lastHudH=h;tabMetrics();
 fetch('/api/hud/bounds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({w,h})}).catch(()=>{})}
 reportHudHits()}
 function reportHudHits(){if(!HUDMODE)return;
 const hits=[];
-for(const el of document.querySelectorAll('#hud .hud-block, #hud .alert, #hud .item-pop, #sp-tip')){
-if(!el||el.classList.contains('hidden'))continue;
-const st=getComputedStyle(el);if(st.display==='none'||st.visibility==='hidden')continue;
-const r=el.getBoundingClientRect();if(!(r.width>=2&&r.height>=2))continue;
-hits.push({x:Math.round(r.left),y:Math.round(r.top),w:Math.round(r.width),h:Math.round(r.height)})}
+const add=(el,pad)=>{
+if(!el||el.classList.contains('hidden'))return;
+const w=el.closest('.hud-widget');
+if(w){if(w.classList.contains('hidden')||w.classList.contains('hud-off'))return;const ws=getComputedStyle(w);if(ws.display==='none'||ws.visibility==='hidden')return}
+const st=getComputedStyle(el);if(st.display==='none'||st.visibility==='hidden'||st.opacity==='0')return;
+if(el.id!=='sp-tip'&&st.pointerEvents==='none')return;
+const r=el.getBoundingClientRect();if(!(r.width>=2&&r.height>=2))return;
+if(r.right<0||r.bottom<0||r.left>innerWidth||r.top>innerHeight)return;
+const p=pad==null?2:pad;
+hits.push({x:Math.max(0,Math.round(r.left)-p),y:Math.max(0,Math.round(r.top)-p),w:Math.round(r.width)+p*2,h:Math.round(r.height)+p*2})};
+add($('hud-mini-bar'));
+add($('hud-flashes'));
+add($('hud-wait'));
+const vis=$('hud-vis-menu');if(vis&&!vis.classList.contains('hidden'))add(vis);
+add($('hud-objs'));
+document.querySelectorAll('#hud .hud-tab-row[data-hud-hit]').forEach(el=>add(el));
+const al=$('alert');if(al&&!al.classList.contains('hidden'))add(al);
+const ip=$('item-pop');if(ip&&!ip.classList.contains('hidden'))add(ip);
+add($('sp-tip'));
+document.querySelectorAll('#hud .hud-grip').forEach(g=>{
+const st=getComputedStyle(g);if(!(+st.opacity>0)||st.pointerEvents!=='auto')return;add(g)});
+document.querySelectorAll('#hud .hud-widget.hud-grip-on').forEach(w=>add(w,14));
+const key=JSON.stringify(hits);
+if(key===reportHudHits._last)return;
+reportHudHits._last=key;
 fetch('/api/hud/hits',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(hits)}).catch(()=>{})}
 function bindHudDrag(){
-const bind=(id,panel)=>{const btn=$(id);if(!btn)return;btn.onpointerdown=e=>{if(e.button)return;e.preventDefault();fetch('/api/hud/drag'+(panel?'?panel='+panel:''),{method:'POST'}).catch(()=>{})}};
-bind('hud-drag','');bind('hud-track-drag','')}
-async function setHold(on){try{hudBtns(await(await fetch('/api/hud/hold?on='+(on?1:0),{method:'POST'})).json())}catch(_){}}
+const start=(id,mode)=>e=>{if(e.button)return;e.preventDefault();const w=$(HUD_EL[id]);if(w)w.classList.add('hud-grip-on');
+reportHudHits();
+const g=hudWidgetPos(id);
+fetch('/api/hud/drag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,mode,x:g.x,y:g.y,scale:g.scale})}).catch(()=>{})};
+document.querySelectorAll('[data-hud-drag]').forEach(btn=>btn.onpointerdown=start(btn.dataset.hudDrag,'drag'));
+document.querySelectorAll('[data-hud-resize]').forEach(btn=>btn.onpointerdown=start(btn.dataset.hudResize,'resize'));
+window.addEventListener('pointerup',()=>{document.querySelectorAll('.hud-grip-on').forEach(w=>w.classList.remove('hud-grip-on'));reportHudHits()})}
 async function pollInput(){
 try{const s=await(await fetch('/api/input?since='+inputSeq)).json();
 if(typeof s.seq==='number')inputSeq=s.seq;
-if(s.tab)tabUntil=Date.now()+450;
+if(s.tab){tabUntil=Date.now()+450;syncHudExpand()}
 if(s.tracks)pullTracks(s.tracks);
-if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e);
-hudBtns(s)}catch(_){}}
+if(s.drag&&s.drag.id)window.__hudMove(s.drag);
+if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e)}catch(_){}}
+async function loadHudGeom(){
+try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:3,widgets:hudDefaultGeom()})}
+reportHudSize()}
 if(HUDMODE){
+applyHudOpacity(hudOpacityValue(),false);applyHudVis();
 bindHudDrag();
+document.querySelectorAll('#hud .hud-widget').forEach(w=>{w.addEventListener('mouseenter',()=>reportHudHits());w.addEventListener('mouseleave',()=>reportHudHits())});
 $('hud-sound').classList.toggle('on',soundOn);
-$('hud-sound').onclick=()=>{soundOn=!soundOn;localStorage.setItem('cdscout.sound',soundOn?'1':'0');$('hud-sound').classList.toggle('on',soundOn);if(soundOn)playObjSfx('dragon');else stopVoices()};
-$('hud-hold').onclick=()=>setHold(!hudHoldOn);
-$('hud-reset').onclick=()=>{fetch('/api/hud/reset',{method:'POST'}).catch(()=>{})};
-$('hud-close').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){};window.close()};
+$('hud-sound').onclick=()=>{toggleHudOpt('sound');if(soundOn)playObjSfx('dragon')};
+$('hud-reset').onclick=()=>{fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{applyHudGeom({v:3,widgets:hudDefaultGeom()})})};
+$('hud-vis-btn').onclick=toggleHudVisMenu;
+document.addEventListener('click',e=>{if(!$('hud-vis')||$('hud-vis').contains(e.target))return;closeHudVisMenu()});
+$('hud-close').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/hud/close');fetch('/api/hud/close',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){};window.close()};
 setInterval(async()=>{try{if((await fetch('/api/status',{cache:'no-store'})).ok)return}catch(_){}
 window.close()},2500);
 $('hud-clock').onclick=()=>{copyFlashCallout();if(liveOn())tickHud()};
 $('hud-demo').onclick=()=>startLiveDemo();
-if(window.ResizeObserver)new ResizeObserver(()=>reportHudSize()).observe($('hud'));
-pollInput();setInterval(pollInput,140);syncHudExpand();setInterval(reportHudSize,800)}
+window.addEventListener('resize',()=>reportHudSize());
+loadHudGeom();
+pollInput();setInterval(pollInput,140);syncHudExpand();setInterval(reportHudHits,800)}
 let autoHudDone=false;
 // Le HUD s'ouvre tout seul au tout début de la partie (à la fontaine) : plus tard,
 // le vol de focus du navigateur serait dangereux en pleine action.
@@ -848,10 +1089,9 @@ if(caitR)liveTracks[`${pid(enemies[3])}|R`]={end:gameNow()+38,total:caitR.cd};
 setDemoLiveActive(true);
 try{await fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(liveState)})}catch(_){}
 pushTracks();
-if(HUDMODE)await setHold(true);
 $('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';
 renderLive()}
-$('demo-live').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo()};
+$('demo-live').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(ideaOn())closeIdea();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo()};
 const SKILLCAPPED='https://www.skill-capped.com/lol/browse/course';
 let trainOpen=false;
 function syncTrain(){
@@ -860,7 +1100,7 @@ const show=trainOpen&&!liveOn();
 if(btn)btn.classList.toggle('active',trainOpen);
 if(sec)sec.classList.toggle('hidden',!show);
 if(show&&fr&&!fr.getAttribute('src'))fr.src=SKILLCAPPED}
-$('train-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();if(liveOn()){window.open(SKILLCAPPED,'_blank','noopener');return}hlOpen=false;syncHighlights();trainOpen=!trainOpen;syncTrain();if(trainOpen)$('train').scrollIntoView({behavior:'smooth',block:'start'})};
+$('train-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();if(document.body.classList.contains('idea-on'))closeIdea();if(liveOn()){window.open(SKILLCAPPED,'_blank','noopener');return}hlOpen=false;syncHighlights();trainOpen=!trainOpen;syncTrain();if(trainOpen)$('train').scrollIntoView({behavior:'smooth',block:'start'})};
 $('train-ext').onclick=e=>{e.preventDefault();window.open(SKILLCAPPED,'_blank','noopener')};
 const YT_EMBED='https://www.youtube-nocookie.com/embed';
 const HL_FEEDS={
@@ -876,7 +1116,7 @@ else{for(const c of [...roster,...allyRoster])add(c,c.name)}
 return out}
 function syncHighlights(){
 const sec=$('highlights'),btn=$('hl-open'),fr=$('hl-frame'),ext=$('hl-ext'),feeds=$('hl-feeds'),nav=$('hl-champs');
-const show=hlOpen&&!liveOn()&&!document.body.classList.contains('quiz-on');
+const show=hlOpen&&!liveOn()&&!document.body.classList.contains('quiz-on')&&!document.body.classList.contains('idea-on');
 if(btn)btn.classList.toggle('active',hlOpen);
 if(sec)sec.classList.toggle('hidden',!show);
 if(!fr)return;
@@ -894,7 +1134,7 @@ if(hlFeed==='profil'&&sel&&sel.deeplol){src=sel.deeplol;open=sel.deeplol}
 else{if(hlFeed==='profil')hlFeed='plays';const f=HL_FEEDS[hlFeed]||HL_FEEDS.plays;src=f.embed;open=sel?ytSearch(sel.name):f.open}
 if(ext){ext.href=open;ext.textContent=hlFeed==='profil'?'Ouvrir DeepLoL ↗':(sel?'Chercher '+sel.name+' ↗':'Ouvrir YouTube ↗');ext.onclick=e=>{e.preventDefault();if(hlFeed==='profil')openDeepLoL(open);else window.open(open,'_blank','noopener')}}
 if(fr.dataset.src!==src){fr.dataset.src=src;fr.src=src}}
-$('hl-open')&&($('hl-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();
+$('hl-open')&&($('hl-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();if(document.body.classList.contains('idea-on'))closeIdea();
 if(liveOn()){const people=hlPeople();const sel=people.find(p=>p.key===(hlKey??focusKey))||people[0];window.open(sel?ytSearch(sel.name):HL_FEEDS.plays.open,'_blank','noopener');return}
 trainOpen=false;syncTrain();hlOpen=!hlOpen;syncHighlights();if(hlOpen)$('highlights').scrollIntoView({behavior:'smooth',block:'start'})});
 $('hl-ext')&&($('hl-ext').onclick=e=>{e.preventDefault();const href=$('hl-ext').href;if(href&&href.indexOf('deeplol.gg')>=0)openDeepLoL(href);else window.open(href,'_blank','noopener')});
@@ -938,14 +1178,24 @@ const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain${
 quizWait=true;const next=$('quiz-next');if(next)next.onclick=()=>{quizWait=false;a.done?renderQuizEnd(a):loadQuiz(false)};
 $('hero-copy').textContent='Score '+a.score+' / '+a.round+' · série '+a.streak}
 catch(e){quizLocked=false;const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain bad">${esc(e.message||'erreur')}</div>`}}
-function openQuiz(){trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('quiz-on');const b=$('quiz-open');if(b){b.classList.add('active');b.textContent='Fermer quiz'}const p=$('hero-pill');if(p)p.textContent='QUIZ';$('hero-title').textContent='Quiz CD';$('hero-copy').textContent='Série de 10 · CD exacts, sorts, passifs · sans haste.';loadQuiz(true)}
+function openQuiz(){if(typeof closeIdea==='function')closeIdea();trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('quiz-on');const b=$('quiz-open');if(b){b.classList.add('active');b.textContent='Fermer quiz'}const p=$('hero-pill');if(p)p.textContent='QUIZ';$('hero-title').textContent='Quiz CD';$('hero-copy').textContent='Série de 10 · CD exacts, sorts, passifs · sans haste.';loadQuiz(true)}
 function closeQuiz(){document.body.classList.remove('quiz-on');quizQ=null;quizLocked=false;quizWait=false;const b=$('quiz-open');if(b){b.classList.remove('active');b.textContent='Quiz'}const p=$('hero-pill');if(p)p.textContent='AUTO';$('hero-title').textContent='Quiz fermé';$('hero-copy').textContent='Relance le quiz, une draft, ou une partie.';if(liveOn())renderLive()}
 $('quiz-open')&&($('quiz-open').onclick=()=>{if(quizOn())closeQuiz();else openQuiz()});
-document.onkeydown=e=>{if(document.activeElement===$('search'))return;
+const ideaOn=()=>document.body.classList.contains('idea-on');
+let ideaFile=null,ideaBusy=false;
+function ideaMsg(html,kind){const el=$('idea-msg');if(!el)return;if(!html){el.className='hidden';el.innerHTML='';return}el.className='idea-msg '+(kind||'');el.innerHTML=html}
+function setIdeaFile(f){ideaFile=f||null;const prev=$('idea-preview'),name=$('idea-file-name');if(!f){if(prev){prev.src='';prev.classList.add('hidden')}if(name)name.textContent='';return}if(name)name.textContent=f.name+' · '+Math.round(f.size/1024)+' ko';if(prev){prev.src=URL.createObjectURL(f);prev.classList.remove('hidden')}}
+function closeIdea(){document.body.classList.remove('idea-on');const b=$('idea-open');if(b){b.classList.remove('active');b.textContent='Idée'}const p=$('hero-pill');if(p)p.textContent='AUTO';$('hero-title').textContent='Idée fermée';$('hero-copy').textContent='Relance une idée, une draft, ou une partie.';if(liveOn())renderLive()}
+async function openIdea(){if(quizOn())closeQuiz();trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('idea-on');const b=$('idea-open');if(b){b.classList.add('active');b.textContent='Fermer idée'}const p=$('hero-pill');if(p)p.textContent='IDÉE';$('hero-title').textContent='Proposer une idée';$('hero-copy').textContent='Titre, description, capture. Si c\'est safe, une issue GitHub part ; sinon un mail ou un SMS.';ideaMsg('');try{const s=await(await fetch('/api/idea')).json();const bits=[];if(s.github)bits.push('issue GitHub directe');else bits.push('formulaire GitHub à valider');if(s.mail)bits.push('mail');if(s.sms)bits.push('SMS');const h=$('idea-hint');if(h)h.textContent=(bits.join(' · ')||'GitHub')+' · hors-sujet dangereux = privé'}catch(_){}}
+$('idea-open')&&($('idea-open').onclick=()=>{if(ideaOn())closeIdea();else openIdea()});
+const ideaDrop=$('idea-drop'),ideaInp=$('idea-image');
+if(ideaDrop&&ideaInp){ideaDrop.onclick=()=>ideaInp.click();ideaDrop.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();ideaInp.click()}};ideaDrop.ondragover=e=>{e.preventDefault();ideaDrop.classList.add('drag')};ideaDrop.ondragleave=()=>ideaDrop.classList.remove('drag');ideaDrop.ondrop=e=>{e.preventDefault();ideaDrop.classList.remove('drag');const f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];if(f)setIdeaFile(f)};ideaInp.onchange=()=>setIdeaFile(ideaInp.files&&ideaInp.files[0])}
+$('idea-form')&&($('idea-form').onsubmit=async e=>{e.preventDefault();if(ideaBusy)return;const title=($('idea-title').value||'').trim(),body=($('idea-body').value||'').trim();if(title.length<3||body.length<10){ideaMsg('Titre (3+ car.) et description (10+ car.) requis.','bad');return}ideaBusy=true;const btn=$('idea-send');if(btn)btn.textContent='Envoi…';ideaMsg('');try{const fd=new FormData();fd.append('title',title);fd.append('body',body);if(ideaFile)fd.append('image',ideaFile,ideaFile.name);const r=await fetch('/api/idea',{method:'POST',body:fd});const raw=await r.text();let d={};try{d=JSON.parse(raw)}catch(_){d={message:raw||'erreur'}}if(!r.ok){ideaMsg(esc(d.message||raw||'erreur'),'bad');return}const link=d.url?` <a href="${esc(d.url)}" target="_blank" rel="noopener">Ouvrir</a>`:'';ideaMsg(esc(d.message||'Envoyé.')+link,d.unsafe?'warn':(d.ok?'ok':'bad'));if(d.ok&&!d.unsafe){$('idea-title').value='';$('idea-body').value='';ideaInp&&(ideaInp.value='');setIdeaFile(null)}}catch(err){ideaMsg(esc(err.message||'erreur réseau'),'bad')}finally{ideaBusy=false;if(btn)btn.textContent='Envoyer'}});
+document.onkeydown=e=>{if(document.activeElement===$('search')||document.activeElement===$('idea-title')||document.activeElement===$('idea-body')){if(ideaOn()&&e.key==='Escape'){e.preventDefault();closeIdea()}return};
 if(quizOn()){if(e.key==='Escape'){e.preventDefault();closeQuiz();return}if(quizWait&&(e.key==='Enter'||e.key===' ')){e.preventDefault();const n=$('quiz-next');if(n)n.click();return}if(quizLocked)return;const map={a:0,b:1,c:2,d:3,'1':0,'2':1,'3':2,'4':3};const i=map[String(e.key).toLowerCase()];if(i==null)return;e.preventDefault();const btns=[...document.querySelectorAll('#quiz-card .quiz-choice')];if(btns[i])btns[i].click();return}
+if(ideaOn()){if(e.key==='Escape'){e.preventDefault();closeIdea()}return}
 if(HUDMODE&&(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&'IJKCijkc'.includes(e.key))||(e.ctrlKey&&(e.key==='u'||e.key==='U')))){e.preventDefault();return}
-if(HUDMODE&&(e.key==='Tab'||e.code==='Tab')){e.preventDefault();tabUntil=Date.now()+450;return}
-if(HUDMODE&&(e.key==='²'||e.code==='Backquote'||e.code==='Quote')){e.preventDefault();return}
+if(HUDMODE&&(e.key==='Tab'||e.code==='Tab')){e.preventDefault();tabUntil=Date.now()+450;syncHudExpand();return}
 const n=+e.key;if(!(n>=1&&n<=9))return;
 if(liveOn()){const p=(liveState.enemies||[])[n-1];if(!p)return;let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s));return}
 const list=visibleCards();if(n<=list.length){focusKey=list[n-1].key;render()}};

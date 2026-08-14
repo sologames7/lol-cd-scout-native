@@ -935,7 +935,7 @@ func apiHUDHold(w http.ResponseWriter, r *http.Request) {
 
 func apiHUDHits(w http.ResponseWriter, r *http.Request) {
 	var rs []hudHit
-	if err := json.NewDecoder(io.LimitReader(r.Body, 8192)).Decode(&rs); err != nil && err != io.EOF {
+	if err := json.NewDecoder(io.LimitReader(r.Body, 32<<10)).Decode(&rs); err != nil && err != io.EOF {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -957,18 +957,34 @@ func apiHUDBounds(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiHUDDrag(w http.ResponseWriter, r *http.Request) {
-	hudBeginDrag()
+	var req hudDragReq
+	if err := json.NewDecoder(io.LimitReader(r.Body, 1024)).Decode(&req); err != nil && err != io.EOF {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.ID == "" {
+		hudBeginDrag()
+	} else {
+		hudBeginWidgetDrag(req)
+	}
 	writeJSON(w, map[string]any{"ok": true})
+}
+
+func apiHUDGeom(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		var g hudGeomDisk
+		if err := json.NewDecoder(io.LimitReader(r.Body, 16<<10)).Decode(&g); err != nil && err != io.EOF {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		hudGeomReplace(g)
+	}
+	writeJSON(w, hudGeomSnapshot())
 }
 
 func apiHUDReset(w http.ResponseWriter, r *http.Request) {
 	hudResetPos()
-	writeHUDStatus(w)
-}
-
-func apiHUDSolid(w http.ResponseWriter, r *http.Request) {
-	hudSetSolid(r.URL.Query().Get("on") != "0")
-	writeHUDStatus(w)
+	writeJSON(w, hudGeomSnapshot())
 }
 
 func apiHUDClose(w http.ResponseWriter, r *http.Request) {
@@ -980,11 +996,15 @@ func apiInput(w http.ResponseWriter, r *http.Request) {
 	since, _ := strconv.ParseUint(r.URL.Query().Get("since"), 10, 64)
 	tab, seq, events := inputSince(since)
 	pinned, noActivate, window := hudStatus()
-	writeJSON(w, map[string]any{
+	out := map[string]any{
 		"supported": hudSupported(), "tab": tab, "seq": seq, "events": events,
 		"pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold(),
 		"tracks": hudTracksGet(),
-	})
+	}
+	if d, ok := hudDragLiveCopy(); ok {
+		out["drag"] = d
+	}
+	writeJSON(w, out)
 }
 
 func apiClipboard(w http.ResponseWriter, r *http.Request) {
@@ -1038,6 +1058,7 @@ func openBrowser(url string) {
 var currentListener atomic.Value
 
 func main() {
+	setDPIAware()
 	if applyStagedUpdate() {
 		return // une instance à jour vient d'être lancée
 	}
@@ -1085,8 +1106,8 @@ func main() {
 	mux.HandleFunc("/api/hud/hits", apiHUDHits)
 	mux.HandleFunc("/api/hud/bounds", apiHUDBounds)
 	mux.HandleFunc("/api/hud/drag", apiHUDDrag)
+	mux.HandleFunc("/api/hud/geom", apiHUDGeom)
 	mux.HandleFunc("/api/hud/reset", apiHUDReset)
-	mux.HandleFunc("/api/hud/solid", apiHUDSolid)
 	mux.HandleFunc("/api/hud/close", apiHUDClose)
 	mux.HandleFunc("/api/tracks", apiTracks)
 	mux.HandleFunc("/api/demo", apiDemo)
@@ -1094,6 +1115,7 @@ func main() {
 	mux.HandleFunc("/api/clipboard", apiClipboard)
 	mux.HandleFunc("/api/open", apiOpen)
 	mux.HandleFunc("/api/quiz", apiQuiz)
+	mux.HandleFunc("/api/idea", apiIdea)
 	ln, err := listenLocal()
 	if err != nil {
 		return
