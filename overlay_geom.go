@@ -1,11 +1,18 @@
 package main
 
 const (
-	hudMiniW = 200
-	hudMiniH = 100
-	hudMinW  = 160
+	hudMiniW = 360
+	hudMiniH = 160
+	hudMinW  = 200
 	hudMinH  = 72
 )
+
+type hudHit struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	W int `json:"w"`
+	H int `json:"h"`
+}
 
 func clampHudGeom(x, y, w, h, sw, sh int) (int, int, int, int) {
 	if sw < 1 {
@@ -44,4 +51,39 @@ func clampHudGeom(x, y, w, h, sw, sh int) (int, int, int, int) {
 func hudDefaultPos(w, h, sw, sh int) (x, y int) {
 	x, y, _, _ = clampHudGeom(sw-w-16, 16, w, h, sw, sh)
 	return x, y
+}
+
+func hudHitContains(hits []hudHit, x, y int) bool {
+	for _, h := range hits {
+		if h.W < 1 || h.H < 1 {
+			continue
+		}
+		if x >= h.X && y >= h.Y && x < h.X+h.W && y < h.Y+h.H {
+			return true
+		}
+	}
+	return false
+}
+
+func hudHitsClean(rs []hudHit) []hudHit {
+	out := make([]hudHit, 0, len(rs))
+	for _, h := range rs {
+		if h.W < 2 || h.H < 2 {
+			continue
+		}
+		out = append(out, h)
+	}
+	return out
+}
+
+func hudHitsEqual(a, b []hudHit) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

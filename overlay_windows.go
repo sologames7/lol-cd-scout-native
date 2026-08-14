@@ -2,10 +2,10 @@
 
 package main
 
-// HUD en jeu : widget natif WS_POPUP (comme Blitz), ~200×100, toujours visible.
-// On crée la HWND nous-mêmes (jamais de cadre Chrome). WebView2 dessine dedans.
-// Tab = aperçu tant que c'est enfoncé (scoreboard League). ² = verrouillage
-// (une frappe, la touche est avalée pour ne pas finir dans le chat).
+// HUD en jeu : widget natif WS_POPUP, visible, click-through hors des blocs.
+// Styles figés (jamais de WS_EX_TRANSPARENT au survol : ça vide WebView2).
+// Trous : SetWindowRgn + WM_NCHITTEST d'après /api/hud/hits.
+// Alt+1–5 Flash, Alt+Maj+1–5 ult, Tab / ² pour le tracker.
 
 import (
 	"encoding/json"
@@ -26,44 +26,49 @@ import (
 const hudWindowTitle = "CD Scout HUD"
 
 var (
-	user32                           = syscall.NewLazyDLL("user32.dll")
-	gdi32                            = syscall.NewLazyDLL("gdi32.dll")
-	dwmapi                           = syscall.NewLazyDLL("dwmapi.dll")
-	procIsWindow                     = user32.NewProc("IsWindow")
-	procEnumWindows                  = user32.NewProc("EnumWindows")
-	procGetWindowTextW               = user32.NewProc("GetWindowTextW")
-	procSetWindowPos                 = user32.NewProc("SetWindowPos")
-	procGetAsyncKeyState             = user32.NewProc("GetAsyncKeyState")
-	procVkKeyScanW                   = user32.NewProc("VkKeyScanW")
-	procGetSystemMetrics             = user32.NewProc("GetSystemMetrics")
-	procShowWindow                   = user32.NewProc("ShowWindow")
-	procPostMessageW                 = user32.NewProc("PostMessageW")
-	procReleaseCapture               = user32.NewProc("ReleaseCapture")
-	procGetCursorPos                 = user32.NewProc("GetCursorPos")
-	procGetWindowRect                = user32.NewProc("GetWindowRect")
-	procRegisterClassExW             = user32.NewProc("RegisterClassExW")
-	procCreateWindowExW              = user32.NewProc("CreateWindowExW")
-	procDefWindowProcW               = user32.NewProc("DefWindowProcW")
-	procGetMessageW                  = user32.NewProc("GetMessageW")
-	procTranslateMessage             = user32.NewProc("TranslateMessage")
-	procDispatchMessageW             = user32.NewProc("DispatchMessageW")
-	procPostQuitMessage              = user32.NewProc("PostQuitMessage")
-	procDestroyWindow                = user32.NewProc("DestroyWindow")
-	procLoadCursorW                  = user32.NewProc("LoadCursorW")
-	procGetStockObject               = gdi32.NewProc("GetStockObject")
-	procDwmSetWindowAttribute        = dwmapi.NewProc("DwmSetWindowAttribute")
-	procDwmExtendFrameIntoClientArea = dwmapi.NewProc("DwmExtendFrameIntoClientArea")
-	procSetWindowsHookExW            = user32.NewProc("SetWindowsHookExW")
-	procUnhookWindowsHookEx          = user32.NewProc("UnhookWindowsHookEx")
-	procCallNextHookEx               = user32.NewProc("CallNextHookEx")
-	ole32                            = syscall.NewLazyDLL("ole32.dll")
-	procCoInitializeEx               = ole32.NewProc("CoInitializeEx")
-	procCoUninitialize               = ole32.NewProc("CoUninitialize")
+	user32                    = syscall.NewLazyDLL("user32.dll")
+	gdi32                     = syscall.NewLazyDLL("gdi32.dll")
+	dwmapi                    = syscall.NewLazyDLL("dwmapi.dll")
+	procIsWindow              = user32.NewProc("IsWindow")
+	procEnumWindows           = user32.NewProc("EnumWindows")
+	procGetWindowTextW        = user32.NewProc("GetWindowTextW")
+	procSetWindowPos          = user32.NewProc("SetWindowPos")
+	procGetAsyncKeyState      = user32.NewProc("GetAsyncKeyState")
+	procVkKeyScanW            = user32.NewProc("VkKeyScanW")
+	procGetSystemMetrics      = user32.NewProc("GetSystemMetrics")
+	procShowWindow            = user32.NewProc("ShowWindow")
+	procPostMessageW          = user32.NewProc("PostMessageW")
+	procReleaseCapture        = user32.NewProc("ReleaseCapture")
+	procGetCursorPos          = user32.NewProc("GetCursorPos")
+	procGetWindowRect         = user32.NewProc("GetWindowRect")
+	procScreenToClient        = user32.NewProc("ScreenToClient")
+	procRegisterClassExW      = user32.NewProc("RegisterClassExW")
+	procCreateWindowExW       = user32.NewProc("CreateWindowExW")
+	procDefWindowProcW        = user32.NewProc("DefWindowProcW")
+	procGetMessageW           = user32.NewProc("GetMessageW")
+	procTranslateMessage      = user32.NewProc("TranslateMessage")
+	procDispatchMessageW      = user32.NewProc("DispatchMessageW")
+	procPostQuitMessage       = user32.NewProc("PostQuitMessage")
+	procDestroyWindow         = user32.NewProc("DestroyWindow")
+	procLoadCursorW           = user32.NewProc("LoadCursorW")
+	procGetStockObject        = gdi32.NewProc("GetStockObject")
+	procCreateRectRgn         = gdi32.NewProc("CreateRectRgn")
+	procCombineRgn            = gdi32.NewProc("CombineRgn")
+	procDeleteObject          = gdi32.NewProc("DeleteObject")
+	procSetWindowRgn          = user32.NewProc("SetWindowRgn")
+	procDwmSetWindowAttribute = dwmapi.NewProc("DwmSetWindowAttribute")
+	procSetWindowsHookExW     = user32.NewProc("SetWindowsHookExW")
+	procUnhookWindowsHookEx   = user32.NewProc("UnhookWindowsHookEx")
+	procCallNextHookEx        = user32.NewProc("CallNextHookEx")
+	ole32                     = syscall.NewLazyDLL("ole32.dll")
+	procCoInitializeEx        = ole32.NewProc("CoInitializeEx")
+	procCoUninitialize        = ole32.NewProc("CoUninitialize")
 )
 
 const (
 	hwndTopmost   = ^uintptr(0)
 	swpNoSize     = 0x0001
+	swpNoMove     = 0x0002
 	swpNoZOrder   = 0x0004
 	swpNoActivate = 0x0010
 
@@ -93,15 +98,22 @@ const (
 	wmHudClose      = wmApp + 3
 	wmHudTopmost    = wmApp + 4
 	wmHudReset      = wmApp + 5
+	wmHudHits       = wmApp + 6
 
 	maNoActivate = 3
 	idcArrow     = 32512
+	blackBrush   = 4
+	rgnOr        = 2
 	vkLButton    = 0x01
 	vkTab        = 0x09
 	vkShift      = 0x10
 	vkControl    = 0x11
 	vkMenu       = 0x12
 	vkOEM3       = 0xC0
+
+	wmNCHitTest   = 0x0084
+	htClient      = 1
+	htTransparent = ^uintptr(0) // HTTRANSPARENT = -1
 
 	whKeyboardLL = 13
 	nullBrush    = 5
@@ -128,13 +140,6 @@ var (
 	toggleVKOnce     sync.Once
 	toggleVK         int
 )
-
-type dwmMargins struct {
-	CxLeftWidth    int32
-	CxRightWidth   int32
-	CyTopHeight    int32
-	CyBottomHeight int32
-}
 
 type kbdLLHook struct {
 	VkCode    uint32
@@ -178,9 +183,15 @@ func dwmAttr(hwnd syscall.Handle, attr uint32, value uint32) {
 	procDwmSetWindowAttribute.Call(uintptr(hwnd), uintptr(attr), uintptr(unsafe.Pointer(&value)), 4)
 }
 
-func extendHudGlass(hwnd syscall.Handle) {
-	m := dwmMargins{-1, -1, -1, -1}
-	procDwmExtendFrameIntoClientArea.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&m)))
+func hudSetControllerOpaque(cr *edge.Chromium) {
+	if cr == nil {
+		return
+	}
+	if c := cr.GetController(); c != nil {
+		if c2 := c.GetICoreWebView2Controller2(); c2 != nil {
+			_ = c2.PutDefaultBackgroundColor(edge.COREWEBVIEW2_COLOR{A: 255, R: 18, G: 28, B: 44})
+		}
+	}
 }
 
 func sysMetric(index int) int {
@@ -272,15 +283,88 @@ func autoOpenHudForGame(key string) {
 	go func() { _ = hudOpen(hudURL()) }()
 }
 
-type hudHit struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	W int `json:"w"`
-	H int `json:"h"`
+var hudHits = struct {
+	mu    sync.Mutex
+	rs    []hudHit
+	solid bool
+}{}
+
+func hudSetHits(rs []hudHit) {
+	rs = hudHitsClean(rs)
+	hudHits.mu.Lock()
+	same := hudHitsEqual(hudHits.rs, rs)
+	if !same {
+		hudHits.rs = rs
+	}
+	hudHits.mu.Unlock()
+	if same {
+		return
+	}
+	if h := hudHWND(); windowAlive(h) {
+		procPostMessageW.Call(uintptr(h), wmHudHits, 0, 0)
+	}
 }
 
-func hudSetHits([]hudHit) {}
-func hudSetSolid(bool)    {}
+func hudSetSolid(on bool) {
+	hudHits.mu.Lock()
+	if hudHits.solid == on {
+		hudHits.mu.Unlock()
+		return
+	}
+	hudHits.solid = on
+	hudHits.mu.Unlock()
+	if h := hudHWND(); windowAlive(h) {
+		procPostMessageW.Call(uintptr(h), wmHudHits, 0, 0)
+	}
+}
+
+func applyHudRegion(hwnd syscall.Handle) {
+	if !windowAlive(hwnd) {
+		return
+	}
+	hudHits.mu.Lock()
+	solid := hudHits.solid
+	rs := append([]hudHit(nil), hudHits.rs...)
+	hudHits.mu.Unlock()
+	if solid || len(rs) == 0 {
+		procSetWindowRgn.Call(uintptr(hwnd), 0, 1)
+		return
+	}
+	r0 := rs[0]
+	rgn, _, _ := procCreateRectRgn.Call(uintptr(r0.X), uintptr(r0.Y), uintptr(r0.X+r0.W), uintptr(r0.Y+r0.H))
+	if rgn == 0 {
+		return
+	}
+	for _, h := range rs[1:] {
+		part, _, _ := procCreateRectRgn.Call(uintptr(h.X), uintptr(h.Y), uintptr(h.X+h.W), uintptr(h.Y+h.H))
+		if part == 0 {
+			continue
+		}
+		procCombineRgn.Call(rgn, rgn, part, rgnOr)
+		procDeleteObject.Call(part)
+	}
+	procSetWindowRgn.Call(uintptr(hwnd), rgn, 1)
+}
+
+func hudNCHitTest(hwnd syscall.Handle, lParam uintptr) uintptr {
+	hudHits.mu.Lock()
+	solid := hudHits.solid
+	rs := hudHits.rs
+	hudHits.mu.Unlock()
+	if solid || len(rs) == 0 {
+		r, _, _ := procDefWindowProcW.Call(uintptr(hwnd), wmNCHitTest, 0, lParam)
+		return r
+	}
+	pt := winPoint{
+		X: int32(int16(lParam)),
+		Y: int32(int16(lParam >> 16)),
+	}
+	procScreenToClient.Call(uintptr(hwnd), uintptr(unsafe.Pointer(&pt)))
+	if hudHitContains(rs, int(pt.X), int(pt.Y)) {
+		return htClient
+	}
+	return htTransparent
+}
 
 func hudStatus() (pinned, noActivate, found bool) {
 	hudPin.mu.Lock()
@@ -519,19 +603,20 @@ func hudUIThread(url string) {
 		_ = settings.PutAreBrowserAcceleratorKeysEnabled(false)
 		_ = settings.PutIsSwipeNavigationEnabled(false)
 	}
-	if c := cr.GetController(); c != nil {
-		if c2 := c.GetICoreWebView2Controller2(); c2 != nil {
-			_ = c2.PutDefaultBackgroundColor(edge.COREWEBVIEW2_COLOR{A: 0, R: 0, G: 0, B: 0})
-		}
-	}
+	hudSetControllerOpaque(cr)
 	// Cette WebView2 n'affiche que le widget : hudmode même si l'URL perd ?hud=1.
 	cr.Init(`(function(){document.documentElement.classList.add('hudmode');function b(){if(document.body)document.body.classList.add('hudmode');document.title='CD Scout HUD'}if(document.body)b();else document.addEventListener('DOMContentLoaded',b)})()`)
 	cr.NavigationCompletedCallback = func(*edge.ICoreWebView2, *edge.ICoreWebView2NavigationCompletedEventArgs) {
+		hudSetControllerOpaque(cr)
 		cr.Resize()
 		cr.Eval(`document.documentElement.classList.add('hudmode');if(document.body)document.body.classList.add('hudmode');document.title='CD Scout HUD'`)
+		if h := hudHWND(); windowAlive(h) {
+			procPostMessageW.Call(uintptr(h), wmHudHits, 0, 0)
+		}
 	}
 	cr.Resize()
 	cr.Navigate(url)
+	applyHudRegion(hwnd)
 	signalHudReady(nil)
 
 	go pinLoop()
@@ -595,7 +680,6 @@ func createHudWindow() (syscall.Handle, error) {
 		return 0, errors.New("CreateWindowEx HUD")
 	}
 	hnd := syscall.Handle(hwnd)
-	extendHudGlass(hnd)
 	dwmAttr(hnd, dwmwaWindowCornerPreference, dwmwcpDoNotRound)
 	dwmAttr(hnd, dwmwaBorderColor, dwmColorNone)
 	dwmAttr(hnd, dwmwaCaptionColor, dwmColorNone)
@@ -608,6 +692,8 @@ func hudWndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr
 		return 1
 	case wmMouseActivate:
 		return maNoActivate
+	case wmNCHitTest:
+		return hudNCHitTest(hwnd, lParam)
 	case wmSize, wmHudBounds:
 		applyHudBounds(hwnd)
 		hudPin.mu.Lock()
@@ -616,6 +702,7 @@ func hudWndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr
 		if web != nil {
 			web.Resize()
 		}
+		applyHudRegion(hwnd)
 		return 0
 	case wmMove:
 		hudPin.mu.Lock()
@@ -631,6 +718,9 @@ func hudWndProc(hwnd syscall.Handle, msg uint32, wParam, lParam uintptr) uintptr
 		return 0
 	case wmHudDrag:
 		go hudDragLoop(hwnd)
+		return 0
+	case wmHudHits:
+		applyHudRegion(hwnd)
 		return 0
 	case wmHudTopmost:
 		applyHudTopmost(hwnd)
@@ -697,13 +787,15 @@ func applyHudTopmost(hwnd syscall.Handle) {
 	if !pinned || !windowAlive(hwnd) {
 		return
 	}
-	procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, 0, 0, 0, 0, swpNoSize|0x0002|swpNoActivate) // NOSIZE|NOMOVE
+	procSetWindowPos.Call(uintptr(hwnd), hwndTopmost, 0, 0, 0, 0, swpNoSize|swpNoMove|swpNoActivate)
 }
 
 func hudDragLoop(hwnd syscall.Handle) {
 	if !windowAlive(hwnd) {
 		return
 	}
+	hudSetSolid(true)
+	defer hudSetSolid(false)
 	var pt winPoint
 	var rc winRect
 	procGetCursorPos.Call(uintptr(unsafe.Pointer(&pt)))
@@ -836,7 +928,7 @@ func inputStart() {
 			inputHub.mu.Lock()
 			inputHub.tab = tab
 			inputHub.mu.Unlock()
-			time.Sleep(30 * time.Millisecond)
+			time.Sleep(16 * time.Millisecond)
 		}
 	}()
 }

@@ -24,13 +24,6 @@ func hudHold() bool { return false }
 
 func hudSetHold(bool) {}
 
-type hudHit struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	W int `json:"w"`
-	H int `json:"h"`
-}
-
 func hudSetHits([]hudHit) {}
 
 func hudSetSolid(bool) {}

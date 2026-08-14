@@ -1,12 +1,14 @@
 package main
 
-// Identités joueurs (pseudo, rang solo, lien DeepLoL) via LCU.
-// Live Client Data donne le Riot ID ; le rang vient de /lol-ranked.
+// Identités joueurs (pseudo, rang solo, WR, lien DeepLoL) via LCU.
+// Live Client Data donne le Riot ID ; le rang / WR viennent de /lol-ranked.
+// AI-score DeepLoL (10 dernières games) : deeplol.go, en partie seulement.
 // Streamer mode : le live client remplace le pseudo par le champion → on n'affiche
 // pas le vrai nom et on ne pose pas de lien DeepLoL (ça le révélerait).
 
 import (
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -16,13 +18,17 @@ import (
 )
 
 type PlayerScout struct {
-	ID      int    `json:"id"`
-	Name    string `json:"name,omitempty"`
-	Hidden  bool   `json:"hidden,omitempty"`
-	Rank    string `json:"rank,omitempty"`
-	Tier    string `json:"tier,omitempty"`
-	DeepLoL string `json:"deeplol,omitempty"`
-	RiotID  string `json:"riotId,omitempty"`
+	ID      int        `json:"id"`
+	Name    string     `json:"name,omitempty"`
+	Hidden  bool       `json:"hidden,omitempty"`
+	Rank    string     `json:"rank,omitempty"`
+	Tier    string     `json:"tier,omitempty"`
+	WR      *int       `json:"wr,omitempty"`
+	Games   int        `json:"games,omitempty"`
+	AI      *int       `json:"ai,omitempty"`
+	Tags    []ScoutTag `json:"tags,omitempty"`
+	DeepLoL string     `json:"deeplol,omitempty"`
+	RiotID  string     `json:"riotId,omitempty"`
 }
 
 type playerIdent struct {
@@ -35,6 +41,12 @@ type playerIdent struct {
 	Division string
 	LP       int
 	Rank     string
+	Wins     int
+	Losses   int
+	AI       int
+	HasAI    bool
+	DLGames  int
+	Tags     []ScoutTag
 	DeepLoL  string
 	Hidden   bool
 	Ready    bool
@@ -53,6 +65,8 @@ type lcuRankedEntry struct {
 	Tier         string `json:"tier"`
 	Division     string `json:"division"`
 	LeaguePoints int    `json:"leaguePoints"`
+	Wins         int    `json:"wins"`
+	Losses       int    `json:"losses"`
 }
 
 type lcuRankedStats struct {
@@ -139,6 +153,8 @@ func harvestIdentities(creds *lcuCreds, phase string) {
 		}()
 	}
 	wg.Wait()
+	c := *creds
+	go enrichDeepLoL(&c, phase)
 }
 
 type flexInt64 int64
@@ -229,8 +245,40 @@ func parseAnyID(raw json.RawMessage) int64 {
 	if s == "" || s == "null" {
 		return 0
 	}
-	n, _ := strconv.ParseInt(s, 10, 64)
-	return n
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return n
+	}
+	if f, err := strconv.ParseFloat(s, 64); err == nil {
+		return int64(f)
+	}
+	return 0
+}
+
+func wrPct(wins, games int) int {
+	if games <= 0 {
+		return 0
+	}
+	return int(math.Round(float64(wins) * 100 / float64(games)))
+}
+
+func identWR(p *playerIdent) (*int, int) {
+	if p == nil {
+		return nil, 0
+	}
+	g := p.Wins + p.Losses
+	if g <= 0 {
+		return nil, 0
+	}
+	v := wrPct(p.Wins, g)
+	return &v, g
+}
+
+func identAI(p *playerIdent) *int {
+	if p == nil || !p.HasAI {
+		return nil
+	}
+	v := p.AI
+	return &v
 }
 
 func resetGameIfNew(key string) {
@@ -244,6 +292,7 @@ func resetGameIfNew(key string) {
 	}
 	identStore.gameKey = key
 	identStore.byChamp = map[int]*playerIdent{}
+	resetDeepLoL()
 }
 
 func enrichMember(creds *lcuCreds, puuid string, summonerID int64, champID int, hidden bool, fallbackName string) {
@@ -308,6 +357,7 @@ func enrichMember(creds *lcuCreds, puuid string, summonerID int64, champID int, 
 		e := pickSolo(&stats)
 		p.Tier, p.Division, p.LP = e.Tier, e.Division, e.LeaguePoints
 		p.Rank = rankShort(e.Tier, e.Division, e.LeaguePoints)
+		p.Wins, p.Losses = e.Wins, e.Losses
 	}
 
 	if !p.Hidden {
@@ -373,6 +423,9 @@ func scoutFromChamp(id int) *PlayerScout {
 	if noneTier(s.Tier) {
 		s.Tier, s.Rank = "", ""
 	}
+	s.WR, s.Games = identWR(p)
+	s.AI = identAI(p)
+	s.Tags = p.Tags
 	if p.Hidden {
 		s.Hidden = true
 		return s
@@ -394,6 +447,10 @@ func attachDraftScout(snap *Snapshot) {
 			snap.AllyFocus[i].Hidden = s.Hidden
 			snap.AllyFocus[i].Rank = s.Rank
 			snap.AllyFocus[i].Tier = s.Tier
+			snap.AllyFocus[i].WR = s.WR
+			snap.AllyFocus[i].Games = s.Games
+			snap.AllyFocus[i].AI = s.AI
+			snap.AllyFocus[i].Tags = s.Tags
 			snap.AllyFocus[i].DeepLoL = s.DeepLoL
 			snap.AllyFocus[i].RiotID = s.RiotID
 		}
@@ -404,6 +461,8 @@ func applyIdentity(lp *LivePlayer) {
 	name, hidden := visibleName(lp.RiotID, lp.Champion)
 	lp.Name, lp.Hidden = name, hidden
 	lp.Rank, lp.Tier, lp.DeepLoL = "", "", ""
+	lp.WR, lp.Games, lp.AI = nil, 0, nil
+	lp.Tags = nil
 	if !hidden {
 		lp.DeepLoL = deepLoLFromRiotID(lp.RiotID)
 	}
@@ -415,6 +474,9 @@ func applyIdentity(lp *LivePlayer) {
 		lp.Tier = strings.ToLower(strings.TrimSpace(id.Tier))
 		lp.Rank = id.Rank
 	}
+	lp.WR, lp.Games = identWR(id)
+	lp.AI = identAI(id)
+	lp.Tags = id.Tags
 	if hidden {
 		return
 	}

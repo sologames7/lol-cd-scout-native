@@ -43,6 +43,7 @@ type Override struct {
 	Important    []Spell  `json:"important"`
 	Counters     []string `json:"counters,omitempty"`
 	HardMatchups []string `json:"hardMatchups,omitempty"`
+	Synergies    []string `json:"synergies,omitempty"`
 }
 
 type ChampionCard struct {
@@ -56,18 +57,23 @@ type ChampionCard struct {
 	Window       string   `json:"window"`
 	Counters     []string `json:"counters,omitempty"`
 	HardMatchups []string `json:"hardMatchups,omitempty"`
+	Synergies    []string `json:"synergies,omitempty"`
 	Source       string   `json:"source"`
 }
 
 type AllyFocus struct {
-	Role    string `json:"role"`
-	ID      int    `json:"id"`
-	Name    string `json:"name,omitempty"`
-	Hidden  bool   `json:"hidden,omitempty"`
-	Rank    string `json:"rank,omitempty"`
-	Tier    string `json:"tier,omitempty"`
-	DeepLoL string `json:"deeplol,omitempty"`
-	RiotID  string `json:"riotId,omitempty"`
+	Role    string     `json:"role"`
+	ID      int        `json:"id"`
+	Name    string     `json:"name,omitempty"`
+	Hidden  bool       `json:"hidden,omitempty"`
+	Rank    string     `json:"rank,omitempty"`
+	Tier    string     `json:"tier,omitempty"`
+	WR      *int       `json:"wr,omitempty"`
+	Games   int        `json:"games,omitempty"`
+	AI      *int       `json:"ai,omitempty"`
+	Tags    []ScoutTag `json:"tags,omitempty"`
+	DeepLoL string     `json:"deeplol,omitempty"`
+	RiotID  string     `json:"riotId,omitempty"`
 }
 
 type teamMember struct {
@@ -87,6 +93,10 @@ type Snapshot struct {
 	Allies     []int         `json:"allies,omitempty"`
 	AllyFocus  []AllyFocus   `json:"allyFocus,omitempty"`
 	EnemyScout []PlayerScout `json:"enemyScout,omitempty"`
+	MyRole     string        `json:"myRole,omitempty"`
+	MyChamp    int           `json:"myChamp,omitempty"`
+	Bans       []int         `json:"bans,omitempty"`
+	Draft      *DraftAdvice  `json:"draft,omitempty"`
 	Error      string        `json:"error,omitempty"`
 	Lockfile   string        `json:"lockfile,omitempty"`
 	Version    string        `json:"version,omitempty"`
@@ -251,6 +261,7 @@ func refreshDragon() {
 	}
 	dragon.mu.Unlock()
 	_ = ensureIndex()
+	go runeTable()
 }
 
 func ensureIndex() error {
@@ -395,9 +406,12 @@ func normalize(d champDetail) ChampionCard {
 	summary := ""
 	window := ""
 	source := "ddragon"
-	var counters, hardMatchups []string
+	var counters, hardMatchups, syns []string
 	if m, ok := matchups[d.ID]; ok {
 		counters, hardMatchups = m.Counters, m.HardMatchups
+	}
+	if s, ok := synergies[d.ID]; ok {
+		syns = s
 	}
 	curatedByKey := map[string]Spell{}
 	var curatedOrder []Spell
@@ -408,6 +422,9 @@ func normalize(d champDetail) ChampionCard {
 		}
 		if len(o.HardMatchups) > 0 {
 			hardMatchups = o.HardMatchups
+		}
+		if len(o.Synergies) > 0 {
+			syns = o.Synergies
 		}
 		for _, s := range o.Important {
 			if a, ok := auto[s.Spell]; ok {
@@ -463,7 +480,7 @@ func normalize(d champDetail) ChampionCard {
 	return ChampionCard{
 		ID: d.ID, Key: key, Name: d.Name, Title: d.Title, Icon: d.Image.Full,
 		Important: important, Summary: summary, Window: window,
-		Counters: counters, HardMatchups: hardMatchups, Source: source,
+		Counters: counters, HardMatchups: hardMatchups, Synergies: syns, Source: source,
 	}
 }
 
@@ -634,13 +651,9 @@ func champID(championID, pickIntent int) int {
 }
 
 func roleLabel(pos string) string {
-	switch strings.ToLower(strings.TrimSpace(pos)) {
-	case "utility":
-		return "SUPP"
-	case "jungle":
-		return "JGL"
-	case "middle":
-		return "MID"
+	switch roleShort(pos) {
+	case "SUPP", "JGL", "MID":
+		return roleShort(pos)
 	default:
 		return ""
 	}
@@ -694,6 +707,11 @@ func getSnapshot() Snapshot {
 			LocalPlayerCellID int          `json:"localPlayerCellId"`
 			TheirTeam         []teamMember `json:"theirTeam"`
 			MyTeam            []teamMember `json:"myTeam"`
+			Bans              struct {
+				MyTeamBans    []int `json:"myTeamBans"`
+				TheirTeamBans []int `json:"theirTeamBans"`
+			} `json:"bans"`
+			Actions json.RawMessage `json:"actions"`
 		}
 		status, err := lcuGET(creds, "/lol-champ-select/v1/session", &session)
 		if err == nil {
@@ -702,9 +720,49 @@ func getSnapshot() Snapshot {
 			}
 			for _, p := range session.MyTeam {
 				snap.Allies = append(snap.Allies, champID(p.ChampionID, p.ChampionPickIntent))
+				if p.CellID == session.LocalPlayerCellID {
+					snap.MyRole = roleShort(p.AssignedPosition)
+					snap.MyChamp = champID(p.ChampionID, p.ChampionPickIntent)
+				}
 			}
 			snap.Enemies, snap.Allies = uniqueNonzero(snap.Enemies), uniqueNonzero(snap.Allies)
 			snap.AllyFocus = allyFocusFromTeam(session.MyTeam, session.LocalPlayerCellID)
+			snap.Bans = uniqueNonzero(append(append([]int{}, session.Bans.MyTeamBans...), session.Bans.TheirTeamBans...))
+			turn := ""
+			type csAction struct {
+				ActorCellID  int    `json:"actorCellId"`
+				ChampionID   int    `json:"championId"`
+				Completed    bool   `json:"completed"`
+				IsInProgress bool   `json:"isInProgress"`
+				Type         string `json:"type"`
+			}
+			applyActions := func(actions []csAction) {
+				for _, a := range actions {
+					if a.IsInProgress && a.ActorCellID == session.LocalPlayerCellID {
+						t := strings.ToLower(a.Type)
+						if t == "ban" || t == "pick" {
+							turn = t
+						}
+					}
+					if a.Completed && strings.EqualFold(a.Type, "ban") && a.ChampionID != 0 {
+						snap.Bans = append(snap.Bans, a.ChampionID)
+					}
+				}
+			}
+			var grouped [][]csAction
+			if json.Unmarshal(session.Actions, &grouped) == nil {
+				for _, g := range grouped {
+					applyActions(g)
+				}
+			} else {
+				var flat []csAction
+				if json.Unmarshal(session.Actions, &flat) == nil {
+					applyActions(flat)
+				}
+			}
+			snap.Bans = uniqueNonzero(snap.Bans)
+			d := buildDraftAdvice(snap.Enemies, snap.Allies, snap.Bans, snap.MyRole, snap.MyChamp, turn)
+			snap.Draft = &d
 		} else if status != 404 {
 			snap.Error = err.Error()
 		}
@@ -801,14 +859,19 @@ func apiQuit(w http.ResponseWriter, r *http.Request) {
 }
 
 var ddragonPathRe = regexp.MustCompile(`(?i)^[0-9]+(?:\.[0-9]+)+/(?:img|data)/[A-Za-z0-9._%/-]+$`)
+var ddragonPerkRe = regexp.MustCompile(`(?i)^img/perk-images/[A-Za-z0-9._/-]+$`)
 
 func ddragonPathOK(p string) bool {
 	p = strings.TrimPrefix(p, "/")
-	return p != "" && !strings.Contains(p, "..") && !strings.Contains(p, "//") && ddragonPathRe.MatchString(p)
+	if p == "" || strings.Contains(p, "..") || strings.Contains(p, "//") {
+		return false
+	}
+	return ddragonPathRe.MatchString(p) || ddragonPerkRe.MatchString(p)
 }
 
 // apiDDragon reverse-proxie le CDN Riot en same-origin : WebView2 (tracking
 // prevention) et certains bloqueurs coupent sinon les icônes ddragon.
+// Chemins versionnés (`16.15.1/img/…`) et runes sans version (`img/perk-images/…`).
 func apiDDragon(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		http.Error(w, "GET", http.StatusMethodNotAllowed)
@@ -920,6 +983,7 @@ func apiInput(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, map[string]any{
 		"supported": hudSupported(), "tab": tab, "seq": seq, "events": events,
 		"pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold(),
+		"tracks": hudTracksGet(),
 	})
 }
 
@@ -1006,7 +1070,10 @@ func main() {
 	mux.HandleFunc("/api/status", apiStatus)
 	mux.HandleFunc("/api/live", apiLive)
 	mux.HandleFunc("/api/voice", apiVoice)
+	mux.HandleFunc("/alerts/", apiAlertArt)
+	mux.HandleFunc("/api/objsfx", apiObjSFX)
 	mux.HandleFunc("/api/cards", apiCards)
+	mux.HandleFunc("/api/draft", apiDraft)
 	mux.HandleFunc("/api/search", apiSearch)
 	mux.HandleFunc("/api/card", apiCard)
 	mux.HandleFunc("/api/quit", apiQuit)
@@ -1021,6 +1088,8 @@ func main() {
 	mux.HandleFunc("/api/hud/reset", apiHUDReset)
 	mux.HandleFunc("/api/hud/solid", apiHUDSolid)
 	mux.HandleFunc("/api/hud/close", apiHUDClose)
+	mux.HandleFunc("/api/tracks", apiTracks)
+	mux.HandleFunc("/api/demo", apiDemo)
 	mux.HandleFunc("/api/input", apiInput)
 	mux.HandleFunc("/api/clipboard", apiClipboard)
 	mux.HandleFunc("/api/open", apiOpen)

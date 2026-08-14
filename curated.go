@@ -99,6 +99,10 @@ var overrides = map[string]Override{
 			"Morgana", "Braum", "Lulu", "Milio", "Janna", "Rell", "Leona", "Renata Glasc",
 			"Ashe", "Senna", "Smolder", "Xerath", "Vel'Koz", "Karthus", "Malzahar",
 		},
+		Synergies: []string{
+			"Nautilus", "Rell", "Leona", "Thresh", "Pyke", "Blitzcrank", "Alistar",
+			"Graves", "Lee Sin", "Ahri", "Sylas", "Jarvan IV",
+		},
 	},
 	"Nautilus": {
 		Summary: "Q > R > E",
@@ -115,6 +119,10 @@ var overrides = map[string]Override{
 		HardMatchups: []string{
 			"Morgana", "Lulu", "Milio", "Janna", "Poppy", "Zilean", "Karma", "Nami",
 			"Sivir", "Xayah", "Ezreal", "Caitlyn",
+		},
+		Synergies: []string{
+			"Samira", "Kai'Sa", "Miss Fortune", "Jhin", "Tristana", "Ezreal",
+			"Graves", "Lee Sin", "Ahri", "Caitlyn",
 		},
 	},
 	"Vayne": {

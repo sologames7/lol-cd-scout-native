@@ -11,8 +11,9 @@ import (
 )
 
 // Alertes audio en live : voiceline de select du jungle aux fenêtres de gank
-// habituelles, voiceline + TTS quand il revient shop avec un gros spike d'or,
-// TTS quand n'importe quel champion (sauf soi) complète un légendaire.
+// habituelles, voiceline quand il revient shop avec un gros spike d'or,
+// pop portrait + son tiroir-caisse quand un champion (sauf soi) complète
+// un légendaire.
 //
 // Les cues restent ~10 s dans LiveState.Voices ; le front déduplique par ID.
 // Voicelines : CommunityDragon champion-choose-vo (ogg FR), proxifiées
@@ -23,6 +24,8 @@ type VoiceCue struct {
 	Kind     string  `json:"kind"` // gank | shop | item
 	Champion string  `json:"champion"`
 	Key      int     `json:"key"`
+	Icon     string  `json:"icon,omitempty"`
+	ItemID   int     `json:"itemId,omitempty"`
 	Title    string  `json:"title"`
 	Sub      string  `json:"sub,omitempty"`
 	Speak    string  `json:"speak,omitempty"` // TTS FR
@@ -242,6 +245,8 @@ func collectPlayerCues(p LivePlayer, enemy bool, state *LiveState, meta map[int]
 				Kind:     "item",
 				Champion: p.Champion,
 				Key:      p.Key,
+				Icon:     p.Icon,
+				ItemID:   it.id,
 				Title:    strings.ToUpper(p.Champion) + " · ITEM",
 				Sub:      name,
 				Speak:    p.Champion + " a complété " + name,
@@ -256,6 +261,7 @@ func collectPlayerCues(p LivePlayer, enemy bool, state *LiveState, meta map[int]
 				Kind:     "shop",
 				Champion: p.Champion,
 				Key:      p.Key,
+				Icon:     p.Icon,
 				Title:    strings.ToUpper(p.Champion) + " · SHOP",
 				Sub:      fmt.Sprintf("spike itemique +%d or — il ressort fort", goldJump),
 				Speak:    p.Champion + " a shop",
@@ -287,6 +293,7 @@ func collectPlayerCues(p LivePlayer, enemy bool, state *LiveState, meta map[int]
 			Kind:     "gank",
 			Champion: p.Champion,
 			Key:      p.Key,
+			Icon:     p.Icon,
 			Title:    strings.ToUpper(p.Champion) + " · " + strings.ToUpper(w.label),
 			Sub:      who,
 			Voice:    true,
@@ -354,7 +361,7 @@ func fetchVoiceOGG(url string) ([]byte, error) {
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return nil, fmt.Errorf("HTTP %d", res.StatusCode)
 	}
-	b, err := io.ReadAll(io.LimitReader(res.Body, 256<<10))
+	b, err := io.ReadAll(io.LimitReader(res.Body, 512<<10))
 	if err != nil {
 		return nil, err
 	}

@@ -122,14 +122,17 @@ func TestObjectives(t *testing.T) {
 			t.Errorf("%s: spawn %.0f, attendu %.0f", c.key, got, c.want)
 		}
 	}
-	if l := obj["grubs"].Leads; len(l) != 2 || l[0] != leadTeamfight || l[1] != leadGrubs {
-		t.Errorf("alertes larves attendues à 120 s + 70 s, obtenu %v", l)
+	if l := obj["grubs"].Leads; len(l) != 1 || l[0] != leadTeamfight {
+		t.Errorf("alerte larves attendue à 75 s, obtenu %v", l)
 	}
 	if l := obj["baron"].Leads; len(l) != 1 || l[0] != leadTeamfight {
-		t.Errorf("alerte baron attendue à 120 s, obtenu %v", l)
+		t.Errorf("alerte baron attendue à 75 s, obtenu %v", l)
 	}
-	if obj["herald"].Leads != nil {
-		t.Errorf("le héraut ne doit pas déclencher d'alerte teamfight: %v", obj["herald"].Leads)
+	if l := obj["herald"].Leads; len(l) != 1 || l[0] != leadTeamfight {
+		t.Errorf("alerte héraut attendue à 75 s, obtenu %v", l)
+	}
+	if leadTeamfight != 75 {
+		t.Errorf("lead teamfight: %.0f, attendu 75 (1:15)", leadTeamfight)
 	}
 
 	// Camp de larves terminé : plus de compte à rebours ni d'alerte.
@@ -149,13 +152,24 @@ func TestObjectives(t *testing.T) {
 
 	// 3 drakes pour une équipe → le prochain donne l'âme ; 4 → Ancestral.
 	obj = buildObjectives(live(1000, kill("DragonKill", 300)+","+kill("DragonKill", 600)+","+kill("DragonKill", 900)))
-	if obj["dragon"].Note != "ÂME" || obj["dragon"].NextAt != 1200 {
+	if obj["dragon"].Note != "ÂME" || obj["dragon"].NextAt != 1200 || obj["dragon"].Kind != "soul" {
 		t.Errorf("drake d'âme attendu à 900+300: %+v", obj["dragon"])
 	}
 	obj = buildObjectives(live(1300, kill("DragonKill", 300)+","+kill("DragonKill", 600)+","+
 		kill("DragonKill", 900)+","+kill("DragonKill", 1200)))
-	if !strings.Contains(strings.ToLower(obj["dragon"].Label), "ancestral") || obj["dragon"].NextAt != 1200+elderRespawn {
+	if !strings.Contains(strings.ToLower(obj["dragon"].Label), "ancestral") || obj["dragon"].NextAt != 1200+elderRespawn || obj["dragon"].Kind != "elder" {
 		t.Errorf("Ancestral attendu 6 min après le 4e drake: %+v", obj["dragon"])
+	}
+
+	fire := `{"EventName":"DragonKill","EventTime":300,"KillerName":"Jgl","DragonType":"Fire"}`
+	obj = buildObjectives(live(400, fire))
+	if obj["dragon"].Kind != "infernal" {
+		t.Errorf("kind infernal attendu après Fire, obtenu %q", obj["dragon"].Kind)
+	}
+	hex := `{"EventName":"DragonKill","EventTime":300,"KillerName":"Jgl","DragonType":"Hextech"}`
+	obj = buildObjectives(live(400, hex))
+	if obj["dragon"].Kind != "hextech" {
+		t.Errorf("kind hextech attendu, obtenu %q", obj["dragon"].Kind)
 	}
 
 	// Baron tué → respawn 6 min plus tard, héraut définitivement absent.
@@ -165,6 +179,25 @@ func TestObjectives(t *testing.T) {
 	}
 	if _, ok := obj["herald"]; ok {
 		t.Errorf("le héraut ne devrait plus être listé après 19:45")
+	}
+}
+
+func TestRuneTable(t *testing.T) {
+	tab := runeTable()
+	if len(tab) < 40 {
+		t.Skipf("runesReforged indisponible (%d entrées)", len(tab))
+	}
+	el, ok := tab[8112] // Électrocution
+	if !ok || !strings.Contains(el.Icon, "Electrocute") {
+		t.Errorf("électrocution 8112: %+v ok=%v", el, ok)
+	}
+	dom, ok := tab[8100]
+	if !ok || !strings.Contains(dom.Icon, "Domination") {
+		t.Errorf("arbre domination 8100: %+v ok=%v", dom, ok)
+	}
+	got := liveRuneOf(rawLiveRune{ID: 8112, DisplayName: "Électrocution"})
+	if got.Icon != el.Icon || got.Name != "Électrocution" {
+		t.Errorf("liveRuneOf: %+v", got)
 	}
 }
 

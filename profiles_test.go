@@ -80,7 +80,8 @@ func TestDeepLoLURL(t *testing.T) {
 }
 
 func TestApplyIdentityStreamer(t *testing.T) {
-	storeIdent(&playerIdent{RiotID: "Secret#EUW", Champion: 51, Tier: "DIAMOND", Division: "II", Rank: "D2", DeepLoL: "https://www.deeplol.gg/summoner/euw/Secret-EUW", Ready: true})
+	ai := 57
+	storeIdent(&playerIdent{RiotID: "Secret#EUW", Champion: 51, Tier: "DIAMOND", Division: "II", Rank: "D2", Wins: 3, Losses: 2, AI: ai, HasAI: true, DeepLoL: "https://www.deeplol.gg/summoner/euw/Secret-EUW", Ready: true})
 	lp := LivePlayer{RiotID: "Caitlyn", Champion: "Caitlyn", Key: 51}
 	applyIdentity(&lp)
 	if !lp.Hidden || lp.Name != "Caitlyn" || lp.DeepLoL != "" {
@@ -89,9 +90,18 @@ func TestApplyIdentityStreamer(t *testing.T) {
 	if lp.Rank != "D2" || lp.Tier != "diamond" {
 		t.Errorf("streamer: le rang peut rester visible: %+v", lp)
 	}
+	if lp.WR == nil || *lp.WR != 60 || lp.Games != 5 || lp.AI == nil || *lp.AI != 57 {
+		t.Errorf("streamer: WR/AI doivent rester visibles: wr=%v games=%d ai=%v", lp.WR, lp.Games, lp.AI)
+	}
 	lp2 := LivePlayer{RiotID: "Cait#EUW", Champion: "Caitlyn", Key: 51}
 	applyIdentity(&lp2)
 	if lp2.Hidden || lp2.Name == "Caitlyn" || lp2.DeepLoL == "" || lp2.Rank != "D2" {
 		t.Errorf("pseudo visible attendu: %+v", lp2)
+	}
+}
+
+func TestWrPct(t *testing.T) {
+	if wrPct(3, 5) != 60 || wrPct(0, 0) != 0 || wrPct(1, 2) != 50 {
+		t.Errorf("wrPct 3/5=%d 0/0=%d 1/2=%d", wrPct(3, 5), wrPct(0, 0), wrPct(1, 2))
 	}
 }

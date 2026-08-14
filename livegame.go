@@ -3,7 +3,8 @@ package main
 // Live Client Data API (Riot, locale, officielle) : https://127.0.0.1:2999/liveclientdata/allgamedata
 // Disponible uniquement pendant une partie, en lecture seule.
 // On en tire : niveaux, items (=> ability haste), morts/respawns, sorts d'invocateur,
-// événements (drakes / héraut / baron) — pour tous les joueurs de la partie.
+// runes (keystone + arbre secondaire), événements (drakes / héraut / baron)
+// — pour tous les joueurs de la partie.
 
 import (
 	"crypto/tls"
@@ -60,7 +61,19 @@ type rawLivePlayer struct {
 		One rawLiveSummSpell `json:"summonerSpellOne"`
 		Two rawLiveSummSpell `json:"summonerSpellTwo"`
 	} `json:"summonerSpells"`
-	Team string `json:"team"`
+	Runes rawLiveRunes `json:"runes"`
+	Team  string       `json:"team"`
+}
+
+type rawLiveRune struct {
+	DisplayName string `json:"displayName"`
+	ID          int    `json:"id"`
+}
+
+type rawLiveRunes struct {
+	Keystone          rawLiveRune `json:"keystone"`
+	PrimaryRuneTree   rawLiveRune `json:"primaryRuneTree"`
+	SecondaryRuneTree rawLiveRune `json:"secondaryRuneTree"`
 }
 
 type rawLive struct {
@@ -164,6 +177,83 @@ func itemHasteTable() map[int]itemHaste {
 	return table
 }
 
+// ---------- Runes (keystone + arbre secondaire) ----------
+
+type runeInfo struct {
+	Name string
+	Icon string
+}
+
+var runeCache = struct {
+	mu      sync.Mutex
+	version string
+	byID    map[int]runeInfo
+}{}
+
+type runeReforgedTree struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Icon  string `json:"icon"`
+	Slots []struct {
+		Runes []struct {
+			ID   int    `json:"id"`
+			Name string `json:"name"`
+			Icon string `json:"icon"`
+		} `json:"runes"`
+	} `json:"slots"`
+}
+
+func runeTable() map[int]runeInfo {
+	version := getVersion()
+	runeCache.mu.Lock()
+	if runeCache.version == version && runeCache.byID != nil {
+		d := runeCache.byID
+		runeCache.mu.Unlock()
+		return d
+	}
+	runeCache.mu.Unlock()
+
+	var trees []runeReforgedTree
+	url := fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/%s/data/fr_FR/runesReforged.json", version)
+	if err := jsonGET(url, &trees); err != nil || len(trees) == 0 {
+		trees = nil
+		url = fmt.Sprintf("https://ddragon.leagueoflegends.com/cdn/%s/data/en_US/runesReforged.json", version)
+		if err := jsonGET(url, &trees); err != nil || len(trees) == 0 {
+			runeCache.mu.Lock()
+			defer runeCache.mu.Unlock()
+			if runeCache.byID != nil {
+				return runeCache.byID
+			}
+			return map[int]runeInfo{}
+		}
+	}
+	byID := make(map[int]runeInfo, 80)
+	for _, t := range trees {
+		byID[t.ID] = runeInfo{Name: t.Name, Icon: t.Icon}
+		for _, slot := range t.Slots {
+			for _, r := range slot.Runes {
+				byID[r.ID] = runeInfo{Name: r.Name, Icon: r.Icon}
+			}
+		}
+	}
+	runeCache.mu.Lock()
+	runeCache.version, runeCache.byID = version, byID
+	runeCache.mu.Unlock()
+	return byID
+}
+
+func liveRuneOf(raw rawLiveRune) LiveRune {
+	if raw.ID == 0 {
+		return LiveRune{}
+	}
+	info := runeTable()[raw.ID]
+	name := raw.DisplayName
+	if name == "" {
+		name = info.Name
+	}
+	return LiveRune{ID: raw.ID, Name: name, Icon: info.Icon}
+}
+
 // ---------- Sorts d'invocateur ----------
 
 var summonerBaseCD = map[string]float64{
@@ -254,12 +344,29 @@ type LiveSummoner struct {
 	CD   float64 `json:"cd"` // secondes, haste invocateur (items) incluse
 }
 
+// LiveRune : keystone ou arbre (secondaire). Icon = chemin ddragon sans version
+// (perk-images/Styles/…), servi via /ddragon/img/…
+type LiveRune struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+	Icon string `json:"icon,omitempty"`
+}
+
+type LiveRunes struct {
+	Keystone  LiveRune `json:"keystone,omitempty"`
+	Secondary LiveRune `json:"secondary,omitempty"`
+}
+
 type LivePlayer struct {
 	RiotID       string         `json:"riotId"`
 	Name         string         `json:"name"` // pseudo affiché ; champion si streamer mode
 	Hidden       bool           `json:"hidden,omitempty"`
 	Rank         string         `json:"rank,omitempty"` // "D2", "Master 120"
 	Tier         string         `json:"tier,omitempty"` // "diamond" pour la bordure
+	WR           *int           `json:"wr,omitempty"`   // winrate solo 0–100
+	Games        int            `json:"games,omitempty"`
+	AI           *int           `json:"ai,omitempty"` // DeepLoL AI-score (10 last)
+	Tags         []ScoutTag     `json:"tags,omitempty"`
 	DeepLoL      string         `json:"deeplol,omitempty"`
 	IsMe         bool           `json:"isMe,omitempty"`
 	Champion     string         `json:"champion"`
@@ -279,6 +386,7 @@ type LivePlayer struct {
 	ItemGold     int            `json:"itemGold,omitempty"` // somme ddragon gold.total
 	Spells       []LiveSpell    `json:"spells"`
 	Summoners    []LiveSummoner `json:"summoners"`
+	Runes        LiveRunes      `json:"runes,omitempty"`
 }
 
 type LiveObjective struct {
@@ -287,6 +395,7 @@ type LiveObjective struct {
 	Order  int       `json:"order,omitempty"`
 	Chaos  int       `json:"chaos,omitempty"`
 	Note   string    `json:"note,omitempty"`  // "ÂME", "×2 restantes"…
+	Kind   string    `json:"kind,omitempty"`  // infernal, mountain, ocean, cloud, hextech, chemtech, soul, elder
 	Leads  []float64 `json:"leads,omitempty"` // anticipations d'alerte (s avant le spawn)
 	Gone   bool      `json:"gone,omitempty"`  // objectif définitivement parti (despawn / camp fini)
 	Rank   int       `json:"rank,omitempty"`  // ordre d'affichage dans la barre
@@ -294,6 +403,7 @@ type LiveObjective struct {
 
 type LiveState struct {
 	Active     bool                     `json:"active"`
+	Demo       bool                     `json:"demo,omitempty"`
 	GameTime   float64                  `json:"gameTime"`
 	GameMode   string                   `json:"gameMode"`
 	Enemies    []LivePlayer             `json:"enemies"`
@@ -463,8 +573,9 @@ var liveCache = struct {
 
 func liveGameActive() bool {
 	liveCache.mu.Lock()
-	defer liveCache.mu.Unlock()
-	return liveCache.state.Active
+	on := liveCache.state.Active
+	liveCache.mu.Unlock()
+	return on || demoLiveOn()
 }
 
 func champBySlug(raw string) (champIndexItem, bool) {
@@ -572,6 +683,10 @@ func buildLivePlayer(p rawLivePlayer, haste map[int]itemHaste) LivePlayer {
 		cd := summonerBaseCD[slug] * hasteFactor(sh)
 		out.Summoners = append(out.Summoners, LiveSummoner{Slug: slug, Name: raw.DisplayName, CD: cd})
 	}
+	out.Runes = LiveRunes{
+		Keystone:  liveRuneOf(p.Runes.Keystone),
+		Secondary: liveRuneOf(p.Runes.SecondaryRuneTree),
+	}
 	applyIdentity(&out)
 	return out
 }
@@ -591,12 +706,8 @@ const (
 	baronRespawn     = 360.0
 )
 
-// Anticipations d'alerte : 2 min pour se regrouper avant un teamfight d'objectif,
-// 70 s pour lâcher sa lane et arriver sur les larves.
-const (
-	leadTeamfight = 120.0
-	leadGrubs     = 70.0
-)
+// Anticipations d'alerte : 1 min 15 pour se regrouper avant un objectif.
+const leadTeamfight = 75.0
 
 func playerTeam(players []rawLivePlayer, name string) string {
 	name = strings.TrimSpace(name)
@@ -623,6 +734,29 @@ func isGrubEvent(name string) bool {
 	return strings.Contains(n, "horde") || strings.Contains(n, "grub")
 }
 
+// DragonType du live client : Fire/Earth/Water/Air/Hextech/Chemtech/Elder
+// (parfois déjà Infernal/Mountain/…).
+func dragonKindFromType(s string) string {
+	switch strings.ToLower(strings.TrimSpace(s)) {
+	case "fire", "infernal":
+		return "infernal"
+	case "earth", "mountain":
+		return "mountain"
+	case "water", "ocean":
+		return "ocean"
+	case "air", "cloud":
+		return "cloud"
+	case "hextech":
+		return "hextech"
+	case "chemtech":
+		return "chemtech"
+	case "elder", "elderdragon":
+		return "elder"
+	default:
+		return ""
+	}
+}
+
 func buildObjectives(raw *rawLive) map[string]LiveObjective {
 	if raw.GameData.MapNumber != 11 && raw.GameData.GameMode != "CLASSIC" && raw.GameData.GameMode != "PRACTICETOOL" {
 		return nil
@@ -631,10 +765,14 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 	dragOrder, dragChaos := 0, 0
 	lastDragon, lastBaron := 0.0, 0.0
 	heraldDead, grubsKilled := false, 0
+	elem := ""
 	for _, e := range raw.Events.Events {
 		switch {
 		case e.EventName == "DragonKill":
 			lastDragon = e.EventTime
+			if k := dragonKindFromType(e.DragonType); k != "" && k != "elder" {
+				elem = k
+			}
 			switch playerTeam(raw.AllPlayers, e.KillerName) {
 			case "ORDER":
 				dragOrder++
@@ -652,7 +790,7 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 	obj := map[string]LiveObjective{}
 
 	// Larves : un seul spawn, camp de 3, disparition à 14:45.
-	grubs := LiveObjective{NextAt: grubsSpawn, Label: "Larves", Leads: []float64{leadTeamfight, leadGrubs}, Rank: 1}
+	grubs := LiveObjective{NextAt: grubsSpawn, Label: "Larves", Leads: []float64{leadTeamfight}, Rank: 1}
 	switch {
 	case grubsKilled >= 3 || (t > grubsDespawn && grubsKilled == 0):
 		grubs.Gone, grubs.Leads = true, nil
@@ -675,18 +813,20 @@ func buildObjectives(raw *rawLive) map[string]LiveObjective {
 		}
 	}
 	dragon := LiveObjective{NextAt: next, Order: dragOrder, Chaos: dragChaos, Label: "Drake",
-		Leads: []float64{leadTeamfight}, Rank: 2}
+		Leads: []float64{leadTeamfight}, Rank: 2, Kind: "dragon"}
 	switch {
 	case elder:
-		dragon.Label, dragon.Note = "Ancestral", "fight décisif"
+		dragon.Label, dragon.Note, dragon.Kind = "Ancestral", "fight décisif", "elder"
 	case dragOrder == 3 || dragChaos == 3:
-		dragon.Note = "ÂME"
+		dragon.Note, dragon.Kind = "ÂME", "soul"
+	case elem != "":
+		dragon.Kind = elem
 	}
 	obj["dragon"] = dragon
 
 	// Héraut : pas d'alerte teamfight (objectif de siège, souvent solo).
 	if !heraldDead && t < heraldDespawn {
-		herald := LiveObjective{NextAt: heraldSpawn, Label: "Héraut", Rank: 3}
+		herald := LiveObjective{NextAt: heraldSpawn, Label: "Héraut", Leads: []float64{leadTeamfight}, Rank: 3}
 		if t >= heraldSpawn {
 			herald.Note = "part à " + clock(heraldDespawn)
 		}
@@ -757,6 +897,7 @@ func getLiveState() LiveState {
 			state.Objectives = buildObjectives(&raw)
 			updateGold(&state)
 			updateVoiceCues(&state)
+			prefetchObjSFX()
 			if _, _, open := hudStatus(); open {
 				state.HudOpen = true
 			}
@@ -792,6 +933,17 @@ func liveGameKey(state LiveState) string {
 
 func apiLive(w http.ResponseWriter, r *http.Request) {
 	state := getLiveState()
+	if !state.Active {
+		if d, ok := demoLiveCopy(); ok {
+			if _, _, open := hudStatus(); open {
+				d.HudOpen = true
+			}
+			writeJSON(w, d)
+			return
+		}
+	} else {
+		setDemoLive(nil)
+	}
 	autoOpenHudForGame(liveGameKey(state))
 	writeJSON(w, state)
 }

@@ -103,7 +103,7 @@ func TestVoiceCuesGankShopItem(t *testing.T) {
 		resetItemMetaCache()
 	})
 
-	kha := LivePlayer{RiotID: "Kha#EUW", Champion: "Kha'Zix", Key: 121, Position: "JUNGLE", Items: []int{1036, 1001}}
+	kha := LivePlayer{RiotID: "Kha#EUW", Champion: "Kha'Zix", Key: 121, Icon: "Khazix.png", Position: "JUNGLE", Items: []int{1036, 1001}}
 	st := &LiveState{Active: true, GameTime: 40, GameMode: "CLASSIC", Enemies: []LivePlayer{kha}}
 	updateVoiceCues(st)
 	if len(st.Voices) != 0 {
@@ -154,8 +154,8 @@ func TestVoiceCuesGankShopItem(t *testing.T) {
 			itemCue = c
 		}
 	}
-	if !itemCue.Voice || !strings.Contains(itemCue.Speak, "Youmuu") {
-		t.Fatalf("item jungle ennemi : VO + TTS Youmuu, obtenu %+v", itemCue)
+	if !itemCue.Voice || !strings.Contains(itemCue.Speak, "Youmuu") || itemCue.ItemID != 3142 || itemCue.Icon != "Khazix.png" {
+		t.Fatalf("item jungle ennemi : VO + TTS Youmuu id=3142 icon, obtenu %+v", itemCue)
 	}
 
 	// Soi-même : pas d'annonce.

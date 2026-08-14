@@ -10,6 +10,8 @@ func TestDDragonPathOK(t *testing.T) {
 		"16.15.1/img/item/3158.png",
 		"16.15.1/data/fr_FR/champion.json",
 		"16.15.1/img/champion/Kha%27Zix.png",
+		"img/perk-images/Styles/Domination/Electrocute/Electrocute.png",
+		"img/perk-images/Styles/7200_Domination.png",
 	}
 	for _, p := range ok {
 		if !ddragonPathOK(p) {
@@ -24,6 +26,8 @@ func TestDDragonPathOK(t *testing.T) {
 		"16.15.1/img//Ahri.png",
 		"foo/img/champion/Ahri.png",
 		"16.15.1/other/Ahri.png",
+		"img/other/foo.png",
+		"img/perk-images/../secret.png",
 	}
 	for _, p := range bad {
 		if ddragonPathOK(p) {
