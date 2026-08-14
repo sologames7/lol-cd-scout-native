@@ -89,11 +89,13 @@ html.hudmode #hud,body.hudmode #hud{display:block;position:fixed;inset:0;width:1
 html.hudmode #hud-vis-menu{opacity:1}
 html.hudmode.hud-vis-open #hud{opacity:1}
 html.hudmode.hud-vis-open #hud>.hud-widget:not(#hud-w-menu),html.hudmode.hud-vis-open #sp-tip{opacity:var(--hud-opacity,1)}
-html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait,html.hudmode.hud-vis-open #hud-w-menu>.hud-grip{opacity:var(--hud-opacity,1)}
+html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait{opacity:var(--hud-opacity,1)}
 .hud-widget{position:absolute;left:0;top:0;z-index:12;transform-origin:top left;box-sizing:border-box;overflow:visible;width:max-content;max-width:none}
 .hud-widget.hidden,.hud-widget.hud-off{display:none!important}
 .hud-grip{position:absolute;left:2px;top:2px;z-index:8;display:flex;align-items:center;gap:4px;margin:0;opacity:0;pointer-events:none;transition:opacity .12s}
 .hud-widget:hover>.hud-grip,.hud-widget.hud-grip-on>.hud-grip{opacity:1;pointer-events:auto}
+#hud-w-alert>.hud-pop-grip,#hud-w-item>.hud-pop-grip{position:relative;left:0;top:0;opacity:1;pointer-events:auto;margin:0 0 4px;z-index:9;filter:drop-shadow(0 2px 6px rgba(0,0,0,.65))}
+#hud-w-alert .hud-pop-grip .hud-drag,#hud-w-alert .hud-pop-grip .hud-resize,#hud-w-item .hud-pop-grip .hud-drag,#hud-w-item .hud-pop-grip .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;opacity:1;pointer-events:auto}
 .hud-block{background:#121c2c;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px;box-sizing:border-box}
 .hud-mini{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
 .hud-flashes{display:flex;flex-direction:row;align-items:flex-start;gap:6px;width:max-content}
@@ -110,18 +112,13 @@ html.hudmode .hud-btns{display:flex}
 .hf .rk{width:40px;height:40px;border-radius:8px;padding:1px;flex-shrink:0;aspect-ratio:1}
 .hf .rk-crest{width:12px;height:12px}
 .hf-spells{display:flex;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
-.hf-sum{position:relative;width:36px;height:36px;padding:0;border:0;border-radius:6px;background:#1a2438;overflow:hidden;cursor:pointer;flex-shrink:0;aspect-ratio:1}
-.hf-sum img,.hf-sum .hr-fi{width:36px;height:36px;display:block;border-radius:6px;object-fit:cover;flex-shrink:0}
-.hf-sum .hv,.hf-ult .hv{position:absolute;left:0;right:0;bottom:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.15;text-align:center;color:#fff;text-shadow:0 1px 3px #000;background:linear-gradient(transparent,rgba(0,0,0,.72))}
-.hf-sum.cd img{filter:grayscale(1) brightness(.55)}.hf-sum.cd .hv{color:#f87171;text-shadow:0 1px 2px #000}
-.hf-sum.up{box-shadow:0 0 0 1px var(--accent)}
-.hf-ult{position:relative;width:36px;height:36px;padding:0;border:0;border-radius:99px;background:#1a2438;cursor:pointer;flex-shrink:0;aspect-ratio:1}
-.hf-ult svg{position:absolute;inset:0;transform:rotate(-90deg)}
-.hf-ult-bg{fill:none;stroke:rgba(255,255,255,.16);stroke-width:2}
-.hf-ult-fg{fill:none;stroke:#fbbf24;stroke-width:2;stroke-linecap:round}
-.hf-ult.cd .hf-ult-fg{stroke:#f87171}.hf-ult.cd .hv{color:#f87171}
-.hf-ult.up .hf-ult-fg{stroke:var(--accent)}
-.hf-ult .hv{background:none;bottom:50%;transform:translateY(50%);font-size:11px;letter-spacing:.04em}
+.hf-sum,.hf-ult{position:relative;width:40px;height:40px;padding:0;border:0;border-radius:7px;background:#1a2438;overflow:hidden;cursor:pointer;flex-shrink:0;aspect-ratio:1}
+.hf-sum img,.hf-sum .hr-fi,.hf-ult img{width:40px;height:40px;display:block;border-radius:7px;object-fit:cover;flex-shrink:0}
+.hf-sum .hv,.hf-ult .hv{position:absolute;inset:0;display:grid;place-items:center;font-family:'Chakra Petch',Inter,sans-serif;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;line-height:.9;letter-spacing:-.06em;text-align:center;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;background:rgba(0,0,0,.42);pointer-events:none}
+.hf-sum:not(.cd) .hv,.hf-ult:not(.cd) .hv{display:none}
+.hf-sum.cd img,.hf-ult.cd img{filter:grayscale(1) brightness(.42)}
+.hf-sum.cd .hv,.hf-ult.cd .hv{color:#ff6b6b;background:rgba(0,0,0,.58)}
+.hf-sum.up,.hf-ult.up{box-shadow:0 0 0 1px var(--accent)}
 .hf.dead .rk{filter:grayscale(.45) contrast(.88)}
 .hud-top{display:flex;align-items:center;gap:6px;min-width:0}
 .hud-logo{display:none}
@@ -200,18 +197,27 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 .hud-tab-list{display:flex;flex-direction:column;background:transparent;pointer-events:none;gap:4px}
 .hud-tab-row{min-height:var(--tab-row-h);height:auto;display:flex;flex-direction:row!important;align-items:center;gap:6px;padding:3px 4px;margin:0;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible;pointer-events:auto;border-radius:0;min-width:max-content}
 .hud-tab-row .hr-spells{width:auto;border:0;gap:3px;flex:0}
-.hud-tab-row .hr-sk{width:40px;min-width:40px;flex:none;padding:0;border:0;background:transparent;gap:1px}
+.hud-tab-row .hr-sk{width:42px;min-width:42px;flex:none;padding:0;border:0;background:transparent;gap:2px;position:relative}
 .hud-tab-row .hr-sk img,.hud-tab-row .hr-sk .hr-fi{width:36px;height:36px;border-radius:6px}
-.hud-tab-row .hr-sk .hv{font-size:11px;line-height:1}
-.hud-tab-row .hr-sk .qi i{display:block;left:0;top:0;font-size:8px;padding:1px 3px;text-transform:lowercase}
+.hud-tab-row .hr-sk .qi{position:relative;display:block}
+.hud-tab-row .hr-sk:not(.hr-sum) .qi .hv{position:absolute;inset:0;display:grid;place-items:center;margin:0;font-size:16px;font-weight:900;letter-spacing:-.04em;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;background:rgba(0,0,0,.48);border-radius:6px;pointer-events:none;z-index:1}
+.hud-tab-row .hr-sk:not(.hr-sum).cd .qi .hv{color:#ff6b6b;background:rgba(0,0,0,.62)}
+.hud-tab-row .hr-sk:not(.hr-sum).up .qi .hv{color:#fff}
+.hud-tab-row .hr-sk:not(.hr-sum).cd img{filter:grayscale(.35) brightness(.55)}
+.hud-tab-row .hr-sk .hk{font-family:'Chakra Petch',Inter,sans-serif;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1;color:#d4a5ff;text-shadow:0 1px 2px #000;white-space:nowrap}
+.hud-tab-row .hr-sum .hv{font-size:11px;line-height:1;position:static;inset:auto;display:block;background:none;text-shadow:none}
+.hud-tab-row .hr-sk .qi i{display:block;left:0;top:0;font-size:8px;padding:1px 3px;text-transform:lowercase;z-index:2}
 .hud-tab-row .hr-p .qi i{text-transform:none}
 #hud-w-tab-enemies .hud-tab-row{justify-content:flex-end}
 #hud-w-alert{z-index:40}#hud-w-item{z-index:38}#hud-w-menu{z-index:22}#hud-w-objs{z-index:16}
 /* Permanent : barre horizontale, sorts 2× plus grands */
-#hud-w-menu{width:max-content}
+#hud-w-menu{width:max-content;display:flex;flex-direction:column;align-items:flex-end}
 #hud-w-menu .hud-block{padding:5px;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
-#hud-w-menu .hud-mini{flex-direction:row;align-items:center;gap:8px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
-#hud-w-menu .hud-clock{font-size:16px;text-align:left;width:auto}
+#hud-w-menu .hud-mini{flex-direction:row;align-items:center;gap:6px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
+#hud-w-menu .hud-call{min-width:42px;font-family:'Chakra Petch',Inter,sans-serif;letter-spacing:.08em;font-weight:900;background:#ff6a00;border-color:#ff9a40;color:#1a0800}
+#hud-w-menu .hud-call:hover{background:#ff7f1a;color:#000}
+#hud-w-menu .hud-call.copied{background:#ffb020;border-color:#ffd060;color:#1a0800}
+#hud-w-menu .hud-drag,#hud-w-menu .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;position:static;opacity:1;pointer-events:auto}
 #hud-w-menu .hud-state{align-self:center}
 #hud-w-menu .hud-btns{display:flex;margin:0 0 0 auto;width:auto;gap:4px}
 #hud-w-menu .hbtn{height:22px;padding:0 7px;font-size:10px;letter-spacing:0;border-radius:6px;width:auto}
@@ -220,18 +226,24 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 #hud-w-menu .hud-wait{width:max-content;min-width:180px;padding:8px 12px}
 #hud-w-menu .hud-wait strong{font-size:13px}
 .hud-vis{position:relative;flex-shrink:0}
-.hud-vis-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:40;width:236px;max-height:min(72vh,420px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
+.hud-vis-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:40;width:248px;max-height:min(80vh,560px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
 .hud-vis-lab{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#64758c;padding:8px 8px 3px}
 .hud-vis-lab:first-child{padding-top:2px}
 .hud-vis-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 8px;border-radius:7px;font-size:12px;font-weight:700;color:#dbe6f5;white-space:nowrap}
 .hud-vis-row:hover{background:rgba(255,255,255,.05)}
-.hud-vis-opac{flex-wrap:nowrap;gap:8px;margin-top:2px}
+.hud-vis-opac span{min-width:6.2ch}
 .hud-vis-opac input[type=range]{width:88px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
 .hud-vis-opac b{font-size:10px;font-variant-numeric:tabular-nums;color:#8d9bb0;min-width:3.4ch;text-align:right;font-weight:800}
 .hud-sw{position:relative;width:30px;height:16px;padding:0;border-radius:99px;background:#243044;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
 .hud-sw::after{content:'';position:absolute;left:2px;top:1px;width:12px;height:12px;border-radius:99px;background:#8d9bb0;transition:left .12s,background .12s}
 .hud-sw.on{background:rgba(91,231,196,.22);border-color:rgba(91,231,196,.5)}
 .hud-sw.on::after{left:14px;background:var(--accent)}
+.hud-vis-btns{display:flex;gap:4px;padding:4px 6px 2px}
+.hud-vis-btns button{flex:1;height:24px;padding:0 4px;font-size:10px;font-weight:800;border-radius:6px;background:#243044;color:#dbe6f5;border:1px solid var(--border);cursor:pointer}
+.hud-vis-btns button.hud-vis-quit{background:#3a1518;color:#fda4a4;border-color:rgba(248,113,113,.4)}
+.hud-vis-btns button.hud-vis-quit:hover{background:#5a1c22;color:#fff}
+.hud-vis-hint{padding:2px 8px 6px;font-size:10px;color:#8d9bb0;line-height:1.35;font-weight:600;white-space:normal}
+html.hudmode.hud-freeze #hud-w-alert .alert,html.hudmode.hud-freeze #hud-w-item .item-pop,html.hudmode.hud-freeze .alert-banner,html.hudmode.hud-freeze .ip-face,html.hudmode.hud-freeze .ip-item{animation:none!important}
 html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult,html.hudmode .hr-sk,html.hudmode .hr-fi{flex-shrink:0}
 html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult{aspect-ratio:1}
 html.hudmode img{object-fit:cover}
@@ -378,21 +390,20 @@ body.idea-on #idea{display:block}
 <div id="sp-tip" class="sp-tip hidden"></div>
 <div id="hud">
 <div class="hud-widget" id="hud-w-menu" data-hud="menu">
-<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="menu" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="menu" title="Redimensionner (ratio)">⤡</button></div>
-<div class="hud-block hud-mini" id="hud-mini-bar"><strong id="hud-clock" class="hud-clock" title="Clic : écrire les Flash ennemis dans le chat (ouvre le chat avant)">—</strong><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-btns"><button type="button" id="hud-sound" class="hbtn on" title="Alertes sonores">♪</button><button type="button" id="hud-reset" class="hbtn" title="Réinitialiser la disposition">RST</button><div class="hud-vis" id="hud-vis"><button type="button" id="hud-vis-btn" class="hbtn" title="Réglages overlay" aria-expanded="false" aria-haspopup="true">⚙</button><div id="hud-vis-menu" class="hud-vis-menu hidden" role="menu"></div></div><button type="button" id="hud-close" class="hbtn x" title="Fermer l'overlay">✕</button></div></div>
+<div class="hud-block hud-mini" id="hud-mini-bar"><button type="button" class="hbtn hud-drag" data-hud-drag="menu" title="Déplacer">⠿</button><button type="button" class="hbtn hud-resize" data-hud-resize="menu" title="Redimensionner (ratio)">⤡</button><button type="button" id="hud-call" class="hbtn hud-call" title="Entrée pour ouvrir le chat, puis clic : colle les CD d'invoc ennemis encore utiles. /allsum dans le chat : sums + ult.">SUM</button><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-vis" id="hud-vis"><button type="button" id="hud-vis-btn" class="hbtn" title="Réglages overlay" aria-expanded="false" aria-haspopup="true">⚙</button><div id="hud-vis-menu" class="hud-vis-menu hidden" role="menu"></div></div></div>
 <div id="hud-flashes" class="hud-block hud-flashes"></div>
-<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Souris sur un bloc = clic HUD · ailleurs = le jeu.<br>Alt+1–5 Flash · Tab cartes.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
+<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Entrée puis SUM = CD invocs ennemis dans le chat.<br>/allsum = sums + ult. Alt+1–5 Flash · Tab cartes.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
 </div>
 <div class="hud-widget" id="hud-w-objs" data-hud="objs">
 <div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="objs" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="objs" title="Redimensionner (ratio)">⤡</button></div>
 <div id="hud-objs" class="hud-block hud-objs"></div>
 </div>
 <div class="hud-widget hidden" id="hud-w-alert" data-hud="alert">
-<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="alert" title="Déplacer">⠿</button></div>
+<div class="hud-grip hud-pop-grip" data-hud-hit><button type="button" class="hbtn hud-drag" data-hud-drag="alert" title="Déplacer">⠿</button><button type="button" class="hbtn hud-resize" data-hud-resize="alert" title="Redimensionner (ratio)">⤡</button></div>
 <div id="alert" class="alert hidden"></div>
 </div>
 <div class="hud-widget hidden" id="hud-w-item" data-hud="item">
-<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="item" title="Déplacer">⠿</button></div>
+<div class="hud-grip hud-pop-grip" data-hud-hit><button type="button" class="hbtn hud-drag" data-hud-drag="item" title="Déplacer">⠿</button><button type="button" class="hbtn hud-resize" data-hud-resize="item" title="Redimensionner (ratio)">⤡</button></div>
 <div id="item-pop" class="item-pop hidden"></div>
 </div>
 <div class="hud-widget hud-tab" id="hud-w-tab-enemies" data-hud="tabE">
@@ -497,7 +508,9 @@ $('demo-toggle').onclick=e=>{e.stopPropagation();const m=$('demo-menu'),t=$('dem
 $('quit').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
 $('demo').onclick=async()=>{closeDemoMenu();if(quizOn())closeQuiz();if(typeof ideaOn==='function'&&ideaOn())closeIdea();if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés + propositions pick/ban (rôle BOT).';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean));loadDraft({enemies:demo.join(','),allies:demoAllies.map(a=>a.id).join(','),role:'BOT'})};
-$('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){$('results').classList.add('hidden');return}const rs=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();$('results').innerHTML=rs.map(r=>`<div class="result" data-key="${r.key}"><span>${esc(r.name)}</span><small>${esc(r.title)}</small></div>`).join('');$('results').classList.toggle('hidden',!rs.length);document.querySelectorAll('.result').forEach(row=>row.onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;$('search').value='';$('results').classList.add('hidden');const c=await (await fetch('/api/card?key='+row.dataset.key)).json();focusKey=c.key;draftPool=[c];setRoster([c],true);setAllies([]);$('hero-title').textContent=c.name;$('hero-copy').textContent='Recherche manuelle.';loadDraft({enemies:String(c.key)})})},180)};
+$('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){$('results').classList.add('hidden');return}
+const dm=q.match(/^devmode\s+(on|off)$/i);if(dm){applyDevMode(dm[1].toLowerCase()==='on');return}
+const rs=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();$('results').innerHTML=rs.map(r=>`<div class="result" data-key="${r.key}"><span>${esc(r.name)}</span><small>${esc(r.title)}</small></div>`).join('');$('results').classList.toggle('hidden',!rs.length);document.querySelectorAll('.result').forEach(row=>row.onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;$('search').value='';$('results').classList.add('hidden');const c=await (await fetch('/api/card?key='+row.dataset.key)).json();focusKey=c.key;draftPool=[c];setRoster([c],true);setAllies([]);$('hero-title').textContent=c.name;$('hero-copy').textContent='Recherche manuelle.';loadDraft({enemies:String(c.key)})})},180)};
 document.onclick=e=>{if(!e.target.closest('.search-wrap'))$('results').classList.add('hidden');if(!e.target.closest('.demo-dd'))closeDemoMenu()};
 // ---- Mode En jeu (Live Client Data API, port 2999) ----
 let liveState=null,liveAt=0,liveTracks={},ciSet=new Set(),liveScout={};
@@ -514,19 +527,39 @@ const pid=p=>`${p.riotId||''}#${p.key}`; // le riotId peut être vide (bots) : l
 function summCD(p,s){if(!s.cd)return 0;return ciSet.has(pid(p))?s.cd*(100+p.summHaste)/(100+p.summHaste+18):s.cd}
 function flashTrackKey(p){const si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');return si<0?'':`${pid(p)}|S${si}`}
 function isEnemyFlashKey(k){return ((liveState&&liveState.enemies)||[]).some(p=>flashTrackKey(p)===k)}
-function flashCallout(){
-const now=gameNow(),rows=[];
+function flashCallout(){return enemyCallout({ult:false})}
+const CALL_SUM_MIN=10,CALL_ULT_MIN=5;
+function summShort(s){
+const x=String(s&&s.slug||'');
+if(/Flash/i.test(x))return'F';if(/Dot/i.test(x))return'I';if(/Heal/i.test(x))return'H';
+if(/Teleport/i.test(x))return'TP';if(/Boost/i.test(x))return'C';if(/Exhaust/i.test(x))return'EX';
+if(/Barrier/i.test(x))return'B';if(/Haste/i.test(x))return'G';if(/Smite/i.test(x))return'SM';
+if(/Mana/i.test(x))return'CL';if(/Snowball/i.test(x))return'A';
+const n=String(s&&s.name||'').replace(/^Summoner\s*/i,'');return (n.slice(0,2)||'S').toUpperCase()}
+function enemyCallout(opts){
+const withUlt=!!(opts&&opts.ult),now=gameNow(),parts=[];
 for(const p of (liveState&&liveState.enemies)||[]){
-const k=flashTrackKey(p);if(!k)continue;
-const tr=liveTracks[k];if(!tr||!(tr.end>now))continue;
-rows.push({end:tr.end,txt:p.champion+' F '+mmss(tr.end)})}
-rows.sort((a,b)=>a.end-b.end);
-return rows.map(r=>r.txt).join(' / ')}
+const P=pid(p),items=[];
+(p.summoners||[]).forEach((s,si)=>{
+const tr=liveTracks[`${P}|S${si}`];if(!tr)return;
+const rest=tr.end-now;if(!(rest>CALL_SUM_MIN))return;
+items.push({end:tr.end,txt:summShort(s)+' '+mmss(rest)})});
+if(withUlt){const tr=liveTracks[`${P}|R`];if(tr){const rest=tr.end-now;if(rest>CALL_ULT_MIN)items.push({end:tr.end,txt:'R '+mmss(rest)})}}
+if(!items.length)continue;
+items.sort((a,b)=>a.end-b.end);
+parts.push({end:items[0].end,txt:(p.champion||'?')+' '+items.map(i=>i.txt).join(' ')})}
+parts.sort((a,b)=>a.end-b.end);
+return parts.map(p=>p.txt).join(' / ')}
 let copiedUntil=0;
-function copyFlashCallout(){
-const t=flashCallout();
-fetch('/api/clipboard',{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:t}).catch(()=>{if(t&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).catch(()=>{})});
-if(t)copiedUntil=Date.now()+1200}
+function markCallCopied(ok){
+const b=$('hud-call');if(!b)return;
+if(ok){copiedUntil=Date.now()+1200;b.textContent='OK';b.classList.add('copied')}
+else{b.textContent='SUM';b.classList.remove('copied')}}
+function copyEnemyCallout(opts){
+const t=enemyCallout(opts),erase=(opts&&opts.replace)?7:0,q=erase?'?erase='+erase:'';
+if(t||erase)fetch('/api/clipboard'+q,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:t||''}).catch(()=>{if(t&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).catch(()=>{})});
+markCallCopied(!!t);return t}
+function copyFlashCallout(){return copyEnemyCallout({ult:false})}
 function toggleTrack(k,cd){if(liveTracks[k])delete liveTracks[k];else{if(!(cd>0))return;liveTracks[k]={end:gameNow()+cd,total:cd}}if(isEnemyFlashKey(k))copyFlashCallout();pushTracks();renderLive()}
 function pruneTracks(now){let n=0;for(const k in liveTracks){if(liveTracks[k].end<=now){delete liveTracks[k];n++}}if(n)pushTracks();return n}
 function pushTracks(){if(!HUDMODE)return;fetch('/api/tracks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(liveTracks)}).catch(()=>{})}
@@ -642,6 +675,18 @@ soundOn=hudOpt.sound}
 function saveHudOpt(){
 try{localStorage.setItem(HUD_OPT_KEY,JSON.stringify(hudOpt));localStorage.setItem('cdscout.sound',soundOn?'1':'0')}catch(_){}}
 loadHudOpt();
+const HUD_VOL_KEY='cdscout.hudvol';
+const HUD_VOL_DEF={obj:42,item:50,voice:26};
+const HUD_VOL_SLIDERS=[{id:'obj',name:'Objectifs'},{id:'item',name:'Achats'},{id:'voice',name:'Voix'}];
+let hudVol={...HUD_VOL_DEF};
+function loadHudVol(){
+try{const raw=JSON.parse(localStorage.getItem(HUD_VOL_KEY)||'null');if(raw&&typeof raw==='object')Object.assign(hudVol,raw)}catch(_){}
+for(const k of Object.keys(HUD_VOL_DEF)){let n=+hudVol[k];if(!(n>=0&&n<=100))n=HUD_VOL_DEF[k];hudVol[k]=Math.round(n)}}
+function saveHudVol(){try{localStorage.setItem(HUD_VOL_KEY,JSON.stringify(hudVol))}catch(_){}}
+function hudVol01(k){const n=+hudVol[k];return Math.min(1,Math.max(0,((n>=0?n:HUD_VOL_DEF[k])||0)/100))}
+function applyHudVolLive(){try{if(objAudio)objAudio.volume=hudVol01('obj')}catch(_){}try{if(voiceAudio)voiceAudio.volume=hudVol01('voice')}catch(_){}}
+function setHudVol(k,n){hudVol[k]=Math.min(100,Math.max(0,Math.round(+n||0)));saveHudVol();applyHudVolLive()}
+loadHudVol();
 const ALERT_SUB={grubs:'pousse ta vague et monte au pit',dragon:'prends la vision bot et regroupe-toi',baron:'vision mid + jungle, regroupe-toi',herald:'pit du baron'};
 function alertText(k,o,lead){
 let title=String(o.label||k).toUpperCase(),sub=ALERT_SUB[k]||'regroupe-toi';
@@ -681,25 +726,27 @@ el.classList.remove('hidden');
 clearTimeout(alertTimer);
 if(HUDMODE){
 const w=$('hud-w-alert');
+if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');reportHudHits()}
+else{
 if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
 alertTimer=setTimeout(()=>{
 if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
 alertTimer=setTimeout(()=>{el.classList.add('hidden');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},380)
 },3000);
-reportHudHits()}
+reportHudHits()}}
 else alertTimer=setTimeout(()=>{el.classList.add('hidden')},level>=2?9000:7000);
 if(silent)return;if(sfx)playObjSfx(sfx);else beep(level)}
 function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(_){return null}}if(actx.state==='suspended')actx.resume();return actx}
-function beep(level){if(!soundOn)return;const c=audioCtx();if(!c)return;
+function beep(level){if(!soundOn)return;const v=hudVol01('obj');if(!(v>0))return;const c=audioCtx();if(!c)return;
 const seq=level>=2?[[1046,0,.18],[1046,.21,.18],[1318,.42,.32]]:[[784,0,.17],[988,.19,.28]];
 for(const[f,t,d]of seq){const o=c.createOscillator(),g=c.createGain();o.type='triangle';o.frequency.value=f;
-const t0=c.currentTime+t;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.3,t0+.015);g.gain.exponentialRampToValueAtTime(.0008,t0+d);
+const t0=c.currentTime+t;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.3*v,t0+.015);g.gain.exponentialRampToValueAtTime(.0008,t0+d);
 o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+d+.03)}}
 let objAudio=null,objClipTimer=null;
 function playObjSfx(kind){
-if(!kind||!soundOn)return;
+if(!kind||!soundOn)return;const v=hudVol01('obj');if(!(v>0))return;
 try{if(objClipTimer)clearTimeout(objClipTimer);if(objAudio){objAudio.pause();objAudio=null}}catch(_){}
-const a=new Audio('/api/objsfx?k='+encodeURIComponent(kind));a.volume=.42;objAudio=a;
+const a=new Audio('/api/objsfx?k='+encodeURIComponent(kind));a.volume=v;objAudio=a;
 const clip={baron:2.1,dragon:2.4,elder:2.4,grubs:1.9,herald:1.9}[kind]||2;
 a.onended=()=>{objAudio=null};a.onerror=()=>beep(2);
 const p=a.play();if(p&&p.catch)p.catch(()=>beep(2));
@@ -722,26 +769,28 @@ const item=v.itemId?itemIcon(v.itemId):'';
 el.className='item-pop';
 if(HUDMODE)el.innerHTML=`${face?`<img class="ip-face" src="${face}" alt="">`:''}${item?`<img class="ip-item" src="${item}" alt="">`:''}<div class="ip-txt"><b>${esc(v.title||v.champion||'')}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div>`;
 else el.innerHTML=`<span class="ip-champ">${face?`<img class="ip-face" src="${face}" alt="">`:''}${item?`<img class="ip-item" src="${item}" alt="">`:''}</span><div class="ip-txt"><b>${esc(v.title||v.champion||'')}</b>${v.sub?`<span>${esc(v.sub)}</span>`:''}</div>`;
-void el.offsetWidth;el.classList.add('pop');el.classList.remove('hidden');
+void el.offsetWidth;el.classList.toggle('pop',!hudFrozen());el.classList.remove('hidden');
 clearTimeout(itemPopTimer);
 if(HUDMODE){
 const w=$('hud-w-item');
+if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');reportHudHits()}
+else{
 if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
 itemPopTimer=setTimeout(()=>{
 if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
 itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},320)
 },2800);
-reportHudHits()}
+reportHudHits()}}
 else itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop')},3200)}
 function cashRegister(){
-if(!soundOn)return;const c=audioCtx();if(!c)return;const t0=c.currentTime;
+if(!soundOn)return;const v=hudVol01('item');if(!(v>0))return;const c=audioCtx();if(!c)return;const t0=c.currentTime;
 try{const n=Math.floor(c.sampleRate*.12),buf=c.createBuffer(1,n,c.sampleRate),d=buf.getChannelData(0);
 for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(n*.32));
 const src=c.createBufferSource();src.buffer=buf;const lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=1200;
-const g=c.createGain();g.gain.setValueAtTime(.07,t0);g.gain.exponentialRampToValueAtTime(.0008,t0+.12);
+const g=c.createGain();g.gain.setValueAtTime(.14*v,t0);g.gain.exponentialRampToValueAtTime(.0008,t0+.12);
 src.connect(lp);lp.connect(g);g.connect(c.destination);src.start(t0)}catch(_){}
 for(const[f,off,dur]of[[784,.05,.2],[1174,.12,.24]]){const o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.value=f;
-const t=t0+off;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.1,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+const t=t0+off;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.2*v,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
 o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+.02)}}
 function voiceAudioOK(){if(!soundOn)return false;if(HUDMODE||window.__liveDemo)return true;return!(liveState&&liveState.hudOpen)}
 function stopVoices(){voiceQ=[];voiceBusy=false;try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}try{if(objClipTimer)clearTimeout(objClipTimer);if(objAudio){objAudio.pause();objAudio.src='';objAudio=null}}catch(_){}try{speechSynthesis.cancel()}catch(_){}clearTimeout(itemPopTimer);const ip=itemEl();if(ip){ip.classList.add('hidden');ip.classList.remove('pop')}const iw=$('hud-w-item');if(iw){iw.classList.add('hidden');iw.classList.remove('hud-in','hud-out')}}
@@ -752,13 +801,14 @@ voiceBusy=true;const v=voiceQ.shift();audioCtx();
 const done=()=>{voiceBusy=false;pumpVoice()};
 const afterVO=()=>{if(v.speak)speakFR(v.speak,done);else done()};
 if(v.voice&&v.key){try{if(voiceAudio){voiceAudio.pause();voiceAudio=null}}catch(_){}
-const a=new Audio('/api/voice?key='+v.key);a.volume=.26;voiceAudio=a;
+const a=new Audio('/api/voice?key='+v.key);a.volume=hudVol01('voice');voiceAudio=a;
 const fail=()=>{if(v.speak)speakFR(v.speak,done);else if(v.champion)speakFR(v.champion,done);else done()};
 a.onended=afterVO;a.onerror=fail;const p=a.play();if(p&&p.catch)p.catch(fail)}else afterVO()}
 function speakFR(text,done){
 if(!text||!window.speechSynthesis){done();return}
+const v=hudVol01('voice');if(!(v>0)){done();return}
 try{speechSynthesis.cancel()}catch(_){}
-const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.volume=.45;u.rate=1.06;
+const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.volume=v;u.rate=1.06;
 const pick=()=>speechSynthesis.getVoices().find(x=>/^fr(-|_|$)/i.test(x.lang));
 const apply=()=>{const fr=pick();if(fr)u.voice=fr;u.onend=done;u.onerror=done;speechSynthesis.speak(u)};
 if(pick())apply();else{const t=setTimeout(()=>{speechSynthesis.removeEventListener('voiceschanged',onV);apply()},400);
@@ -792,7 +842,7 @@ document.documentElement.style.setProperty('--tab-row-h',rowH+'px');
 return {rowH,rowsTop,leftX,rightX,sw,sh}}
 function hudDefaultGeom(){
 const m=tabMetrics(),pad=16,sw=m.sw,sh=m.sh;
-return {menu:{x:sw-420-pad,y:pad,scale:1},objs:{x:sw-158-pad,y:pad+320,scale:1},alert:{x:sw-400-pad,y:Math.round(sh/6),scale:1},item:{x:sw-240-pad,y:sh-108,scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
+return {menu:{x:sw-240-pad,y:pad,scale:1},objs:{x:sw-158-pad,y:pad+320,scale:1},alert:{x:sw-400-pad,y:Math.round(sh/6),scale:1},item:{x:sw-240-pad,y:sh-108,scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
 function hudWidgetPos(id){const g=hudGeom[id]||hudDefaultGeom()[id]||{x:16,y:16,scale:1};return {x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1}}
 function applyHudWidget(id,g){
 const el=$(HUD_EL[id]);if(!el||!g)return;
@@ -807,6 +857,11 @@ applyHudVis();
 reportHudHits()}
 window.__hudMove=function(p){if(!p||!p.id)return;applyHudWidget(p.id,{x:p.x,y:p.y,scale:p.scale});reportHudHits()};
 window.__hudApplyGeom=function(g){applyHudGeom(g)};
+function resetHudLayout(){
+fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{applyHudGeom({v:4,widgets:hudDefaultGeom()})})}
+function closeHudOverlay(){
+try{navigator.sendBeacon&&navigator.sendBeacon('/api/hud/close');fetch('/api/hud/close',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
+window.close()}
 function hudOpacityValue(){
 let v=parseFloat(document.documentElement.style.getPropertyValue('--hud-opacity'));
 if(!(v>=0.25&&v<=1)){try{v=parseFloat(localStorage.getItem(HUD_OPACITY_KEY))}catch(_){v=1}}
@@ -831,6 +886,40 @@ function hideHudItem(){
 clearTimeout(itemPopTimer);itemPopTimer=null;
 const el=itemEl();if(el){el.classList.add('hidden');el.classList.remove('pop')}
 const w=$('hud-w-item');if(w)w.classList.add('hidden'),w.classList.remove('hud-in','hud-out')}
+let hudForceUI=false;
+const HUD_FREEZE_KEY='cdscout.hudfreeze';
+const hudStudio={freeze:false,bi:0};
+try{hudStudio.freeze=localStorage.getItem(HUD_FREEZE_KEY)==='1'}catch(_){}
+function hudFrozen(){return !!(HUDMODE&&hudForceUI&&hudStudio.freeze)}
+function syncHudFreezeClass(){
+const on=hudFrozen();
+document.documentElement.classList.toggle('hud-freeze',on);
+if(document.body)document.body.classList.toggle('hud-freeze',on)}
+async function loadHudForceUI(){
+try{const s=await(await fetch('/api/hud',{cache:'no-store'})).json();hudForceUI=!!s.force}catch(_){hudForceUI=false}
+syncHudFreezeClass()}
+const HUD_STUDIO_BANNERS=[{k:'baron',o:{},name:'Baron'},{k:'herald',o:{},name:'Héraut'},{k:'grubs',o:{},name:'Larves'},{k:'dragon',o:{kind:'infernal'},name:'Infernal'},{k:'dragon',o:{kind:'mountain'},name:'Mountain'},{k:'dragon',o:{kind:'ocean'},name:'Océan'},{k:'dragon',o:{kind:'cloud'},name:'Cloud'},{k:'dragon',o:{kind:'hextech'},name:'Hextech'},{k:'dragon',o:{kind:'chemtech'},name:'Chemtech'},{k:'dragon',o:{kind:'soul',note:'ÂME'},name:'Âme'},{k:'dragon',o:{kind:'elder',label:'Ancestral'},name:'Ancestral'}];
+function previewStudioBanner(){
+const s=HUD_STUDIO_BANNERS[hudStudio.bi%HUD_STUDIO_BANNERS.length];
+hudStudio.bi++;
+const o=Object.assign({label:s.name,leads:[75],nextAt:75},s.o);
+const[t,sub]=alertText(s.k,o,75);
+fireAlert(t,sub,2,true,'',s.k,o);
+reportHudHits()}
+function previewStudioItem(){
+const p=((liveState&&liveState.enemies)||[])[0]||((liveState&&liveState.allies)||[])[0]||{};
+const icon=p.icon||'Zed.png',champ=p.champion||p.name||'Zed';
+showItemPop({icon,itemId:3142,title:champ+' · ITEM',sub:'Youmuu, lame spectrale',champion:champ});
+reportHudHits()}
+function setHudFreeze(on){
+hudStudio.freeze=!!on;
+try{localStorage.setItem(HUD_FREEZE_KEY,hudStudio.freeze?'1':'0')}catch(_){}
+syncHudFreezeClass();
+if(hudStudio.freeze){clearTimeout(alertTimer);alertTimer=null;clearTimeout(itemPopTimer);itemPopTimer=null;
+const aw=$('hud-w-alert'),iw=$('hud-w-item');
+if(aw)aw.classList.remove('hud-in','hud-out');
+if(iw)iw.classList.remove('hud-in','hud-out')}
+applyHudVis()}
 function stopVoiceOnly(){
 voiceQ=[];voiceBusy=false;
 try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}
@@ -850,11 +939,28 @@ for(const sec of HUD_OPT_MENU){
 html+=`<div class="hud-vis-lab">${esc(sec.lab)}</div>`;
 for(const it of sec.items){
 const on=hudOptOn(it.id);
-html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}}
+html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}
+if(sec.lab==='Audio'){for(const v of HUD_VOL_SLIDERS){const n=Math.round(hudVol01(v.id)*100);
+html+=`<div class="hud-vis-row hud-vis-opac"><span>${esc(v.name)}</span><input type="range" data-vol="${v.id}" min="0" max="100" step="5" value="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div>`}}
+}
 const pct=Math.round(hudOpacityValue()*100);
 html+=`<div class="hud-vis-lab">Affichage</div><div class="hud-vis-row hud-vis-opac"><span>Opacité</span><input type="range" id="hud-opacity" min="25" max="100" step="5" value="${pct}" aria-valuemin="25" aria-valuemax="100" aria-valuenow="${pct}"><b id="hud-opacity-val">${pct} %</b></div>`;
+html+=`<div class="hud-vis-lab">Overlay</div><div class="hud-vis-btns"><button type="button" data-hud-act="reset">Reset dispo</button><button type="button" class="hud-vis-quit" data-hud-act="close">Quitter</button></div>`;
+if(hudForceUI){
+const fr=!!hudStudio.freeze;
+html+=`<div class="hud-vis-lab">Studio</div><div class="hud-vis-row"><span>Figer</span><button type="button" class="hud-sw${fr?' on':''}" data-studio="freeze" role="switch" aria-checked="${fr}" title="Garder bannière / achat à l'écran"></button></div><div class="hud-vis-btns"><button type="button" data-studio="banner">Bannière</button><button type="button" data-studio="item">Achat</button><button type="button" data-studio="hide">Masquer</button></div><div class="hud-vis-hint">Bannière cycle les PNG. Figer coupe l'anim et le timer.</div>`}
 m.innerHTML=html;
 m.querySelectorAll('[data-opt]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();toggleHudOpt(b.dataset.opt)});
+m.querySelectorAll('[data-studio]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
+const a=b.dataset.studio;
+if(a==='freeze')setHudFreeze(!hudStudio.freeze);
+else if(a==='banner')previewStudioBanner();
+else if(a==='item')previewStudioItem();
+else if(a==='hide'){hideHudAlert();hideHudItem();reportHudHits()}});
+m.querySelectorAll('[data-hud-act]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
+if(b.dataset.hudAct==='reset')resetHudLayout();
+else if(b.dataset.hudAct==='close')closeHudOverlay()});
+m.querySelectorAll('[data-vol]').forEach(sl=>sl.oninput=()=>{setHudVol(sl.dataset.vol,+sl.value);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)});
 const sl=$('hud-opacity');
 if(sl)sl.oninput=()=>{const v=(+sl.value)/100;applyHudOpacity(v,true);const lab=$('hud-opacity-val');if(lab)lab.textContent=Math.round(v*100)+' %';sl.setAttribute('aria-valuenow',String(Math.round(v*100)))}}
 function closeHudVisMenu(){
@@ -872,22 +978,32 @@ m.classList.toggle('hidden');
 b.setAttribute('aria-expanded',open?'true':'false');
 document.documentElement.classList.toggle('hud-vis-open',open);
 if(document.body)document.body.classList.toggle('hud-vis-open',open);
-if(open)renderHudVisMenu();
+if(open){loadHudForceUI().then(()=>renderHudVisMenu());renderHudVisMenu()}
 reportHudHits()}
 function hudObj(k,cls){const o=(liveState.objectives||{})[k];if(!o)return'';
 const note=k==='dragon'&&(o.order||o.chaos)?`${o.order||0}–${o.chaos||0}${o.note?' · '+o.note:''}`:(o.note||'');
 const tip=esc((o.label||k)+(note?' '+note:''));
 return `<div class="hobj ${cls}${o.gone?' gone':''}" data-next="${o.nextAt}"${o.gone?' data-gone="1"':''} title="${tip}"><img src="${OBJ_ICON[k]||''}" alt="${esc(o.label||k)}" loading="lazy"><span class="on-name">${esc(o.label||k)}</span><strong>…</strong></div>`}
+function spellCostNum(s){
+const raw=String(s&&s.cost||'').trim();if(!raw)return'';
+const parts=raw.split(/\s*→\s*|\s*\/\s*/).map(x=>x.trim()).filter(Boolean);if(!parts.length)return'';
+let idx=parts.length-1;const r=parseInt(s.rank,10);if(r>=1&&r<=parts.length)idx=r-1;
+const v=String(parts[idx]||'').replace(/[^\d.,]/g,'').replace(',','.');
+if(!v||!(+v>0))return'';return String(Math.round(+v))}
+function spellCostLabel(s){
+const key=String(s&&s.spell||'').toUpperCase();const n=spellCostNum(s);return n?key+' '+n:key}
 function hudSpellChip(s,p,P,ally,i){
 const cd=s.cd||0,isP=s.spell==='P',isR=s.spell==='R',k=`${P}|${s.spell}`;
 const note=((liveScout[p.key]&&liveScout[p.key].important)||[]).find(x=>x.spell===s.spell&&x.note);
 const hint=cd?(isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'Clic quand il l\'utilise (re-clique pour annuler).'):'';
 const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
-const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
 const shown=cd?fmtCD(cd):'';
+const head0=spellBadge(s,'qi')||`<span class="qi"><b>${esc(s.spell)}</b></span>`;
+const head=cd?head0.replace('</span>',`<span class="hv">${shown}</span></span>`):head0;
+const cost=`<span class="hk">${esc(spellCostLabel(s))}</span>`;
 const cls='hr-sk'+(isP?' hr-p':'')+(isR?' hr-r':'');
-if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head}</div>`;
-return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}<span class="hv">${shown}</span></button>`}
+if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head}${cost}</div>`;
+return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}${cost}</button>`}
 function hudSumChip(s,si,p,P,ally,i){
 const k=`${P}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
 const hint=isF&&!ally?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
@@ -900,8 +1016,8 @@ const icon=s.slug?`<img src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
 return `<button type="button" class="hf-sum" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}<span class="hv">—</span></button>`}
 function hudUltChip(p,i){
 const r=(p.spells||[]).find(s=>s.spell==='R');if(!r)return '';
-const k=`${pid(p)}|R`,cd=r.cd||0;
-return `<button type="button" class="hf-ult" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}"><svg viewBox="0 0 22 22"><circle class="hf-ult-bg" cx="11" cy="11" r="9"/><circle class="hf-ult-fg" cx="11" cy="11" r="9" stroke-dasharray="${ULT_C}" stroke-dashoffset="0"/></svg><span class="hv">R</span></button>`}
+const k=`${pid(p)}|R`,cd=r.cd||0,ic=spellIcon(r);
+return `<button type="button" class="hf-ult" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}">${ic?`<img src="${ic}" alt="">`:'<b>R</b>'}<span class="hv"></span></button>`}
 function hudMenuChip(p,i){
 const dead=p.isDead?(gameNow()+p.respawn):0;
 const sums=(p.summoners||[]).map((s,si)=>hudMenuSum(p,s,si,i)).join('');
@@ -928,7 +1044,7 @@ $('hud-state').title=on?(window.__liveDemo?'DÉMO':'EN JEU'):'ATTENTE';
 $('hud-state').classList.toggle('on',on);
 if(!on){$('hud-objs').innerHTML='';$('hud-flashes').innerHTML='';
 const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');if(te)te.innerHTML='';if(ta)ta.innerHTML='';
-$('hud-clock').textContent='—';syncHudExpand();return}
+markCallCopied(false);syncHudExpand();return}
 $('hud-objs').innerHTML=OBJ_ORDER.map(([k,c])=>hudObj(k,c)).join('');
 $('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudMenuChip(p,i)).join('');
 const hudAll=liveState.allies||[];
@@ -940,11 +1056,10 @@ tickHud();syncHudExpand()}
 function tickHud(){
 syncHudExpand();
 const on=liveOn();
-if(!on){$('hud-clock').textContent='—';$('hud-clock').classList.remove('copied');return}
+if(!on){markCallCopied(false);return}
 const now=gameNow();
 if(pruneTracks(now)){renderHud();return}
-if(Date.now()<copiedUntil){$('hud-clock').textContent='CHAT';$('hud-clock').classList.add('copied')}
-else{$('hud-clock').textContent=mmss(now);$('hud-clock').classList.remove('copied')}
+if(Date.now()>=copiedUntil)markCallCopied(false);
 document.querySelectorAll('#hud-objs .hobj').forEach(el=>{const s=el.querySelector('strong');
 if(el.dataset.gone){s.textContent='—';return}
 const rest=+el.dataset.next-now;
@@ -960,12 +1075,13 @@ const tms=row.hasAttribute('data-tm')?[row]:[...row.querySelectorAll('[data-tm]'
 tms.forEach(el=>{
 const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,val=el.querySelector('.hv');
 el.classList.remove('cd','up');
-if(tr&&tr.end-now>0){el.classList.add('cd');if(val)val.textContent=el.dataset.kind==='spell'?fmtCDTick(tr.end-now):mmss(tr.end-now);
-const fg=el.querySelector('.hf-ult-fg');if(fg){const frac=Math.max(0,(tr.end-now)/(tr.total||base||1));fg.style.strokeDashoffset=(ULT_C*(1-frac)).toFixed(2)}}
-else{if(val)val.textContent=base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—';
-const fg=el.querySelector('.hf-ult-fg');if(fg){fg.style.strokeDashoffset='0';if(base>0)el.classList.add('up')}}})});
+const perm=el.classList.contains('hf-sum')||el.classList.contains('hf-ult');
+if(tr&&tr.end-now>0){el.classList.add('cd');if(val)val.textContent=perm?String(Math.max(0,Math.round(tr.end-now))):(el.dataset.kind==='spell'?fmtCDTick(tr.end-now):mmss(tr.end-now))}
+else{if(val)val.textContent=perm?'':(base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—');if(perm&&base>0)el.classList.add('up')}})});
 checkAlerts(now);checkVoices()}
-function applyHotkey(e){const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
+function applyHotkey(e){
+if(e.kind==='allsum'){copyEnemyCallout({ult:true,replace:true});return}
+const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
 if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd);return}
 let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
 const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s))}
@@ -1019,21 +1135,18 @@ if(s.tracks)pullTracks(s.tracks);
 if(s.drag&&s.drag.id)window.__hudMove(s.drag);
 if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e)}catch(_){}}
 async function loadHudGeom(){
-try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:3,widgets:hudDefaultGeom()})}
+try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:4,widgets:hudDefaultGeom()})}
 reportHudSize()}
 if(HUDMODE){
 applyHudOpacity(hudOpacityValue(),false);applyHudVis();
+loadHudForceUI().then(()=>{syncHudFreezeClass();if($('hud-vis-menu')&&!$('hud-vis-menu').classList.contains('hidden'))renderHudVisMenu()});
 bindHudDrag();
 document.querySelectorAll('#hud .hud-widget').forEach(w=>{w.addEventListener('mouseenter',()=>reportHudHits());w.addEventListener('mouseleave',()=>reportHudHits())});
-$('hud-sound').classList.toggle('on',soundOn);
-$('hud-sound').onclick=()=>{toggleHudOpt('sound');if(soundOn)playObjSfx('dragon')};
-$('hud-reset').onclick=()=>{fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{applyHudGeom({v:3,widgets:hudDefaultGeom()})})};
 $('hud-vis-btn').onclick=toggleHudVisMenu;
 document.addEventListener('click',e=>{if(!$('hud-vis')||$('hud-vis').contains(e.target))return;closeHudVisMenu()});
-$('hud-close').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/hud/close');fetch('/api/hud/close',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){};window.close()};
 setInterval(async()=>{try{if((await fetch('/api/status',{cache:'no-store'})).ok)return}catch(_){}
 window.close()},2500);
-$('hud-clock').onclick=()=>{copyFlashCallout();if(liveOn())tickHud()};
+$('hud-call').onclick=()=>{copyEnemyCallout({ult:false});if(liveOn())tickHud()};
 $('hud-demo').onclick=()=>startLiveDemo();
 window.addEventListener('resize',()=>reportHudSize());
 loadHudGeom();
@@ -1042,7 +1155,7 @@ let autoHudDone=false;
 // Le HUD s'ouvre tout seul au tout début de la partie (à la fontaine) : plus tard,
 // le vol de focus du navigateur serait dangereux en pleine action.
 async function maybeAutoHud(){
-if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0')return;
+if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0'||!liveOn())return;
 autoHudDone=true;
 try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)return;await fetch('/api/hud/open',{method:'POST'})}catch(_){}}
 function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();stopVoices();setDemoLiveActive(false);fetch('/api/demo',{method:'DELETE'}).catch(()=>{});renderLive()}
@@ -1139,8 +1252,17 @@ if(liveOn()){const people=hlPeople();const sel=people.find(p=>p.key===(hlKey??fo
 trainOpen=false;syncTrain();hlOpen=!hlOpen;syncHighlights();if(hlOpen)$('highlights').scrollIntoView({behavior:'smooth',block:'start'})});
 $('hl-ext')&&($('hl-ext').onclick=e=>{e.preventDefault();const href=$('hl-ext').href;if(href&&href.indexOf('deeplol.gg')>=0)openDeepLoL(href);else window.open(href,'_blank','noopener')});
 $('hud-open').onclick=async()=>{const b=$('hud-open'),label='HUD en jeu';b.textContent='Ouverture…';
-try{const r=await fetch('/api/hud/open',{method:'POST'});b.textContent=r.ok?'HUD ouvert':(await r.text()).slice(0,40)||'HUD indisponible'}catch(_){b.textContent='HUD indisponible'}
+try{const r=await fetch('/api/hud/open',{method:'POST'});if(r.ok)b.textContent='HUD ouvert';else{const t=(await r.text()).slice(0,60);b.textContent=r.status===403?'Hors partie':(t||'HUD indisponible')}}catch(_){b.textContent='HUD indisponible'}
 setTimeout(()=>{b.textContent=label},3000)};
+async function applyDevMode(on){
+$('results').classList.add('hidden');
+try{const r=await fetch('/api/hud/devmode',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on})});
+const raw=await r.text();let d={};try{d=JSON.parse(raw)}catch(_){d={message:raw}}
+if(!r.ok){$('hero-title').textContent='Devmode indisponible';$('hero-copy').textContent=d.message||raw||'Réservé au build local (run.ps1).';return}
+$('search').value='';
+if(on){$('hero-title').textContent='Devmode ON';$('hero-copy').textContent='Overlay forcé, même hors partie. Tape « devmode off » pour revenir au mode partie uniquement.'}
+else{$('hero-title').textContent='Devmode OFF';$('hero-copy').textContent='Overlay uniquement pendant une partie (ou une démo en jeu).'}}
+catch(_){$('hero-title').textContent='Devmode indisponible';$('hero-copy').textContent='Le serveur local n\'a pas répondu.'}}
 async function pollLive(){
 try{const s=await(await fetch('/api/live')).json();
 if(s.active){

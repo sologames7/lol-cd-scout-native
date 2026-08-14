@@ -163,7 +163,7 @@ func hudDefaultWidgets(sw, sh int) map[string]hudWidgetGeom {
 		sh = 1080
 	}
 	pad := 16
-	menuW := 420
+	menuW := 240
 	objsW := 158
 	_, rowsTop, tabLeft, tabRight := hudTabMetrics(sw, sh)
 	return map[string]hudWidgetGeom{
@@ -209,9 +209,9 @@ func clampHudWidget(g hudWidgetGeom, sw, sh int) hudWidgetGeom {
 func hudGeomMerge(g hudGeomDisk, sw, sh int) hudGeomDisk {
 	def := hudDefaultWidgets(sw, sh)
 	if g.V < 2 || g.Widgets == nil {
-		return hudGeomDisk{V: 3, Widgets: def}
+		return hudGeomDisk{V: 4, Widgets: def}
 	}
-	out := hudGeomDisk{V: 3, Widgets: make(map[string]hudWidgetGeom, len(def))}
+	out := hudGeomDisk{V: 4, Widgets: make(map[string]hudWidgetGeom, len(def))}
 	for id, d := range def {
 		if cur, ok := g.Widgets[id]; ok {
 			out.Widgets[id] = clampHudWidget(cur, sw, sh)
@@ -219,7 +219,7 @@ func hudGeomMerge(g hudGeomDisk, sw, sh int) hudGeomDisk {
 			out.Widgets[id] = d
 		}
 	}
-	if g.V < 3 {
+	if g.V < 4 {
 		out.Widgets["menu"] = def["menu"]
 	}
 	return out

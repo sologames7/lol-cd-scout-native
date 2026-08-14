@@ -916,6 +916,10 @@ func hudURL() string {
 }
 
 func apiHUDOpen(w http.ResponseWriter, r *http.Request) {
+	if !hudMayOpen() {
+		http.Error(w, "HUD uniquement en partie", http.StatusForbidden)
+		return
+	}
 	// Ne pas bloquer la requête HTTP : WebView2 Embed peut prendre plusieurs
 	// secondes, et ça saturait le navigateur (Quitter / Data Dragon coincés).
 	go func() { _ = hudOpen(hudURL()) }()
@@ -1017,7 +1021,14 @@ func apiClipboard(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := setClipboard(strings.TrimSpace(string(b))); err != nil {
+	erase, _ := strconv.Atoi(r.URL.Query().Get("erase"))
+	if erase < 0 {
+		erase = 0
+	}
+	if erase > 32 {
+		erase = 32
+	}
+	if err := writeClipboard(strings.TrimSpace(string(b)), erase); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -1026,7 +1037,7 @@ func apiClipboard(w http.ResponseWriter, r *http.Request) {
 
 func writeHUDStatus(w http.ResponseWriter) {
 	pinned, noActivate, window := hudStatus()
-	writeJSON(w, map[string]any{"supported": hudSupported(), "pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold()})
+	writeJSON(w, map[string]any{"supported": hudSupported(), "pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold(), "dev": hudDevAllowed(), "force": hudForceOn()})
 }
 
 func apiCard(w http.ResponseWriter, r *http.Request) {
@@ -1059,6 +1070,7 @@ var currentListener atomic.Value
 
 func main() {
 	setDPIAware()
+	hudForceLoad()
 	if applyStagedUpdate() {
 		return // une instance à jour vient d'être lancée
 	}
@@ -1101,6 +1113,7 @@ func main() {
 	mux.HandleFunc("/api/update", apiUpdate)
 	mux.HandleFunc("/api/hud", func(w http.ResponseWriter, r *http.Request) { writeHUDStatus(w) })
 	mux.HandleFunc("/api/hud/open", apiHUDOpen)
+	mux.HandleFunc("/api/hud/devmode", apiHUDDevMode)
 	mux.HandleFunc("/api/hud/pin", apiHUDPin)
 	mux.HandleFunc("/api/hud/hold", apiHUDHold)
 	mux.HandleFunc("/api/hud/hits", apiHUDHits)

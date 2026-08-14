@@ -46,6 +46,7 @@ var (
 	procPostMessageW          = user32.NewProc("PostMessageW")
 	procReleaseCapture        = user32.NewProc("ReleaseCapture")
 	procGetCursorPos          = user32.NewProc("GetCursorPos")
+	procGetForegroundWindow   = user32.NewProc("GetForegroundWindow")
 	procGetWindowRect         = user32.NewProc("GetWindowRect")
 	procScreenToClient        = user32.NewProc("ScreenToClient")
 	procRegisterClassExW      = user32.NewProc("RegisterClassExW")
@@ -308,16 +309,27 @@ var autoHud = struct {
 	lastTry time.Time
 }{}
 
-// autoOpenHudForGame ouvre le widget dès qu'une partie live est détectée
-// (y compris en cours de game : le délai « < 60 s » ratait tout lancement tardif).
+// hudCloseIdle ferme l'overlay sans bloquer la réouverture auto de la
+// prochaine partie (contrairement à la croix, qui pose userClosed).
+func hudCloseIdle() {
+	hudPin.mu.Lock()
+	hudPin.userClosed = false
+	hwnd := hudPin.hwnd
+	hudPin.mu.Unlock()
+	if windowAlive(hwnd) {
+		procPostMessageW.Call(uintptr(hwnd), wmHudClose, 0, 0)
+	}
+}
+
+// autoOpenHudForGame ouvre le widget dès qu'une partie live est détectée.
+// Hors partie (et hors démo / devmode), l'overlay se ferme.
 func autoOpenHudForGame(key string) {
+	key = hudKeepKey(key)
 	autoHud.mu.Lock()
 	if key == "" {
 		autoHud.key = ""
 		autoHud.mu.Unlock()
-		hudPin.mu.Lock()
-		hudPin.userClosed = false
-		hudPin.mu.Unlock()
+		hudCloseIdle()
 		return
 	}
 	hudPin.mu.Lock()
@@ -505,7 +517,7 @@ func hudSetBounds(_, _ int) {
 
 func hudResetPos() {
 	sw, sh := hudScreenSize()
-	g := hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
+	g := hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
 	hudGeomReplace(g)
 	hudEvalGeom(g)
 	if h := hudHWND(); windowAlive(h) {
@@ -624,11 +636,11 @@ func loadHudGeomFile() hudGeomDisk {
 	sw, sh := hudScreenSize()
 	b, err := os.ReadFile(hudGeomPath())
 	if err != nil {
-		return hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
+		return hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
 	}
 	var g hudGeomDisk
 	if json.Unmarshal(b, &g) != nil {
-		return hudGeomDisk{V: 3, Widgets: hudDefaultWidgets(sw, sh)}
+		return hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
 	}
 	return hudGeomMerge(g, sw, sh)
 }
@@ -1000,6 +1012,44 @@ func pinLoop() {
 	}
 }
 
+func leagueForeground() bool {
+	h := leagueGameHWND()
+	if h == 0 {
+		return false
+	}
+	fg, _, _ := procGetForegroundWindow.Call()
+	return syscall.Handle(fg) == h
+}
+
+func watchAllsum(step *int, held *bool, last *time.Time) {
+	if !leagueForeground() || keyDown(vkMenu) || keyDown(vkControl) {
+		*step, *held = 0, false
+		return
+	}
+	if *step > 0 && time.Since(*last) > 900*time.Millisecond {
+		*step, *held = 0, false
+	}
+	expect := [...]int{0xBF, 0x41, 0x4C, 0x4C, 0x53, 0x55, 0x4D} // / A L L S U M
+	if *step >= len(expect) {
+		*step = 0
+		return
+	}
+	down := keyDown(expect[*step])
+	if down && !*held {
+		*step++
+		*last = time.Now()
+		*held = true
+		if *step == len(expect) {
+			pushInput("allsum", 0)
+			*step, *held = 0, false
+		}
+		return
+	}
+	if !down {
+		*held = false
+	}
+}
+
 func keyDown(vk int) bool {
 	r, _, _ := procGetAsyncKeyState.Call(uintptr(vk))
 	return r&0x8000 != 0
@@ -1030,6 +1080,8 @@ func inputStart() {
 
 	go func() {
 		prev := [5]bool{}
+		allsumStep, allsumHeld := 0, false
+		var allsumLast time.Time
 		for {
 			alt, shift := keyDown(vkMenu), keyDown(vkShift)
 			tab := keyDown(vkTab)
@@ -1044,6 +1096,7 @@ func inputStart() {
 				}
 				prev[i] = down
 			}
+			watchAllsum(&allsumStep, &allsumHeld, &allsumLast)
 			inputHub.mu.Lock()
 			inputHub.tab = tab
 			inputHub.mu.Unlock()

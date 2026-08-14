@@ -43,14 +43,14 @@ func TestHudDefaultWidgets(t *testing.T) {
 			t.Fatalf("widget manquant: %s", id)
 		}
 	}
-	if w["menu"].X < 1400 || w["menu"].X > 1600 || w["menu"].Y != 16 {
+	if w["menu"].X < 1600 || w["menu"].X > 1720 || w["menu"].Y != 16 {
 		t.Fatalf("menu=%+v", w["menu"])
 	}
 }
 
 func TestHudGeomMergeLegacy(t *testing.T) {
 	g := hudGeomMerge(hudGeomDisk{X: 10, Y: 20}, 1920, 1080)
-	if g.V != 3 || g.Widgets["menu"].X == 0 && g.Widgets["menu"].Y == 0 {
+	if g.V != 4 || g.Widgets["menu"].X == 0 && g.Widgets["menu"].Y == 0 {
 		t.Fatalf("merge legacy: %+v", g)
 	}
 	old := hudGeomDisk{V: 2, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
@@ -58,7 +58,11 @@ func TestHudGeomMergeLegacy(t *testing.T) {
 	if up.Widgets["menu"].X == 100 {
 		t.Fatalf("v2 doit recentrer le menu horizontal: %+v", up.Widgets["menu"])
 	}
-	cur := hudGeomDisk{V: 3, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
+	v3 := hudGeomDisk{V: 3, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1}}}
+	if hudGeomMerge(v3, 1920, 1080).Widgets["menu"].X == 100 {
+		t.Fatal("v3 doit recaler le menu à droite")
+	}
+	cur := hudGeomDisk{V: 4, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
 	m := hudGeomMerge(cur, 1920, 1080)
 	if m.Widgets["menu"].X != 100 || m.Widgets["menu"].Scale != 1.2 {
 		t.Fatalf("keep menu: %+v", m.Widgets["menu"])

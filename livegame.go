@@ -938,12 +938,15 @@ func apiLive(w http.ResponseWriter, r *http.Request) {
 			if _, _, open := hudStatus(); open {
 				d.HudOpen = true
 			}
+			autoOpenHudForGame(liveGameKey(d))
 			writeJSON(w, d)
 			return
 		}
-	} else {
-		setDemoLive(nil)
+		autoOpenHudForGame("")
+		writeJSON(w, state)
+		return
 	}
+	setDemoLive(nil)
 	autoOpenHudForGame(liveGameKey(state))
 	writeJSON(w, state)
 }

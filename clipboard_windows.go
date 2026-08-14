@@ -7,7 +7,7 @@ package main
 // League ignore le presse-papier OS (clipboard interne) : Ctrl+V depuis
 // l'extérieur ne colle rien. Après la copie on frappe le texte en Unicode
 // dans le client (SendInput) — le chat doit être ouvert (Entrée), on n'envoie
-// pas le message tout seul.
+// pas le message tout seul. /allsum : erase=7 backspaces puis la liste.
 
 import (
 	"errors"
@@ -24,6 +24,7 @@ const (
 	keyeventfKeyup     = 0x0002
 	keyeventfUnicode   = 0x0004
 	leagueChatMaxRunes = 250
+	vkBack             = 0x08
 )
 
 var (
@@ -55,6 +56,10 @@ type sendKbd struct {
 }
 
 func setClipboard(s string) error {
+	return writeClipboard(s, 0)
+}
+
+func writeClipboard(s string, erase int) error {
 	utf16, err := syscall.UTF16FromString(s)
 	if err != nil {
 		return err
@@ -75,31 +80,28 @@ func setClipboard(s string) error {
 	}
 	defer procCloseClipboard.Call()
 	procEmptyClipboard.Call()
-	if s == "" {
-		return nil
-	}
-
-	nbytes := uintptr(len(utf16) * 2)
-	h, _, _ := procGlobalAlloc.Call(gmemMoveable, nbytes)
-	if h == 0 {
-		return errors.New("GlobalAlloc")
-	}
-	ptr, _, _ := procGlobalLock.Call(h)
-	if ptr == 0 {
-		procGlobalFree.Call(h)
-		return errors.New("GlobalLock")
-	}
-	dst := unsafe.Slice((*uint16)(unsafe.Pointer(ptr)), len(utf16))
-	copy(dst, utf16)
-	procGlobalUnlock.Call(h)
-
-	ok, _, _ := procSetClipboardData.Call(cfUnicodeText, h)
-	if ok == 0 {
-		procGlobalFree.Call(h)
-		return errors.New("SetClipboardData")
-	}
 	if s != "" {
-		go typeIntoLeagueChat(s)
+		nbytes := uintptr(len(utf16) * 2)
+		h, _, _ := procGlobalAlloc.Call(gmemMoveable, nbytes)
+		if h == 0 {
+			return errors.New("GlobalAlloc")
+		}
+		ptr, _, _ := procGlobalLock.Call(h)
+		if ptr == 0 {
+			procGlobalFree.Call(h)
+			return errors.New("GlobalLock")
+		}
+		dst := unsafe.Slice((*uint16)(unsafe.Pointer(ptr)), len(utf16))
+		copy(dst, utf16)
+		procGlobalUnlock.Call(h)
+		ok, _, _ := procSetClipboardData.Call(cfUnicodeText, h)
+		if ok == 0 {
+			procGlobalFree.Call(h)
+			return errors.New("SetClipboardData")
+		}
+	}
+	if s != "" || erase > 0 {
+		go typeIntoLeagueChat(s, erase)
 	}
 	return nil
 }
@@ -111,10 +113,7 @@ func leagueGameHWND() syscall.Handle {
 	return findWindow("League of Legends (TM)")
 }
 
-func typeIntoLeagueChat(s string) {
-	if s == "" {
-		return
-	}
+func typeIntoLeagueChat(s string, erase int) {
 	runes := []rune(s)
 	if len(runes) > leagueChatMaxRunes {
 		s = string(runes[:leagueChatMaxRunes])
@@ -132,6 +131,14 @@ func typeIntoLeagueChat(s string) {
 	procAllowSetForegroundWindow.Call(^uintptr(0))
 	procSetForegroundWindow.Call(uintptr(hwnd))
 	time.Sleep(25 * time.Millisecond)
+	for i := 0; i < erase; i++ {
+		sendVk(vkBack, 0)
+		sendVk(vkBack, keyeventfKeyup)
+		time.Sleep(8 * time.Millisecond)
+	}
+	if s == "" {
+		return
+	}
 	utf16, err := syscall.UTF16FromString(s)
 	if err != nil || len(utf16) < 2 {
 		return
@@ -140,6 +147,15 @@ func typeIntoLeagueChat(s string) {
 		sendUnicodeKey(ch, 0)
 		sendUnicodeKey(ch, keyeventfKeyup)
 	}
+}
+
+func sendVk(vk uint16, up uint32) {
+	in := sendKbd{
+		Type:  inputKeyboard,
+		Vk:    vk,
+		Flags: up,
+	}
+	procSendInput.Call(1, uintptr(unsafe.Pointer(&in)), unsafe.Sizeof(in))
 }
 
 func sendUnicodeKey(ch uint16, up uint32) {
