@@ -247,6 +247,7 @@ func refreshDragon() {
 	if changed {
 		dragon.index, dragon.byKey, dragon.details = nil, nil, map[string]champDetail{}
 		resetPassiveCDCache()
+		resetItemMetaCache()
 	}
 	dragon.mu.Unlock()
 	_ = ensureIndex()
@@ -1004,6 +1005,7 @@ func main() {
 	mux.HandleFunc("/ddragon/", apiDDragon)
 	mux.HandleFunc("/api/status", apiStatus)
 	mux.HandleFunc("/api/live", apiLive)
+	mux.HandleFunc("/api/voice", apiVoice)
 	mux.HandleFunc("/api/cards", apiCards)
 	mux.HandleFunc("/api/search", apiSearch)
 	mux.HandleFunc("/api/card", apiCard)
@@ -1022,6 +1024,7 @@ func main() {
 	mux.HandleFunc("/api/input", apiInput)
 	mux.HandleFunc("/api/clipboard", apiClipboard)
 	mux.HandleFunc("/api/open", apiOpen)
+	mux.HandleFunc("/api/quiz", apiQuiz)
 	ln, err := listenLocal()
 	if err != nil {
 		return

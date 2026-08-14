@@ -37,6 +37,27 @@ h1{font-size:34px;letter-spacing:-.02em;background:linear-gradient(120deg,#fff 3
 .card,.tile,.gold-main,.gold-mini{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
 .tile:hover,.card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.18)}.tile.dead:hover{transform:none}
 .secondary{transition:background .15s,border-color .15s}.secondary:hover{background:#223049;border-color:rgba(255,255,255,.2)}
+.toolbar>button,.demo-dd{flex-shrink:0}
+.demo-dd{position:relative;display:flex;align-items:stretch}
+.toolbar .ghost{background:transparent;color:#7d8ca3;border-color:transparent;font-size:13px;padding:0 12px;letter-spacing:.02em}
+.toolbar .ghost:hover{background:rgba(255,255,255,.05);color:#dce7f8;border-color:var(--border)}
+.toolbar .ghost.open,.toolbar .ghost.active{color:var(--accent);border-color:rgba(91,231,196,.28);background:rgba(91,231,196,.06)}
+.chev{display:inline-block;width:0;height:0;margin-left:6px;border:4px solid transparent;border-top-color:currentColor;border-bottom-width:0;opacity:.65;transform:translateY(1px);transition:transform .15s}
+.ghost.open .chev{transform:translateY(-1px) rotate(180deg)}
+.demo-menu{position:absolute;z-index:25;top:calc(100% + 6px);right:0;min-width:168px;padding:6px;border:1px solid var(--border);background:#101827;border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.5);display:flex;flex-direction:column;gap:2px}
+.demo-menu button{height:36px;text-align:left;background:transparent;color:#dce7f8;border-radius:9px;font-size:13px;font-weight:700}
+.demo-menu button:hover{background:#192438}
+.demo-menu button.active{color:var(--accent);background:rgba(91,231,196,.1)}
+.danger{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#6b1515;color:#fecaca;border:1px solid rgba(248,113,113,.42);padding:0 14px;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+.danger:hover{background:#8b1c1c;border-color:rgba(248,113,113,.7);color:#fff}
+.danger svg{flex-shrink:0;display:block}
+@media(max-width:720px){.demo-dd{width:100%}.demo-dd>button,.danger,.toolbar #train-open,.toolbar #quiz-open,.toolbar #hl-open{height:42px;width:100%;justify-content:center}.demo-menu{left:0;right:0}}
+.train{display:flex;flex-direction:column;gap:10px}
+.train-hint{margin:0;color:var(--muted);font-size:12px;line-height:1.45}
+.train-wrap{position:relative;height:min(72vh,820px);border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#0b1220}
+.train-wrap iframe{display:block;width:100%;height:100%;border:0;background:#0b1220}
+.hl-feeds{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px}
+.hl-feeds .secondary{height:32px;font-size:12px;padding:0 12px}
 input{transition:border-color .15s,box-shadow .15s}input:focus{box-shadow:0 0 0 3px rgba(91,231,196,.12)}
 @keyframes pulseSoon{0%,100%{box-shadow:0 0 8px rgba(251,191,36,.1)}50%{box-shadow:0 0 22px rgba(251,191,36,.35)}}
 .obj.soon{animation:pulseSoon 1.6s ease-in-out infinite}
@@ -174,10 +195,44 @@ a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:non
 .ring-portrait{border:3px solid #4a5568}
 .hr-pic[class*="t-"],.ring-portrait[class*="t-"]{border-color:var(--tc)}
 .hr-dl{display:inline-grid;place-items:center;margin-left:4px;width:14px;height:14px;border-radius:3px;background:#243044;color:var(--accent);font-size:9px;font-weight:900;border:1px solid #3d4a5c;vertical-align:middle}
-</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><button id="demo" class="secondary">Démo draft</button><button id="demo-live" class="secondary">Démo en jeu</button><button id="hud-open" class="secondary" title="Ouvre le widget HUD (200×100, toujours visible au-dessus de League)">HUD en jeu</button><button id="quit" class="secondary">Quitter</button></section><section class="hero"><div><span class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis + SUPP / JGL / MID alliés apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
+body.quiz-on #live,body.quiz-on #cs-enemies,body.quiz-on #cs-allies,body.quiz-on #train,body.quiz-on #highlights{display:none!important}
+body.quiz-on #quiz{display:block}
+#quiz{display:none}
+.quiz-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:22px 24px;max-width:820px}
+.quiz-top{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.quiz-kind{font-size:10px;font-weight:900;letter-spacing:.14em;padding:4px 8px;border-radius:999px;border:1px solid rgba(91,231,196,.35);background:rgba(91,231,196,.12);color:var(--accent)}
+.quiz-kind.sort{border-color:rgba(122,162,255,.4);background:rgba(122,162,255,.12);color:#bcd0ff}
+.quiz-kind.passif{border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.1);color:#fde68a}
+.quiz-prog{margin-left:auto;font-family:'Chakra Petch',Inter,sans-serif;font-size:14px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.quiz-prompt{font-family:'Space Grotesk',Inter,sans-serif;font-size:22px;letter-spacing:-.02em;margin:10px 0 6px;line-height:1.3}
+.quiz-prompt.long{font-size:16px;font-weight:600;font-family:Inter,sans-serif;letter-spacing:0}
+.quiz-sub{color:var(--muted);font-size:13px;line-height:1.45}
+.quiz-visual{width:72px;height:72px;border-radius:16px;border:1px solid var(--border);background:#0b1220;margin:14px 0 4px;display:block;object-fit:cover}
+.quiz-choices{display:grid;gap:9px;margin-top:18px}
+.quiz-choice{text-align:left;padding:13px 14px;border-radius:14px;background:#1a2537;border:1px solid var(--border);color:var(--text);display:flex;align-items:center;gap:12px;font-weight:700}
+.quiz-choice:hover{background:#223049;border-color:rgba(255,255,255,.2)}
+.quiz-choice:disabled{cursor:default;opacity:1}
+.quiz-choice .qk{flex-shrink:0;width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-family:'Chakra Petch',Inter,sans-serif;font-size:13px;background:#0d1524;border:1px solid var(--border);color:var(--muted)}
+.quiz-choice img{width:36px;height:36px;border-radius:9px;background:#0b1220;flex-shrink:0}
+.quiz-choice.ok{border-color:rgba(91,231,196,.75);background:rgba(91,231,196,.14)}
+.quiz-choice.ok .qk{color:var(--accent);border-color:rgba(91,231,196,.55)}
+.quiz-choice.bad{border-color:rgba(248,113,113,.75);background:rgba(248,113,113,.14)}
+.quiz-choice.bad .qk{color:#fda4a4;border-color:rgba(248,113,113,.55)}
+.quiz-explain{margin-top:14px;padding:10px 12px;border-radius:12px;border:1px solid rgba(91,231,196,.25);background:rgba(91,231,196,.08);font-size:13px;line-height:1.45;color:#dbe6f5}
+.quiz-explain.bad{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08)}
+.quiz-foot{display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.quiz-foot .secondary{height:40px}
+.quiz-end{text-align:center;padding:28px 12px}
+.quiz-end .quiz-score{font-family:'Chakra Petch',Inter,sans-serif;font-size:64px;font-weight:700;line-height:1;margin:8px 0 4px}
+.quiz-end .quiz-score b{color:var(--accent)}
+.quiz-end p{color:var(--muted);margin:0 0 18px}
+</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><div class="demo-dd" id="demo-dd"><button type="button" id="demo-toggle" class="secondary ghost" aria-expanded="false" aria-haspopup="true" title="Modes démo">Démo <i class="chev"></i></button><div id="demo-menu" class="demo-menu hidden" role="menu"><button type="button" id="demo" role="menuitem">Démo draft</button><button type="button" id="demo-live" role="menuitem">Démo en jeu</button></div></div><button id="hud-open" class="secondary" title="Ouvre le widget HUD (200×100, toujours visible au-dessus de League)">HUD en jeu</button><button id="quiz-open" class="secondary" title="Série de 10 questions difficiles : CD exacts, sorts, passifs">Quiz</button><button type="button" id="hl-open" class="secondary" title="Replays YouTube des moments forts (iframe)">Moments forts</button><button type="button" id="train-open" class="secondary" title="Cours Skill Capped (iframe, ou le site si l'embed est bloqué)">S'entraîner</button><button id="quit" class="danger" title="Quitter CD Scout"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 3h10a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 2H5v14h9V5zm1 0h4v14h-4V5zM8.5 13a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>Quitter</button></section><section class="hero"><div><span id="hero-pill" class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis + SUPP / JGL / MID alliés apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
+<section id="train" class="train hidden"><div class="section-title"><h3>Entraînement Skill Capped</h3><a class="deeplol" id="train-ext" href="https://www.skill-capped.com/lol/browse/course" target="_blank" rel="noopener noreferrer">Ouvrir le site ↗</a></div><p class="train-hint">Cours et smurf commentaries. Si le cadre reste vide, Skill Capped bloque l'embed — le lien ouvre le site (compte requis).</p><div class="train-wrap"><iframe id="train-frame" title="Skill Capped" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe></div></section>
+<section id="highlights" class="train hidden"><div class="section-title"><h3>Moments forts</h3><a class="deeplol" id="hl-ext" href="https://www.youtube.com/results?search_query=League+of+Legends+outplay" target="_blank" rel="noopener noreferrer">Ouvrir YouTube ↗</a></div><p class="train-hint">Iframe YouTube : outplays (Daily LoL Plays) et extraits LoL Esports. Un champion de la draft met à jour le lien de recherche. L'onglet Profil charge DeepLoL si le joueur n'est pas anonyme (sinon le site bloque souvent l'embed).</p><div class="hl-feeds" id="hl-feeds"></div><nav class="champ-nav hidden" id="hl-champs" aria-label="Champion des extraits"></nav><div class="train-wrap"><iframe id="hl-frame" title="Moments forts" allow="fullscreen; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div></section>
 <section id="live" class="hidden"><div id="obj-bar" class="obj-bar"></div><div id="live-cards" class="tiles"></div><div class="gold-row"><div id="gold-main" class="gold-main"></div><div id="gold-roles" class="gold-grid"></div></div><div class="live-hint">Clique l'<strong>anneau</strong> d'un ennemi (ou <strong>Alt+1–5</strong> sur le HUD) quand il Flash → timer + les Flash ennemis encore en CD s'écrivent dans le chat League (ouvre le chat avec <strong>Entrée</strong> avant, le jeu refuse Ctrl+V). Clique le chip <strong>R</strong> quand il ult, re-clique pour annuler. <strong>CI</strong> = Cosmic Insight (+18 haste invocateur). CD Q/W/E au rang max plausible, rang de R exact, haste des items incluse (runes inconnues). Or <em>estimé</em> (CS + kills + assists + or passif) : Riot n'expose pas l'or exact des autres joueurs, la tendance est fiable.</div><div class="section-title" style="margin-top:16px"><h3>Alliés</h3><span id="live-ally-count">—</span></div><div id="live-allies" class="tiles"></div></section>
 <section id="cs-enemies"><div class="section-title"><h3>Ennemis détectés</h3><span id="enemy-count">0/5</span></div><nav id="champ-nav" class="champ-nav hidden" aria-label="Filtrer les ennemis"></nav><div id="cards" class="cards"></div><div id="empty" class="empty"><div class="empty-icon">⌁</div><strong>Aucun champion ennemi détecté</strong><span>Utilise la recherche, la démo draft ou la démo en jeu pour tester l'interface.</span></div></section>
 <section id="cs-allies"><div class="section-title"><h3>Alliés clés</h3><span id="ally-count">SUPP · JGL · MID</span></div><div id="ally-cards" class="cards"></div><div id="ally-empty" class="empty"><div class="empty-icon">⌁</div><strong>Pas encore d’alliés SUPP / JGL / MID</strong><span>Dès que leurs picks sont visibles en champ select, leurs CD s’affichent ici.</span></div></section>
+<section id="quiz"><div id="quiz-card" class="quiz-card"></div></section>
 </main><footer><span>Tab : aperçu HUD · ² : verrouiller · Alt+1–5 : Flash</span><span>Draft : CD sans haste · En jeu : haste des items incluse (runes inconnues).</span></footer></div>
 <div id="sp-tip" class="sp-tip hidden"></div>
 <div id="hud">
@@ -192,7 +247,7 @@ a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:non
 </div>
 <div id="upd" class="upd hidden"></div>
 <script>
-const $=id=>document.getElementById(id);let roster=[],visible=new Set(),focusKey=null,allyRoster=[],draftPool=[],timer,version='16.15.1',lastPhase='';
+const $=id=>document.getElementById(id);let roster=[],visible=new Set(),focusKey=null,allyRoster=[],draftPool=[],timer,version='16.15.1',lastPhase='',hlOpen=false,hlFeed='plays',hlKey=null;
 document.addEventListener('error',e=>{const img=e.target;if(!img||img.tagName!=='IMG'||img.dataset.ddfb)return;const m=String(img.src||'').match(/\/ddragon\/(.+)$/);if(!m)return;img.dataset.ddfb='1';img.src='https://ddragon.leagueoflegends.com/cdn/'+m[1]},true);
 // ?hud=1 : widget natif 200×100 (WebView2), toujours visible.
 const HUDMODE=document.documentElement.classList.contains('hudmode')||/\bhud=/.test(location.search)||location.pathname==='/hud';
@@ -249,8 +304,8 @@ function matchups(c){const hard=c.counters||[],diff=c.hardMatchups||[];if(!hard.
 function card(c,i,opts={}){const role=opts.role||c.role;const ally=!!role;const spells=(c.important||[]).map(s=>`<div class="spell" data-tip="${spellTip(s,c.key,{cd:s.cd,note:s.note||''})}">${spellBadge(s,'spell-key')||`<span class="spell-key">${esc(s.spell)}</span>`}<div><div class="spell-name">${esc(s.name)}</div>${s.note?`<div class="spell-note">${esc(s.note)}</div>`:''}</div><span class="spell-cd">${esc(s.cd||'—')}</span></div>`).join('');const badge=role?`<span class="role-badge">${esc(role)}</span>`:`<span class="source">${c.source==='curated'?'curated':'auto'}</span>`;const label=role?esc(c.name):`${i+1}. ${esc(c.name)}`;const who=c.hidden?'':(c.playerName||c.riotId||'');const tc=tierClass(c.tier);const sub=[who,c.rank].filter(Boolean).join(' · ');const link=(!c.hidden&&c.deeplol)?` <a class="deeplol" href="${esc(c.deeplol)}" target="_blank" rel="noopener noreferrer">DeepLoL</a>`:'';return `<article class="card ${ally?'ally':''} ${c.key===focusKey?'focus':''}" data-key="${c.key}"><div class="card-head"><div class="pic-frame ${tc}"><img class="portrait" src="${iconUrl(c)}" alt=""></div><div><h4>${label}</h4><div class="title">${sub?esc(sub)+' · ':''}${esc(c.title)}${link}</div></div>${badge}</div><div class="spells">${spells}</div><div class="summary"><span>À retenir</span><strong>${esc(c.summary)}</strong></div>${c.window?`<div class="window">${esc(c.window)}</div>`:''}${matchups(c)}</article>`}
 function visibleCards(){return roster.filter(c=>visible.has(c.key))}
 function renderNav(){const nav=$('champ-nav');nav.classList.toggle('hidden',!roster.length);nav.innerHTML=roster.map(c=>`<button type="button" class="champ-toggle ${visible.has(c.key)?'on':''}" data-key="${c.key}" title="${esc(c.name)}" aria-pressed="${visible.has(c.key)}"><img src="${iconUrl(c)}" alt="${esc(c.name)}"><span class="tick">✓</span></button>`).join('');nav.querySelectorAll('.champ-toggle').forEach(btn=>btn.onclick=()=>{const key=+btn.dataset.key;if(visible.has(key)){visible.delete(key);if(focusKey===key)focusKey=null}else visible.add(key);render()})}
-function renderAllies(){const list=allyRoster;$('ally-count').textContent=list.length?list.map(c=>c.role).join(' · '):'SUPP · JGL · MID';$('ally-empty').classList.toggle('hidden',list.length>0);$('ally-cards').innerHTML=list.map((c,i)=>card(c,i,{role:c.role})).join('');$('ally-cards').querySelectorAll('.card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;render()})}
-function render(){const cards=visibleCards();$('enemy-count').textContent=`${cards.length}/${roster.length||5}`;$('empty').classList.toggle('hidden',roster.length>0);renderNav();$('cards').innerHTML=cards.map(card).join('');document.querySelectorAll('#cards .card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;render()});renderAllies()}
+function renderAllies(){const list=allyRoster;$('ally-count').textContent=list.length?list.map(c=>c.role).join(' · '):'SUPP · JGL · MID';$('ally-empty').classList.toggle('hidden',list.length>0);$('ally-cards').innerHTML=list.map((c,i)=>card(c,i,{role:c.role})).join('');$('ally-cards').querySelectorAll('.card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;hlKey=focusKey;render()})}
+function render(){const cards=visibleCards();$('enemy-count').textContent=`${cards.length}/${roster.length||5}`;$('empty').classList.toggle('hidden',roster.length>0);renderNav();$('cards').innerHTML=cards.map(card).join('');document.querySelectorAll('#cards .card').forEach(x=>x.onclick=e=>{if(e.target.closest('a'))return;focusKey=+x.dataset.key;hlKey=focusKey;render()});renderAllies();syncHighlights()}
 function setRoster(cards,reset){const prev=new Set(roster.map(c=>c.key));const next=new Set();for(const c of cards){if(reset||!prev.has(c.key)||visible.has(c.key))next.add(c.key)}roster=cards;visible=next;if(focusKey!=null&&!visible.has(focusKey)&&!allyRoster.some(a=>a.key===focusKey))focusKey=null;render()}
 function setAllies(cards){allyRoster=cards;if(focusKey!=null&&!visible.has(focusKey)&&!allyRoster.some(a=>a.key===focusKey))focusKey=null;render()}
 async function fetchCards(ids){if(!ids.length)return[];const r=await fetch('/api/cards?ids='+ids.join(','));return await r.json()}
@@ -263,12 +318,15 @@ if(st==='downloading'){el.className='upd';el.innerHTML=`<span class="utxt">Mise 
 if(st==='error'){el.className='upd err';el.innerHTML=`<span class="utxt">Mise à jour <b>${esc(u.latest)}</b> impossible : ${esc(u.error||'erreur inconnue')}</span>`;return}
 el.className='upd';el.innerHTML=`<span class="utxt">Version <b>${esc(u.latest)}</b> prête · elle s'installe au prochain lancement.</span><button type="button" id="upd-now">Redémarrer</button>`;
 $('upd-now').onclick=async()=>{el.innerHTML='<span class="utxt">Redémarrage…</span>';try{await fetch('/api/update',{method:'POST'})}catch(_){}setTimeout(()=>location.reload(),2500)}}
-async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`:'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.'}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
+async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(document.body.classList.contains('quiz-on')){$('dot').classList.toggle('on',!!s.connected||!!window.__liveDemo);$('status').textContent=window.__liveDemo?'Mode démo en jeu':(s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté'));$('phase').textContent=window.__liveDemo?'HUD sans partie':(s.phase||'—');lastPhase=s.phase||lastPhase;return}if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`:'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.'}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
+function closeDemoMenu(){const m=$('demo-menu'),t=$('demo-toggle');if(!m||!t)return;m.classList.add('hidden');t.classList.remove('open');t.setAttribute('aria-expanded','false')}
+function setDemoLiveActive(on){const b=$('demo-live'),t=$('demo-toggle');if(b){b.textContent=on?'Fermer démo':'Démo en jeu';b.classList.toggle('active',!!on)}if(t)t.classList.toggle('active',!!on)}
+$('demo-toggle').onclick=e=>{e.stopPropagation();const m=$('demo-menu'),t=$('demo-toggle'),open=m.classList.contains('hidden');m.classList.toggle('hidden');t.classList.toggle('open',open);t.setAttribute('aria-expanded',open?'true':'false')};
 $('quit').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
-$('demo').onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés SUPP / JGL / MID en exemple.';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean))};
+$('demo').onclick=async()=>{closeDemoMenu();if(quizOn())closeQuiz();if(window.__liveDemo)stopLiveDemo();window.__manual=true;focusKey=null;$('hero-title').textContent='Démo draft';$('hero-copy').textContent='Ennemis + alliés SUPP / JGL / MID en exemple.';const enemyCards=await fetchCards(demo);const allyCards=await fetchCards(demoAllies.map(a=>a.id));const byKey=Object.fromEntries(allyCards.map(c=>[c.key,c]));draftPool=[...enemyCards,...allyCards];setRoster(enemyCards,true);setAllies(demoAllies.map(a=>{const c=byKey[a.id];return c?{...c,role:a.role}:null}).filter(Boolean))};
 $('search').oninput=()=>{clearTimeout(timer);timer=setTimeout(async()=>{const q=$('search').value.trim();if(!q){$('results').classList.add('hidden');return}const rs=await (await fetch('/api/search?q='+encodeURIComponent(q))).json();$('results').innerHTML=rs.map(r=>`<div class="result" data-key="${r.key}"><span>${esc(r.name)}</span><small>${esc(r.title)}</small></div>`).join('');$('results').classList.toggle('hidden',!rs.length);document.querySelectorAll('.result').forEach(row=>row.onclick=async()=>{if(window.__liveDemo)stopLiveDemo();window.__manual=true;$('search').value='';$('results').classList.add('hidden');const c=await (await fetch('/api/card?key='+row.dataset.key)).json();focusKey=c.key;draftPool=[c];setRoster([c],true);setAllies([]);$('hero-title').textContent=c.name;$('hero-copy').textContent='Recherche manuelle.'})},180)};
-document.onclick=e=>{if(!e.target.closest('.search-wrap'))$('results').classList.add('hidden')};
+document.onclick=e=>{if(!e.target.closest('.search-wrap'))$('results').classList.add('hidden');if(!e.target.closest('.demo-dd'))closeDemoMenu()};
 // ---- Mode En jeu (Live Client Data API, port 2999) ----
 let liveState=null,liveAt=0,liveTracks={},ciSet=new Set(),liveScout={};
 const POS={TOP:'TOP',JUNGLE:'JGL',MIDDLE:'MID',BOTTOM:'BOT',UTILITY:'SUPP'};
@@ -328,8 +386,10 @@ const subChamp=(!p.hidden&&p.champion&&p.champion!==who)?esc(p.champion)+' · ':
 return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${nameHtml}</div><div class="tile-sub">${subChamp}${p.rank?esc(p.rank)+' · ':''}Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div></div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait ${tierClass(p.tier)}" src="${iconUrl(p)}" alt=""><div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
 function renderLive(){
 if(HUDMODE)return renderHud();
+if(document.body.classList.contains('quiz-on'))return;
 const on=liveOn();
 $('live').classList.toggle('hidden',!on);$('cs-enemies').classList.toggle('hidden',on);$('cs-allies').classList.toggle('hidden',on);
+syncTrain();syncHighlights();
 if(!on)return;
 $('hero-title').textContent='En jeu · '+mmss(gameNow());
 $('hero-copy').textContent=window.__liveDemo?'Démo HUD — clique Flash / R / CI, graphes d\'or. Reclique le bouton pour fermer.':'Anneaux Flash cliquables, CD réels estimés, or par lane.';
@@ -384,7 +444,7 @@ document.querySelectorAll('#live [data-end]').forEach(el=>{el.textContent=mmss(+
 document.querySelectorAll('#live [data-obj-next]').forEach(el=>{if(el.dataset.gone){el.textContent='PARTI';return}const r=+el.dataset.objNext-now;el.textContent=r>0?mmss(r):'SUR LA MAP';el.parentElement.classList.toggle('soon',r>0&&r<60)});
 const lt=$('live-time');if(lt)lt.textContent=mmss(now);
 $('hero-title').textContent=(window.__liveDemo?'Démo · ':'En jeu · ')+mmss(now);
-checkAlerts(now)}
+checkAlerts(now);checkVoices()}
 // ---- Alertes d'objectif : anticipations fournies par le serveur (objectives[].leads) ----
 let soundOn=localStorage.getItem('cdscout.sound')!=='0',alertTimer=null,actx=null,firedAlerts=new Set();
 const ALERT_SUB={grubs:'pousse ta vague et monte au pit',dragon:'prends la vision bot et regroupe-toi',baron:'vision mid + jungle, regroupe-toi',herald:'pit du baron'};
@@ -404,12 +464,12 @@ const key=`${k}|${Math.round(o.nextAt)}|${lead}`;
 if(firedAlerts.has(key))continue;
 firedAlerts.add(key);
 const[t,s]=alertText(k,o,lead);fireAlert(t,s,lead<=90?2:1)}}}
-function fireAlert(title,sub,level){
+function fireAlert(title,sub,level,silent){
 const el=$('alert');if(!el)return;
 el.className='alert'+(level>=2?' hot':'');
 el.innerHTML=`<b>${esc(title)}</b>${sub?`<span>${esc(sub)}</span>`:''}`;
 clearTimeout(alertTimer);alertTimer=setTimeout(()=>el.classList.add('hidden'),level>=2?9000:7000);
-beep(level)}
+if(!silent)beep(level)}
 function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(_){return null}}if(actx.state==='suspended')actx.resume();return actx}
 function beep(level){if(!soundOn)return;const c=audioCtx();if(!c)return;
 const seq=level>=2?[[1046,0,.18],[1046,.21,.18],[1318,.42,.32]]:[[784,0,.17],[988,.19,.28]];
@@ -417,6 +477,34 @@ for(const[f,t,d]of seq){const o=c.createOscillator(),g=c.createGain();o.type='tr
 const t0=c.currentTime+t;g.gain.setValueAtTime(0,t0);g.gain.linearRampToValueAtTime(.3,t0+.015);g.gain.exponentialRampToValueAtTime(.0008,t0+d);
 o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+d+.03)}}
 document.addEventListener('pointerdown',()=>{if(soundOn)audioCtx()},{once:true});
+// Voicelines jungle (ogg CDragon) + TTS d'item. Volume bas, file d'attente, pas de double
+// lecture si le HUD épinglé joue déjà (la fenêtre principale se tait).
+let voiceQ=[],voiceBusy=false,voiceAudio=null;
+function checkVoices(){
+const list=(liveState&&liveState.voices)||[];
+for(const v of list){if(!v||!v.id)continue;const k='v|'+v.id;if(firedAlerts.has(k))continue;firedAlerts.add(k);
+fireAlert(v.title||v.champion||'',v.sub,v.hot?2:1,true);enqueueVoice(v)}}
+function voiceAudioOK(){if(!soundOn)return false;if(HUDMODE||window.__liveDemo)return true;return!(liveState&&liveState.hudOpen)}
+function stopVoices(){voiceQ=[];voiceBusy=false;try{if(voiceAudio){voiceAudio.pause();voiceAudio.src='';voiceAudio=null}}catch(_){}try{speechSynthesis.cancel()}catch(_){}}
+function enqueueVoice(v){if(!voiceAudioOK())return;voiceQ.push(v);pumpVoice()}
+function pumpVoice(){
+if(voiceBusy||!voiceQ.length)return;if(!voiceAudioOK()){voiceQ=[];return}
+voiceBusy=true;const v=voiceQ.shift();audioCtx();
+const done=()=>{voiceBusy=false;pumpVoice()};
+const afterVO=()=>{if(v.speak)speakFR(v.speak,done);else done()};
+if(v.voice&&v.key){try{if(voiceAudio){voiceAudio.pause();voiceAudio=null}}catch(_){}
+const a=new Audio('/api/voice?key='+v.key);a.volume=.26;voiceAudio=a;
+const fail=()=>{if(v.speak)speakFR(v.speak,done);else if(v.champion)speakFR(v.champion,done);else done()};
+a.onended=afterVO;a.onerror=fail;const p=a.play();if(p&&p.catch)p.catch(fail)}else afterVO()}
+function speakFR(text,done){
+if(!text||!window.speechSynthesis){done();return}
+try{speechSynthesis.cancel()}catch(_){}
+const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.volume=.45;u.rate=1.06;
+const pick=()=>speechSynthesis.getVoices().find(x=>/^fr(-|_|$)/i.test(x.lang));
+const apply=()=>{const fr=pick();if(fr)u.voice=fr;u.onend=done;u.onerror=done;speechSynthesis.speak(u)};
+if(pick())apply();else{const t=setTimeout(()=>{speechSynthesis.removeEventListener('voiceschanged',onV);apply()},400);
+function onV(){clearTimeout(t);speechSynthesis.removeEventListener('voiceschanged',onV);apply()}
+speechSynthesis.addEventListener('voiceschanged',onV)}}
 // ---- HUD compact (mode ?hud=1) ----
 const OBJ_ORDER=[['grubs','o-grubs'],['dragon','o-dragon'],['herald','o-herald'],['baron','o-baron']];
 const OBJ_ICON={grubs:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/grub.png',dragon:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/dragon.png',herald:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/riftherald.png',baron:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/baron.png'};
@@ -524,7 +612,7 @@ if(row.classList.contains('hf'))row.classList.remove('cd','up');
 if(tr&&tr.end-now>0){el.classList.add('cd');if(row.classList.contains('hf'))row.classList.add('cd');val.textContent=el.dataset.kind==='spell'?fmtCD(tr.end-now):mmss(tr.end-now)}
 else val.textContent=base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—'})});
 $('hud').classList.toggle('detail',!!tabUntil&&Date.now()<tabUntil);
-checkAlerts(now)}
+checkAlerts(now);checkVoices()}
 // Raccourcis globaux lus côté Go : Tab (aperçu), ² (verrou), Alt+1..5 (Flash), Alt+Maj+1..5 (ult).
 function applyHotkey(e){const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
 if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd);return}
@@ -548,7 +636,7 @@ hudBtns(s)}catch(_){}}
 if(HUDMODE){
 bindHudDrag();
 $('hud-sound').classList.toggle('on',soundOn);
-$('hud-sound').onclick=()=>{soundOn=!soundOn;localStorage.setItem('cdscout.sound',soundOn?'1':'0');$('hud-sound').classList.toggle('on',soundOn);if(soundOn)beep(1)};
+$('hud-sound').onclick=()=>{soundOn=!soundOn;localStorage.setItem('cdscout.sound',soundOn?'1':'0');$('hud-sound').classList.toggle('on',soundOn);if(soundOn)beep(1);else stopVoices()};
 $('hud-hold').onclick=()=>setHold(!hudHoldOn);
 $('hud-reset').onclick=()=>{fetch('/api/hud/reset',{method:'POST'}).catch(()=>{})};
 $('hud-close').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){};window.close()};
@@ -565,7 +653,7 @@ async function maybeAutoHud(){
 if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0')return;
 autoHudDone=true;
 try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)return;await fetch('/api/hud/open',{method:'POST'})}catch(_){}}
-function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}renderLive()}
+function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();stopVoices();setDemoLiveActive(false);renderLive()}
 function parseSpellCD(s){const t=String(s||'');if(!t||t==='—'||t==='auto')return 0;const m=t.match(/(\d+(?:[.,]\d+)?)/);if(!m)return 0;let v=parseFloat(m[1].replace(',','.'));if(/min/i.test(t))v*=60;return v}
 function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;
 const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
@@ -579,35 +667,113 @@ const F=(cd=300)=>({slug:'SummonerFlash',name:'Flash',cd});
 const allies=[mk(266,'TOP','Toplaner#EUW',{lv:13,k:2,d:3,a:1,cs:141,ah:25,rank:'E1',tier:'emerald',items:[3071,3047,3068,3053,1028],cds:[11,14,8,80],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(64,'JUNGLE','Jungler#EUW',{lv:12,k:4,d:2,a:6,cs:118,ah:20,rank:'D4',tier:'diamond',items:[6692,3111,3814,3134,1036],cds:[8,12,9,70],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(103,'MIDDLE','Moi#EUW',{me:1,lv:13,k:5,d:2,a:4,cs:156,ah:40,sh:10,rank:'D2',tier:'diamond',items:[3157,3020,4645,6655,1058],cds:[6,8,10,95],sums:[F(270),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(222,'BOTTOM','ADC#EUW',{lv:12,k:6,d:1,a:7,cs:172,ah:0,rank:'P2',tier:'platinum',items:[3031,3006,3085,3036,1038],cds:[7,9,5,70],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(89,'UTILITY','Support#EUW',{lv:11,k:1,d:4,a:9,cs:32,ah:30,rank:'G1',tier:'gold',items:[3190,3111,3109,3067,1001],cds:[12,10,14,60],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
 const enemies=[mk(58,'TOP','Renek#EUW',{lv:13,k:3,d:2,a:2,cs:148,ah:20,rank:'D3',tier:'diamond',items:[3071,3047,3053,3068,1031],cds:[10,12,8,90],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(121,'JUNGLE','Kha#EUW',{lv:12,k:3,d:4,a:3,cs:110,ah:18,dead:1,respawn:22,rank:'E2',tier:'emerald',items:[3142,3111,3814,1036],cds:[5,8,7,80],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(238,'MIDDLE','Zed#EUW',{lv:13,k:4,d:5,a:2,cs:149,ah:24,rank:'Master 80',tier:'master',items:[3142,3020,3814,3134,1053],cds:[5,18,4,90],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(51,'BOTTOM','Cait#EUW',{lv:12,k:3,d:3,a:4,cs:165,ah:0,rank:'D2',tier:'diamond',items:[3031,3006,3094,1038,1042],cds:[8,10,12,80],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(53,'UTILITY','Blitzcrank',{hidden:1,lv:11,k:0,d:5,a:8,cs:28,ah:25,rank:'G3',tier:'gold',items:[3190,3111,3067,1028,1001],cds:[18,12,10,50],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
 const t=1055,metas=[{label:'TOP',allyChamp:allies[0].champion,enemyChamp:enemies[0].champion},{label:'JGL',allyChamp:allies[1].champion,enemyChamp:enemies[1].champion},{label:'MID',allyChamp:allies[2].champion,enemyChamp:enemies[2].champion},{label:'BOT',allyChamp:allies[3].champion,enemyChamp:enemies[3].champion},{label:'SUPP',allyChamp:allies[4].champion,enemyChamp:enemies[4].champion}];
-window.__liveDemo=true;window.__manual=true;liveTracks={};ciSet=new Set([pid(enemies[4])]);firedAlerts=new Set();
+window.__liveDemo=true;window.__manual=true;liveTracks={};ciSet=new Set([pid(enemies[4])]);firedAlerts=new Set();stopVoices();
 // 17:35 : larves déjà parties, âme au prochain drake, Baron dans ~2:25 (l'alerte -2 min tombe ~25 s après le lancement).
 liveState={active:true,gameTime:t,gameMode:'CLASSIC',enemies,allies,objectives:{
 grubs:{nextAt:480,label:'Larves',gone:true},
 dragon:{nextAt:t+42,label:'Drake',order:3,chaos:1,note:'ÂME',leads:[120]},
 herald:{nextAt:900,label:'Héraut'},
-baron:{nextAt:1200,label:'Baron',leads:[120]}},gold:demoMkGold(t,metas)};
+baron:{nextAt:1200,label:'Baron',leads:[120]}},gold:demoMkGold(t,metas),voices:[
+{id:'demo-gank',kind:'gank',champion:"Kha'Zix",key:121,title:"KHA'ZIX · PREMIER CRABE",sub:'fenêtre de gank typique — ward et recule',voice:true,hot:true},
+{id:'demo-item',kind:'item',champion:'Zed',key:238,title:'ZED · ITEM',sub:'Youmuu, lame spectrale',speak:'Zed a complété Youmuu',hot:true}]};
 liveAt=Date.now();
 const zed=enemies[2],si=(zed.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');
 liveTracks[`${pid(zed)}|S${si<0?0:si}`]={end:gameNow()+187,total:summCD(zed,zed.summoners[si<0?0:si])};
 const caitR=(enemies[3].spells||[]).find(s=>s.spell==='R');
 if(caitR)liveTracks[`${pid(enemies[3])}|R`]={end:gameNow()+38,total:caitR.cd};
-const b=$('demo-live');b.textContent='Fermer démo';b.classList.add('active');
+setDemoLiveActive(true);
 $('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';
 renderLive()}
-$('demo-live').onclick=()=>{if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo()};
+$('demo-live').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo()};
+const SKILLCAPPED='https://www.skill-capped.com/lol/browse/course';
+let trainOpen=false;
+function syncTrain(){
+const sec=$('train'),btn=$('train-open'),fr=$('train-frame');
+const show=trainOpen&&!liveOn();
+if(btn)btn.classList.toggle('active',trainOpen);
+if(sec)sec.classList.toggle('hidden',!show);
+if(show&&fr&&!fr.getAttribute('src'))fr.src=SKILLCAPPED}
+$('train-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();if(liveOn()){window.open(SKILLCAPPED,'_blank','noopener');return}hlOpen=false;syncHighlights();trainOpen=!trainOpen;syncTrain();if(trainOpen)$('train').scrollIntoView({behavior:'smooth',block:'start'})};
+$('train-ext').onclick=e=>{e.preventDefault();window.open(SKILLCAPPED,'_blank','noopener')};
+const YT_EMBED='https://www.youtube-nocookie.com/embed';
+const HL_FEEDS={
+plays:{label:'Outplays',embed:YT_EMBED+'?listType=user_uploads&list=DailyLoLPlays&autoplay=0&rel=0',open:'https://www.youtube.com/results?search_query=League+of+Legends+outplay'},
+esports:{label:'Esports',embed:YT_EMBED+'/videoseries?list=UU2t5bjwHdUX4vM2g8TRDq5g&autoplay=0&rel=0',open:'https://www.youtube.com/@LoLEsports'}
+};
+function ytSearch(q){return 'https://www.youtube.com/results?search_query='+encodeURIComponent(q+' outplay League of Legends')}
+function hlPeople(){
+const out=[],seen=new Set();
+const add=(o,champ)=>{if(!o||o.key==null||seen.has(o.key))return;seen.add(o.key);out.push({key:o.key,name:champ||o.name||o.champion||'',icon:o.icon,deeplol:(!o.hidden&&o.deeplol)?o.deeplol:'',who:o.hidden?'':(o.playerName||o.riotId||'')})};
+if(liveOn()){for(const p of [...(liveState.enemies||[]),...(liveState.allies||[])])add(p,p.champion)}
+else{for(const c of [...roster,...allyRoster])add(c,c.name)}
+return out}
+function syncHighlights(){
+const sec=$('highlights'),btn=$('hl-open'),fr=$('hl-frame'),ext=$('hl-ext'),feeds=$('hl-feeds'),nav=$('hl-champs');
+const show=hlOpen&&!liveOn()&&!document.body.classList.contains('quiz-on');
+if(btn)btn.classList.toggle('active',hlOpen);
+if(sec)sec.classList.toggle('hidden',!show);
+if(!fr)return;
+if(!show){if(fr.getAttribute('src')){fr.removeAttribute('src');delete fr.dataset.src}return}
+const people=hlPeople();
+if(hlKey==null&&focusKey!=null)hlKey=focusKey;
+if(hlKey!=null&&!people.some(p=>p.key===hlKey))hlKey=people.length?people[0].key:null;
+const sel=people.find(p=>p.key===hlKey);
+if(feeds){feeds.innerHTML=['plays','esports'].map(id=>`<button type="button" class="secondary${hlFeed===id?' active':''}" data-hl="${id}">${HL_FEEDS[id].label}</button>`).join('')+(sel&&sel.deeplol?`<button type="button" class="secondary${hlFeed==='profil'?' active':''}" data-hl="profil">Profil</button>`:'');
+feeds.querySelectorAll('[data-hl]').forEach(b=>b.onclick=()=>{hlFeed=b.dataset.hl;syncHighlights()})}
+if(nav){nav.classList.toggle('hidden',!people.length);nav.innerHTML=people.map(p=>`<button type="button" class="champ-toggle ${p.key===hlKey?'on':''}" data-key="${p.key}" title="${esc(p.name)}${p.who?' · '+p.who:''}"><img src="${iconUrl(p)}" alt="${esc(p.name)}"><span class="tick">✓</span></button>`).join('');
+nav.querySelectorAll('.champ-toggle').forEach(b=>b.onclick=()=>{hlKey=+b.dataset.key;if(hlFeed==='profil'&&!(people.find(p=>p.key===hlKey)||{}).deeplol)hlFeed='plays';syncHighlights()})}
+let src,open;
+if(hlFeed==='profil'&&sel&&sel.deeplol){src=sel.deeplol;open=sel.deeplol}
+else{if(hlFeed==='profil')hlFeed='plays';const f=HL_FEEDS[hlFeed]||HL_FEEDS.plays;src=f.embed;open=sel?ytSearch(sel.name):f.open}
+if(ext){ext.href=open;ext.textContent=hlFeed==='profil'?'Ouvrir DeepLoL ↗':(sel?'Chercher '+sel.name+' ↗':'Ouvrir YouTube ↗');ext.onclick=e=>{e.preventDefault();if(hlFeed==='profil')openDeepLoL(open);else window.open(open,'_blank','noopener')}}
+if(fr.dataset.src!==src){fr.dataset.src=src;fr.src=src}}
+$('hl-open')&&($('hl-open').onclick=()=>{if(document.body.classList.contains('quiz-on'))closeQuiz();
+if(liveOn()){const people=hlPeople();const sel=people.find(p=>p.key===(hlKey??focusKey))||people[0];window.open(sel?ytSearch(sel.name):HL_FEEDS.plays.open,'_blank','noopener');return}
+trainOpen=false;syncTrain();hlOpen=!hlOpen;syncHighlights();if(hlOpen)$('highlights').scrollIntoView({behavior:'smooth',block:'start'})});
+$('hl-ext')&&($('hl-ext').onclick=e=>{e.preventDefault();const href=$('hl-ext').href;if(href&&href.indexOf('deeplol.gg')>=0)openDeepLoL(href);else window.open(href,'_blank','noopener')});
 $('hud-open').onclick=async()=>{const b=$('hud-open'),label='HUD en jeu';b.textContent='Ouverture…';
 try{const r=await fetch('/api/hud/open',{method:'POST'});b.textContent=r.ok?'HUD ouvert':(await r.text()).slice(0,40)||'HUD indisponible'}catch(_){b.textContent='HUD indisponible'}
 setTimeout(()=>{b.textContent=label},3000)};
 async function pollLive(){
 try{const s=await(await fetch('/api/live')).json();
-if(s.active){const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;const b=$('demo-live');if(b){b.textContent='Démo en jeu';b.classList.remove('active')}liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();firedAlerts=new Set();maybeAutoHud()}
+if(s.active){const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;setDemoLiveActive(false);liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();firedAlerts=new Set();stopVoices();maybeAutoHud()}
 const missing=[...new Set([...(s.enemies||[]),...(s.allies||[])].map(p=>p.key).filter(k=>k&&!liveScout[k]))];
 if(missing.length){fetchCards(missing).then(list=>{for(const c of list)liveScout[c.key]=c;if(liveOn())renderLive()}).catch(()=>{})}
 }else if(window.__liveDemo)return;
 else{liveState=s;liveAt=Date.now();autoHudDone=false}
 }catch(_){if(!window.__liveDemo)liveState=null}
 renderLive()}
+let quizLocked=false,quizQ=null,quizWait=false,quizBest=+localStorage.getItem('cdscout.quizBest')||0;
+const quizOn=()=>document.body.classList.contains('quiz-on');
+const quizIcon=p=>p?dd(p.split('/').map(encodeURIComponent).join('/')):'';
+function quizEndCopy(score,total){const r=score/total;if(r>=.9)return'Challenger vibes. Les trades, tu les comptes déjà.';if(r>=.7)return'Solide. Les CD rang 1, c\'est ça qui gagne les all-in.';if(r>=.5)return'Pas mal. Recolle les courbes Q/W/E, c\'est le plus dur.';return'Dur volontairement. Relance une série, ça rentre.'}
+function renderQuizEnd(a){if(a.score>quizBest){quizBest=a.score;try{localStorage.setItem('cdscout.quizBest',String(quizBest))}catch(_){}}
+$('hero-title').textContent='Quiz terminé';$('hero-copy').textContent=a.score+' / '+a.total+' · record '+quizBest+'/10';
+$('quiz-card').innerHTML=`<div class="quiz-end"><div class="eyebrow">SÉRIE</div><div class="quiz-score"><b>${a.score}</b>/${a.total}</div><p>${esc(quizEndCopy(a.score,a.total))} · record ${quizBest}/10</p><div class="quiz-foot" style="justify-content:center"><button type="button" class="secondary" id="quiz-again">Rejouer</button><button type="button" class="secondary" id="quiz-close">Fermer</button></div></div>`;
+$('quiz-again').onclick=()=>loadQuiz(true);$('quiz-close').onclick=closeQuiz}
+function renderQuizQ(q){quizQ=q;quizLocked=false;quizWait=false;if(q.done){renderQuizEnd({score:q.score,total:q.total||10});return}
+const letters='ABCD',kind=(q.kind||'CD').toUpperCase(),kc=kind==='SORT'?'sort':kind==='PASSIF'?'passif':'';
+const vis=q.icon?`<img class="quiz-visual" src="${quizIcon(q.icon)}" alt="">`:'';
+const choices=(q.choices||[]).map((c,i)=>`<button type="button" class="quiz-choice" data-id="${esc(c.id)}"><span class="qk">${letters[i]}</span>${c.icon?`<img src="${quizIcon(c.icon)}" alt="">`:''}<span>${esc(c.label)}</span></button>`).join('');
+$('hero-title').textContent='Quiz CD · '+q.round+' / '+q.total;
+$('hero-copy').textContent='Sans haste · patch '+(q.patch||version)+' · score '+q.score+(q.streak?' · série '+q.streak:'');
+$('quiz-card').innerHTML=`<div class="quiz-top"><span class="quiz-kind ${kc}">${esc(kind)}</span><span class="quiz-sub">Difficile · 4 choix</span><span class="quiz-prog">${q.round} / ${q.total} · ${q.score} pts</span></div><div class="quiz-prompt${(q.prompt||'').length>140?' long':''}">${esc(q.prompt).replace(/\n/g,'<br>')}</div>${q.sub?`<div class="quiz-sub">${esc(q.sub)}</div>`:''}${vis}<div class="quiz-choices">${choices}</div><div id="quiz-after"></div>`;
+$('quiz-card').querySelectorAll('.quiz-choice').forEach(b=>b.onclick=()=>answerQuiz(b.dataset.id))}
+async function loadQuiz(reset){quizLocked=true;$('quiz-card').innerHTML='<div class="empty"><div class="empty-icon">⌁</div><strong>Chargement du patch…</strong><span>Questions difficiles sur les CD, sorts et passifs.</span></div>';
+try{const r=await fetch('/api/quiz'+(reset?'?new=1':''));if(!r.ok)throw new Error((await r.text())||'erreur');renderQuizQ(await r.json())}
+catch(e){$('quiz-card').innerHTML=`<div class="empty"><strong>Quiz indisponible</strong><span>${esc(e.message||'Data Dragon injoignable')}</span><button type="button" class="secondary" id="quiz-retry" style="height:40px;margin-top:8px">Réessayer</button></div>`;const b=$('quiz-retry');if(b)b.onclick=()=>loadQuiz(true)}}
+async function answerQuiz(pick){if(quizLocked||!quizQ)return;quizLocked=true;
+try{const r=await fetch('/api/quiz',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:quizQ.id,pick})});if(!r.ok)throw new Error((await r.text())||'erreur');const a=await r.json();
+$('quiz-card').querySelectorAll('.quiz-choice').forEach(b=>{b.disabled=true;if(b.dataset.id===a.answerId)b.classList.add('ok');else if(b.dataset.id===pick&&!a.correct)b.classList.add('bad')});
+const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain${a.correct?'':' bad'}">${a.correct?'Correct. ':'Raté. '}${esc(a.explain||'')}</div><div class="quiz-foot"><button type="button" class="secondary" id="quiz-next">${a.done?'Voir le score':'Suivant'} · Entrée</button><span class="quiz-sub">score ${a.score}/${a.total} · série ${a.streak}</span></div>`;
+quizWait=true;const next=$('quiz-next');if(next)next.onclick=()=>{quizWait=false;a.done?renderQuizEnd(a):loadQuiz(false)};
+$('hero-copy').textContent='Score '+a.score+' / '+a.round+' · série '+a.streak}
+catch(e){quizLocked=false;const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain bad">${esc(e.message||'erreur')}</div>`}}
+function openQuiz(){trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('quiz-on');const b=$('quiz-open');if(b){b.classList.add('active');b.textContent='Fermer quiz'}const p=$('hero-pill');if(p)p.textContent='QUIZ';$('hero-title').textContent='Quiz CD';$('hero-copy').textContent='Série de 10 · CD exacts, sorts, passifs · sans haste.';loadQuiz(true)}
+function closeQuiz(){document.body.classList.remove('quiz-on');quizQ=null;quizLocked=false;quizWait=false;const b=$('quiz-open');if(b){b.classList.remove('active');b.textContent='Quiz'}const p=$('hero-pill');if(p)p.textContent='AUTO';$('hero-title').textContent='Quiz fermé';$('hero-copy').textContent='Relance le quiz, une draft, ou une partie.';if(liveOn())renderLive()}
+$('quiz-open')&&($('quiz-open').onclick=()=>{if(quizOn())closeQuiz();else openQuiz()});
 document.onkeydown=e=>{if(document.activeElement===$('search'))return;
+if(quizOn()){if(e.key==='Escape'){e.preventDefault();closeQuiz();return}if(quizWait&&(e.key==='Enter'||e.key===' ')){e.preventDefault();const n=$('quiz-next');if(n)n.click();return}if(quizLocked)return;const map={a:0,b:1,c:2,d:3,'1':0,'2':1,'3':2,'4':3};const i=map[String(e.key).toLowerCase()];if(i==null)return;e.preventDefault();const btns=[...document.querySelectorAll('#quiz-card .quiz-choice')];if(btns[i])btns[i].click();return}
 if(HUDMODE&&(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&'IJKCijkc'.includes(e.key))||(e.ctrlKey&&(e.key==='u'||e.key==='U')))){e.preventDefault();return}
 if(HUDMODE&&(e.key==='Tab'||e.code==='Tab')){e.preventDefault();tabUntil=Date.now()+450;return}
 if(HUDMODE&&(e.key==='²'||e.code==='Backquote'||e.code==='Quote')){e.preventDefault();return}

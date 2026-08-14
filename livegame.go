@@ -276,6 +276,7 @@ type LivePlayer struct {
 	AbilityHaste int            `json:"abilityHaste"`
 	SummHaste    int            `json:"summHaste"`
 	Items        []int          `json:"items"`
+	ItemGold     int            `json:"itemGold,omitempty"` // somme ddragon gold.total
 	Spells       []LiveSpell    `json:"spells"`
 	Summoners    []LiveSummoner `json:"summoners"`
 }
@@ -299,6 +300,8 @@ type LiveState struct {
 	Allies     []LivePlayer             `json:"allies"`
 	Objectives map[string]LiveObjective `json:"objectives"`
 	Gold       *GoldInfo                `json:"gold,omitempty"`
+	Voices     []VoiceCue               `json:"voices,omitempty"`
+	HudOpen    bool                     `json:"hudOpen,omitempty"`
 }
 
 // ---------- Or estimé ----------
@@ -753,6 +756,10 @@ func getLiveState() LiveState {
 			}
 			state.Objectives = buildObjectives(&raw)
 			updateGold(&state)
+			updateVoiceCues(&state)
+			if _, _, open := hudStatus(); open {
+				state.HudOpen = true
+			}
 			if creds, err := getCreds(); err == nil {
 				kickHarvest(creds, "InProgress")
 			}
