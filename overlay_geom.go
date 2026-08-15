@@ -12,10 +12,18 @@ package main
 //	tabCardW       = 280 largeur de nos cartes latérales (icônes agrandies)
 //	tabCardGap     = 8   espace entre cartes et bord du tableau
 const (
-	hudMiniW = 360
-	hudMiniH = 160
-	hudMinW  = 200
-	hudMinH  = 72
+	hudGeomVer = 5
+	hudMiniW   = 360
+	hudMiniH   = 160
+	hudMinW    = 200
+	hudMinH    = 72
+	// Largeur réelle du permanent (barre + 5 chips Flash ~491 px). 420 laissait
+	// dépasser ~70 px à droite au lancement / en démo.
+	hudMenuW  = 520
+	hudObjsW  = 158
+	hudAlertW = 420
+	hudItemW  = 260
+	hudItemH  = 96
 
 	tabRows        = 5
 	tabRowH1080    = 52
@@ -45,6 +53,7 @@ type hudWidgetGeom struct {
 
 type hudGeomDisk struct {
 	V       int                      `json:"v"`
+	Keep    bool                     `json:"keep,omitempty"`
 	Widgets map[string]hudWidgetGeom `json:"widgets,omitempty"`
 	// Ancien format (HWND unique) : ignoré, le canvas est plein écran.
 	X int `json:"x,omitempty"`
@@ -149,8 +158,11 @@ func hudTabMetrics(sw, sh int) (rowH, rowsTop, leftX, rightX int) {
 		leftX = 0
 	}
 	rightX = boardLeft + boardW + tabCardGap
-	if rightX+80 > sw {
-		rightX = sw - 80
+	if rightX+tabCardW > sw {
+		rightX = sw - tabCardW
+	}
+	if rightX < 0 {
+		rightX = 0
 	}
 	return rowH, rowsTop, leftX, rightX
 }
@@ -163,20 +175,47 @@ func hudDefaultWidgets(sw, sh int) map[string]hudWidgetGeom {
 		sh = 1080
 	}
 	pad := 16
-	menuW := 240
-	objsW := 158
 	_, rowsTop, tabLeft, tabRight := hudTabMetrics(sw, sh)
+	itemY := sh - hudItemH - pad
+	if itemY < pad {
+		itemY = pad
+	}
 	return map[string]hudWidgetGeom{
-		"menu":  {X: sw - menuW - pad, Y: pad, Scale: 1},
-		"objs":  {X: sw - objsW - pad, Y: pad + 320, Scale: 1},
-		"alert": {X: sw - 400 - pad, Y: sh / 6, Scale: 1},
-		"item":  {X: sw - 240 - pad, Y: sh - 108, Scale: 1},
+		"menu":  {X: sw - hudMenuW - pad, Y: pad, Scale: 1},
+		"objs":  {X: sw - hudObjsW - pad, Y: pad + 320, Scale: 1},
+		"alert": {X: sw - hudAlertW - pad, Y: sh / 6, Scale: 1},
+		"item":  {X: sw - hudItemW - pad, Y: itemY, Scale: 1},
 		"tabE":  {X: tabLeft, Y: rowsTop, Scale: 1},
 		"tabA":  {X: tabRight, Y: rowsTop, Scale: 1},
 	}
 }
 
+func hudWidgetEst(id string, scale float64) (w, h int) {
+	if scale <= 0 {
+		scale = 1
+	}
+	switch id {
+	case "menu":
+		w, h = hudMenuW, 150
+	case "objs":
+		w, h = hudObjsW, 180
+	case "alert":
+		w, h = hudAlertW, 140
+	case "item":
+		w, h = hudItemW, hudItemH
+	case "tabE", "tabA":
+		w, h = tabCardW, tabRows*tabRowH1080
+	default:
+		w, h = 48, 32
+	}
+	return int(float64(w)*scale + 0.5), int(float64(h)*scale + 0.5)
+}
+
 func clampHudWidget(g hudWidgetGeom, sw, sh int) hudWidgetGeom {
+	return clampHudWidgetID("", g, sw, sh)
+}
+
+func clampHudWidgetID(id string, g hudWidgetGeom, sw, sh int) hudWidgetGeom {
 	sc := g.scaleOr1()
 	if sc < hudScaleMin {
 		sc = hudScaleMin
@@ -191,11 +230,12 @@ func clampHudWidget(g hudWidgetGeom, sw, sh int) hudWidgetGeom {
 	if sh < 1 {
 		sh = 1080
 	}
-	if g.X > sw-48 {
-		g.X = sw - 48
+	ew, eh := hudWidgetEst(id, sc)
+	if g.X+ew > sw {
+		g.X = sw - ew
 	}
-	if g.Y > sh-32 {
-		g.Y = sh - 32
+	if g.Y+eh > sh {
+		g.Y = sh - eh
 	}
 	if g.X < 0 {
 		g.X = 0
@@ -209,18 +249,22 @@ func clampHudWidget(g hudWidgetGeom, sw, sh int) hudWidgetGeom {
 func hudGeomMerge(g hudGeomDisk, sw, sh int) hudGeomDisk {
 	def := hudDefaultWidgets(sw, sh)
 	if g.V < 2 || g.Widgets == nil {
-		return hudGeomDisk{V: 4, Widgets: def}
+		return hudGeomDisk{V: hudGeomVer, Widgets: def}
 	}
-	out := hudGeomDisk{V: 4, Widgets: make(map[string]hudWidgetGeom, len(def))}
+	out := hudGeomDisk{V: hudGeomVer, Keep: g.Keep, Widgets: make(map[string]hudWidgetGeom, len(def))}
 	for id, d := range def {
 		if cur, ok := g.Widgets[id]; ok {
-			out.Widgets[id] = clampHudWidget(cur, sw, sh)
+			out.Widgets[id] = clampHudWidgetID(id, cur, sw, sh)
 		} else {
 			out.Widgets[id] = d
 		}
 	}
-	if g.V < 4 {
+	// Sans « Sauver dispo », un bump de schéma recale menu / item / alert
+	// (anciens défauts trop étroits). Un layout marqué keep survit aux maj.
+	if !g.Keep && g.V < hudGeomVer {
 		out.Widgets["menu"] = def["menu"]
+		out.Widgets["item"] = def["item"]
+		out.Widgets["alert"] = def["alert"]
 	}
 	return out
 }

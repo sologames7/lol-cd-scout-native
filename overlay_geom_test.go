@@ -43,14 +43,21 @@ func TestHudDefaultWidgets(t *testing.T) {
 			t.Fatalf("widget manquant: %s", id)
 		}
 	}
-	if w["menu"].X < 1600 || w["menu"].X > 1720 || w["menu"].Y != 16 {
-		t.Fatalf("menu=%+v", w["menu"])
+	wantX := 1920 - hudMenuW - 16
+	if w["menu"].X != wantX || w["menu"].Y != 16 {
+		t.Fatalf("menu=%+v want x=%d", w["menu"], wantX)
+	}
+	for id, g := range w {
+		ew, eh := hudWidgetEst(id, g.scaleOr1())
+		if g.X < 0 || g.Y < 0 || g.X+ew > 1920 || g.Y+eh > 1080 {
+			t.Fatalf("%s hors écran: %+v est=%dx%d", id, g, ew, eh)
+		}
 	}
 }
 
 func TestHudGeomMergeLegacy(t *testing.T) {
 	g := hudGeomMerge(hudGeomDisk{X: 10, Y: 20}, 1920, 1080)
-	if g.V != 4 || g.Widgets["menu"].X == 0 && g.Widgets["menu"].Y == 0 {
+	if g.V != hudGeomVer || g.Widgets["menu"].X == 0 && g.Widgets["menu"].Y == 0 {
 		t.Fatalf("merge legacy: %+v", g)
 	}
 	old := hudGeomDisk{V: 2, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
@@ -62,20 +69,82 @@ func TestHudGeomMergeLegacy(t *testing.T) {
 	if hudGeomMerge(v3, 1920, 1080).Widgets["menu"].X == 100 {
 		t.Fatal("v3 doit recaler le menu à droite")
 	}
-	cur := hudGeomDisk{V: 4, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
+	v4 := hudGeomDisk{V: 4, Widgets: map[string]hudWidgetGeom{"menu": {X: 1664, Y: 16, Scale: 1}}}
+	if hudGeomMerge(v4, 1920, 1080).Widgets["menu"].X == 1664 {
+		t.Fatal("v4 menu trop étroit doit être recalculé")
+	}
+	cur := hudGeomDisk{V: hudGeomVer, Widgets: map[string]hudWidgetGeom{"menu": {X: 100, Y: 40, Scale: 1.2}}}
 	m := hudGeomMerge(cur, 1920, 1080)
 	if m.Widgets["menu"].X != 100 || m.Widgets["menu"].Scale != 1.2 {
-		t.Fatalf("keep menu: %+v", m.Widgets["menu"])
+		t.Fatalf("keep menu v5: %+v", m.Widgets["menu"])
 	}
 	if _, ok := m.Widgets["objs"]; !ok {
 		t.Fatal("objs défaut")
 	}
 }
 
+func TestHudGeomMergeSavedLayout(t *testing.T) {
+	old := hudGeomDisk{
+		V:    4,
+		Keep: true,
+		Widgets: map[string]hudWidgetGeom{
+			"menu": {X: 100, Y: 40, Scale: 1.1},
+			"item": {X: 80, Y: 900, Scale: 1},
+		},
+	}
+	m := hudGeomMerge(old, 1920, 1080)
+	if !m.Keep || m.V != hudGeomVer {
+		t.Fatalf("keep perdu: %+v", m)
+	}
+	if m.Widgets["menu"].X != 100 || m.Widgets["menu"].Scale != 1.1 {
+		t.Fatalf("layout sauvé recalé: %+v", m.Widgets["menu"])
+	}
+	if m.Widgets["item"].X != 80 {
+		t.Fatalf("item sauvé recalé: %+v", m.Widgets["item"])
+	}
+	if _, ok := m.Widgets["objs"]; !ok {
+		t.Fatal("objs défaut manquant sur un layout partiel")
+	}
+}
+
 func TestClampHudWidget(t *testing.T) {
-	g := clampHudWidget(hudWidgetGeom{X: 9000, Y: -8, Scale: 9}, 1920, 1080)
-	if g.X > 1920-48 || g.Y < 0 || g.Scale > hudScaleMax {
-		t.Fatalf("%+v", g)
+	g := clampHudWidgetID("menu", hudWidgetGeom{X: 9000, Y: -8, Scale: 9}, 1920, 1080)
+	ew, _ := hudWidgetEst("menu", hudScaleMax)
+	if g.X+ew > 1920 || g.Y < 0 || g.Scale > hudScaleMax {
+		t.Fatalf("%+v estW=%d", g, ew)
+	}
+}
+
+func TestHudTabAlliesOnScreen(t *testing.T) {
+	_, _, _, rightX := hudTabMetrics(1920, 1080)
+	if rightX+tabCardW > 1920 {
+		t.Fatalf("tabA dépasse: right=%d + %d", rightX, tabCardW)
+	}
+}
+
+func TestHudMenuDefaultFitsScreens(t *testing.T) {
+	for _, scr := range [][2]int{{1920, 1080}, {2560, 1080}, {1366, 768}, {1280, 720}} {
+		sw, sh := scr[0], scr[1]
+		w := hudDefaultWidgets(sw, sh)
+		for id, g := range w {
+			ew, eh := hudWidgetEst(id, g.scaleOr1())
+			if g.X < 0 || g.Y < 0 || g.X+ew > sw || g.Y+eh > sh {
+				t.Fatalf("%s hors %dx%d: %+v est=%dx%d", id, sw, sh, g, ew, eh)
+			}
+		}
+	}
+}
+
+func TestClampOldMenu420Default(t *testing.T) {
+	// Défaut v5 : sw-420-16. Les 5 chips Flash font plus large → clamp à gauche.
+	oldX := 1920 - 420 - 16
+	g := clampHudWidgetID("menu", hudWidgetGeom{X: oldX, Y: 16, Scale: 1}, 1920, 1080)
+	ew, _ := hudWidgetEst("menu", 1)
+	if g.X+ew > 1920 || g.X < 0 {
+		t.Fatalf("menu encore hors écran: x=%d estW=%d", g.X, ew)
+	}
+	if g.X >= oldX {
+		t.Fatalf("doit reculer le menu: x=%d old=%d", g.X, oldX)
 	}
 }
 

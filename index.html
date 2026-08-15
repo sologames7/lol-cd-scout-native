@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoL CD Scout</title>
-<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD';try{var v=parseFloat(localStorage.getItem('cdscout.hudopacity'));if(v>=0.25&&v<=1)document.documentElement.style.setProperty('--hud-opacity',String(v))}catch(e){}}})()</script>
+<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD';try{var ids=['menu','objs','alert','item','tabE','tabA'],g=parseFloat(localStorage.getItem('cdscout.hudopacity'));if(!(g>=0.25&&g<=1))g=1;var raw=JSON.parse(localStorage.getItem('cdscout.hudwopacity')||'null')||{};for(var i=0;i<ids.length;i++){var v=parseFloat(raw[ids[i]]);if(!(v>=0.25&&v<=1))v=g;document.documentElement.style.setProperty('--hud-op-'+ids[i],String(v))}}catch(e){}}})()</script>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Chakra+Petch:wght@600;700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -85,11 +85,16 @@ textarea{width:100%;border:1px solid var(--border);background:#0d1524;color:var(
 #hud{display:none}
 html.hudmode,body.hudmode{background:transparent!important;overflow:hidden;margin:0;width:100%;height:100%;cursor:default;user-select:none!important;-webkit-user-select:none!important}
 html.hudmode .shell,body.hudmode .shell{display:none!important}
-html.hudmode #hud,body.hudmode #hud{display:block;position:fixed;inset:0;width:100vw;height:100vh;padding:0;margin:0;background:transparent;border:0;overflow:hidden;font-size:14px;opacity:var(--hud-opacity,1)}
+html.hudmode #hud,body.hudmode #hud{display:block;position:fixed;inset:0;width:100vw;height:100vh;padding:0;margin:0;background:transparent;border:0;overflow:hidden;font-size:14px;opacity:1}
+#hud-w-menu{opacity:var(--hud-op-menu,1)}
+#hud-w-objs{opacity:var(--hud-op-objs,1)}
+#hud-w-alert{opacity:var(--hud-op-alert,1)}
+#hud-w-item{opacity:var(--hud-op-item,1)}
+#hud-w-tab-enemies{opacity:var(--hud-op-tabE,1)}
+#hud-w-tab-allies{opacity:var(--hud-op-tabA,1)}
 html.hudmode #hud-vis-menu{opacity:1}
-html.hudmode.hud-vis-open #hud{opacity:1}
-html.hudmode.hud-vis-open #hud>.hud-widget:not(#hud-w-menu),html.hudmode.hud-vis-open #sp-tip{opacity:var(--hud-opacity,1)}
-html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait{opacity:var(--hud-opacity,1)}
+html.hudmode.hud-vis-open #hud-w-menu{opacity:1}
+html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait{opacity:var(--hud-op-menu,1)}
 .hud-widget{position:absolute;left:0;top:0;z-index:12;transform-origin:top left;box-sizing:border-box;overflow:visible;width:max-content;max-width:none}
 .hud-widget.hidden,.hud-widget.hud-off{display:none!important}
 .hud-grip{position:absolute;left:2px;top:2px;z-index:8;display:flex;align-items:center;gap:4px;margin:0;opacity:0;pointer-events:none;transition:opacity .12s}
@@ -214,9 +219,9 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 #hud-w-menu{width:max-content;display:flex;flex-direction:column;align-items:flex-end}
 #hud-w-menu .hud-block{padding:5px;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
 #hud-w-menu .hud-mini{flex-direction:row;align-items:center;gap:6px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
-#hud-w-menu .hud-call{min-width:42px;font-family:'Chakra Petch',Inter,sans-serif;letter-spacing:.08em;font-weight:900;background:#ff6a00;border-color:#ff9a40;color:#1a0800}
-#hud-w-menu .hud-call:hover{background:#ff7f1a;color:#000}
-#hud-w-menu .hud-call.copied{background:#ffb020;border-color:#ffd060;color:#1a0800}
+#hud-w-menu .hud-call{min-width:42px;font-family:'Chakra Petch',Inter,sans-serif;letter-spacing:.06em;font-weight:800;background:rgba(255,122,40,.22);border-color:rgba(255,150,70,.5);color:#ffc090}
+#hud-w-menu .hud-call:hover{background:rgba(255,122,40,.36);border-color:rgba(255,170,90,.7);color:#ffe0c4}
+#hud-w-menu .hud-call.copied{background:rgba(255,176,48,.32);border-color:rgba(255,200,90,.65);color:#ffe8b8}
 #hud-w-menu .hud-drag,#hud-w-menu .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;position:static;opacity:1;pointer-events:auto}
 #hud-w-menu .hud-state{align-self:center}
 #hud-w-menu .hud-btns{display:flex;margin:0 0 0 auto;width:auto;gap:4px}
@@ -226,13 +231,20 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 #hud-w-menu .hud-wait{width:max-content;min-width:180px;padding:8px 12px}
 #hud-w-menu .hud-wait strong{font-size:13px}
 .hud-vis{position:relative;flex-shrink:0}
-.hud-vis-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:40;width:248px;max-height:min(80vh,560px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
+.hud-vis-menu{position:absolute;bottom:calc(100% + 4px);right:0;z-index:40;width:268px;max-height:min(78vh,720px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
 .hud-vis-lab{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#64758c;padding:8px 8px 3px}
 .hud-vis-lab:first-child{padding-top:2px}
 .hud-vis-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 8px;border-radius:7px;font-size:12px;font-weight:700;color:#dbe6f5;white-space:nowrap}
 .hud-vis-row:hover{background:rgba(255,255,255,.05)}
-.hud-vis-opac span{min-width:6.2ch}
-.hud-vis-opac input[type=range]{width:88px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+.hud-vis-widget{flex-wrap:wrap;gap:4px 8px;padding:6px 8px}
+.hud-vis-head{display:flex;width:100%;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+.hud-vis-head span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.hud-vis-opac-line{display:flex;width:100%;align-items:center;gap:8px}
+.hud-vis-opac-line input[type=range]{flex:1;width:auto;min-width:0;height:16px;margin:0;accent-color:var(--accent);cursor:pointer}
+.hud-vis-opac-line input[type=range]:disabled{opacity:.35;cursor:default}
+.hud-vis-opac-line b{font-size:10px;font-variant-numeric:tabular-nums;color:#8d9bb0;min-width:3.4ch;text-align:right;font-weight:800}
+.hud-vis-opac span{min-width:7ch;flex:1;overflow:hidden;text-overflow:ellipsis}
+.hud-vis-opac input[type=range]{width:84px;height:16px;margin:0;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
 .hud-vis-opac b{font-size:10px;font-variant-numeric:tabular-nums;color:#8d9bb0;min-width:3.4ch;text-align:right;font-weight:800}
 .hud-sw{position:relative;width:30px;height:16px;padding:0;border-radius:99px;background:#243044;border:1px solid var(--border);cursor:pointer;flex-shrink:0}
 .hud-sw::after{content:'';position:absolute;left:2px;top:1px;width:12px;height:12px;border-radius:99px;background:#8d9bb0;transition:left .12s,background .12s}
@@ -240,6 +252,7 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 .hud-sw.on::after{left:14px;background:var(--accent)}
 .hud-vis-btns{display:flex;gap:4px;padding:4px 6px 2px}
 .hud-vis-btns button{flex:1;height:24px;padding:0 4px;font-size:10px;font-weight:800;border-radius:6px;background:#243044;color:#dbe6f5;border:1px solid var(--border);cursor:pointer}
+.hud-vis-btns button.on{border-color:rgba(91,231,196,.55);color:var(--accent);background:rgba(91,231,196,.12)}
 .hud-vis-btns button.hud-vis-quit{background:#3a1518;color:#fda4a4;border-color:rgba(248,113,113,.4)}
 .hud-vis-btns button.hud-vis-quit:hover{background:#5a1c22;color:#fff}
 .hud-vis-hint{padding:2px 8px 6px;font-size:10px;color:#8d9bb0;line-height:1.35;font-weight:600;white-space:normal}
@@ -248,12 +261,13 @@ html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult,html.hudmode .hr-sk,h
 html.hudmode .rk,html.hudmode .hf-sum,html.hudmode .hf-ult{aspect-ratio:1}
 html.hudmode img{object-fit:cover}
 html.hudmode .rk-crest,html.hudmode .hobj img{object-fit:contain}
-@keyframes hudBannerIn{from{transform:translateX(100vw);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes hudBannerOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100vw);opacity:0}}
-html.hudmode #hud-w-alert.hud-in .alert{animation:hudBannerIn .4s cubic-bezier(.2,.9,.3,1) both}
-html.hudmode #hud-w-alert.hud-out .alert{animation:hudBannerOut .35s ease-in both}
-html.hudmode #hud-w-item.hud-in .item-pop{animation:hudBannerIn .35s cubic-bezier(.2,.9,.3,1) both}
-html.hudmode #hud-w-item.hud-out .item-pop{animation:hudBannerOut .3s ease-in both}
+@keyframes hudPopIn{0%{transform:scale(.38);opacity:0}58%{transform:scale(1.14);opacity:1}78%{transform:scale(.96)}100%{transform:scale(1);opacity:1}}
+@keyframes hudPopOut{0%{transform:scale(1);opacity:1}42%{transform:scale(1.2);opacity:.7}100%{transform:scale(.15);opacity:0}}
+html.hudmode #hud-w-alert .alert,html.hudmode #hud-w-item .item-pop{transform-origin:right center}
+html.hudmode #hud-w-alert.hud-in .alert{animation:hudPopIn .42s cubic-bezier(.2,1.4,.3,1) both}
+html.hudmode #hud-w-alert.hud-out .alert{animation:hudPopOut .28s ease-in both}
+html.hudmode #hud-w-item.hud-in .item-pop{animation:hudPopIn .36s cubic-bezier(.2,1.4,.3,1) both}
+html.hudmode #hud-w-item.hud-out .item-pop{animation:hudPopOut .24s ease-in both}
 /* ---- Alertes d'objectif : bannière PNG Foot 2 Rue (art + texte FR) ---- */
 .alert{position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:80;display:flex;flex-direction:row;align-items:center;gap:12px;padding:8px 16px 8px 8px;border:5px solid #111;border-radius:20px;background:#f6e27a;box-shadow:6px 6px 0 #111;text-align:left;max-width:min(96vw,970px);animation:alertIn .28s cubic-bezier(.2,1.3,.4,1)}
 .alert.hidden{display:none!important}
@@ -726,14 +740,14 @@ el.classList.remove('hidden');
 clearTimeout(alertTimer);
 if(HUDMODE){
 const w=$('hud-w-alert');
-if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');reportHudHits()}
+if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');requestAnimationFrame(keepHudWidgetsOnScreen);reportHudHits()}
 else{
 if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
 alertTimer=setTimeout(()=>{
 if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
 alertTimer=setTimeout(()=>{el.classList.add('hidden');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},380)
 },3000);
-reportHudHits()}}
+requestAnimationFrame(keepHudWidgetsOnScreen);reportHudHits()}}
 else alertTimer=setTimeout(()=>{el.classList.add('hidden')},level>=2?9000:7000);
 if(silent)return;if(sfx)playObjSfx(sfx);else beep(level)}
 function audioCtx(){if(!actx){try{actx=new(window.AudioContext||window.webkitAudioContext)()}catch(_){return null}}if(actx.state==='suspended')actx.resume();return actx}
@@ -760,7 +774,7 @@ if(HUDTRACK)return;
 const list=(liveState&&liveState.voices)||[];
 for(const v of list){if(!v||!v.id)continue;const k='v|'+v.id;if(firedAlerts.has(k))continue;firedAlerts.add(k);
 if(v.kind==='item'||v.kind==='shop'){if(!hudOptOn('items'))continue;showItemPop(v);cashRegister();if(v.voice)enqueueVoice(Object.assign({},v,{speak:''}))}
-else{if(!hudOptOn('ganks'))continue;const cur=alertEl();if(!(cur&&!cur.classList.contains('hidden')&&/\bobj-/.test(cur.className)))fireAlert(v.title||v.champion||'',v.sub,v.hot?2:1,true);enqueueVoice(v)}}}
+else{if(hudOptOn('ganks')){const cur=alertEl();if(!(cur&&!cur.classList.contains('hidden')&&/\bobj-/.test(cur.className)))fireAlert(v.title||v.champion||'',v.sub,v.hot?2:1,true)}enqueueVoice(v)}}}
 let itemPopTimer=null;
 function showItemPop(v){
 const el=itemEl();if(!el)return;
@@ -773,14 +787,14 @@ void el.offsetWidth;el.classList.toggle('pop',!hudFrozen());el.classList.remove(
 clearTimeout(itemPopTimer);
 if(HUDMODE){
 const w=$('hud-w-item');
-if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');reportHudHits()}
+if(hudFrozen()){if(w)w.classList.remove('hidden','hud-out','hud-in');requestAnimationFrame(keepHudWidgetsOnScreen);reportHudHits()}
 else{
 if(w){w.classList.remove('hidden','hud-out');w.classList.add('hud-in')}
 itemPopTimer=setTimeout(()=>{
 if(w){w.classList.remove('hud-in');w.classList.add('hud-out')}
 itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop');if(w){w.classList.add('hidden');w.classList.remove('hud-out','hud-in')}reportHudHits()},320)
 },2800);
-reportHudHits()}}
+requestAnimationFrame(keepHudWidgetsOnScreen);reportHudHits()}}
 else itemPopTimer=setTimeout(()=>{el.classList.add('hidden');el.classList.remove('pop')},3200)}
 function cashRegister(){
 if(!soundOn)return;const v=hudVol01('item');if(!(v>0))return;const c=audioCtx();if(!c)return;const t0=c.currentTime;
@@ -823,9 +837,11 @@ const TAB_ROWS=5,TAB_ROW_H_1080=52,TAB_HEADER_H_1080=56,TAB_BOARD_W_1080=920,TAB
 const HUD_WIDGET_IDS=['menu','objs','alert','item','tabE','tabA'];
 const HUD_EL={menu:'hud-w-menu',objs:'hud-w-objs',alert:'hud-w-alert',item:'hud-w-item',tabE:'hud-w-tab-enemies',tabA:'hud-w-tab-allies'};
 const HUD_OPACITY_KEY='cdscout.hudopacity';
+const HUD_WOP_KEY='cdscout.hudwopacity';
+const HUD_WOP_IDS=['menu','objs','alert','item','tabE','tabA'];
 const HUD_OPT_WIDGETS=['objs','tabE','tabA'];
-const HUD_OPT_MENU=[{lab:'Widgets',items:[{id:'objs',name:'Objectifs'},{id:'tabE',name:'CD ennemis'},{id:'tabA',name:'CD alliés'}]},{lab:'Alertes',items:[{id:'banners',name:'Bannières'},{id:'items',name:'Achats'},{id:'ganks',name:'Ganks jungle'}]},{lab:'Audio',items:[{id:'sound',name:'Sons'},{id:'voices',name:'Voix jungle'}]}];
-let hudGeom={};
+const HUD_OPT_MENU=[{lab:'Widgets',items:[{name:'Barre',wop:'menu'},{id:'objs',name:'Objectifs',wop:'objs'},{id:'tabE',name:'CD ennemis',wop:'tabE'},{id:'tabA',name:'CD alliés',wop:'tabA'}]},{lab:'Alertes',items:[{id:'banners',name:'Bannières',wop:'alert'},{id:'items',name:'Achats',wop:'item'},{id:'ganks',name:'Notifs gank jgl'}]},{lab:'Audio',items:[{id:'sound',name:'Sons'},{id:'voices',name:'Voix jungle'}]}];
+let hudGeom={},hudGeomKeep=false;
 const ULT_C=(2*Math.PI*9).toFixed(2);
 function tabMetrics(){
 const sh=innerHeight||1080,sw=innerWidth||1920;
@@ -837,40 +853,66 @@ const rowsTop=boardTop+headerH;
 const boardW=Math.max(400,Math.round(TAB_BOARD_W_1080*playW/1920));
 const boardLeft=playX+Math.round((playW-boardW)/2);
 const leftX=Math.max(0,boardLeft-TAB_CARD_W-TAB_CARD_GAP);
-const rightX=Math.min(sw-80,boardLeft+boardW+TAB_CARD_GAP);
+const rightX=Math.max(0,Math.min(sw-TAB_CARD_W,boardLeft+boardW+TAB_CARD_GAP));
 document.documentElement.style.setProperty('--tab-row-h',rowH+'px');
 return {rowH,rowsTop,leftX,rightX,sw,sh}}
+const HUD_MENU_W=520,HUD_OBJS_W=158,HUD_ALERT_W=420,HUD_ITEM_W=260,HUD_ITEM_H=96;
 function hudDefaultGeom(){
 const m=tabMetrics(),pad=16,sw=m.sw,sh=m.sh;
-return {menu:{x:sw-240-pad,y:pad,scale:1},objs:{x:sw-158-pad,y:pad+320,scale:1},alert:{x:sw-400-pad,y:Math.round(sh/6),scale:1},item:{x:sw-240-pad,y:sh-108,scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
+return {menu:{x:Math.max(0,sw-HUD_MENU_W-pad),y:pad,scale:1},objs:{x:Math.max(0,sw-HUD_OBJS_W-pad),y:pad+320,scale:1},alert:{x:Math.max(0,sw-HUD_ALERT_W-pad),y:Math.round(sh/6),scale:1},item:{x:Math.max(0,sw-HUD_ITEM_W-pad),y:Math.max(pad,sh-HUD_ITEM_H-pad),scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
 function hudWidgetPos(id){const g=hudGeom[id]||hudDefaultGeom()[id]||{x:16,y:16,scale:1};return {x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1}}
 function applyHudWidget(id,g){
 const el=$(HUD_EL[id]);if(!el||!g)return;
 hudGeom[id]={x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1};
 el.style.left=hudGeom[id].x+'px';el.style.top=hudGeom[id].y+'px';
 el.style.transform='scale('+hudGeom[id].scale+')'}
+function keepHudWidgetsOnScreen(){
+if(!HUDMODE||document.querySelector('.hud-grip-on'))return;
+const sw=innerWidth||1920,sh=innerHeight||1080,pad=6;
+let moved=false;
+for(const id of HUD_WIDGET_IDS){
+const el=$(HUD_EL[id]);if(!el||el.classList.contains('hidden')||el.classList.contains('hud-off'))continue;
+const g=hudWidgetPos(id),w=el.offsetWidth,h=el.offsetHeight;
+if(!(w>8&&h>8))continue;
+const visW=w*g.scale,visH=h*g.scale;
+let x=g.x,y=g.y;
+if(x+visW>sw-pad)x=Math.max(0,Math.round(sw-pad-visW));
+if(y+visH>sh-pad)y=Math.max(0,Math.round(sh-pad-visH));
+if(x<0)x=0;if(y<0)y=0;
+if(x===g.x&&y===g.y)continue;
+applyHudWidget(id,{x,y,scale:g.scale});moved=true}
+if(moved)reportHudHits()}
 function applyHudGeom(g){
+hudGeomKeep=!!(g&&g.keep);
 if(g&&g.widgets)hudGeom=g.widgets;
 const def=hudDefaultGeom();
 for(const id of HUD_WIDGET_IDS)applyHudWidget(id,hudGeom[id]||def[id]);
 applyHudVis();
+requestAnimationFrame(keepHudWidgetsOnScreen);
 reportHudHits()}
 window.__hudMove=function(p){if(!p||!p.id)return;applyHudWidget(p.id,{x:p.x,y:p.y,scale:p.scale});reportHudHits()};
 window.__hudApplyGeom=function(g){applyHudGeom(g)};
 function resetHudLayout(){
-fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{applyHudGeom({v:4,widgets:hudDefaultGeom()})})}
+fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>applyHudGeom({v:5,widgets:hudDefaultGeom()}))}
+function keepHudLayout(){
+fetch('/api/hud/keep',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{})}
 function closeHudOverlay(){
 try{navigator.sendBeacon&&navigator.sendBeacon('/api/hud/close');fetch('/api/hud/close',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 window.close()}
-function hudOpacityValue(){
-let v=parseFloat(document.documentElement.style.getPropertyValue('--hud-opacity'));
-if(!(v>=0.25&&v<=1)){try{v=parseFloat(localStorage.getItem(HUD_OPACITY_KEY))}catch(_){v=1}}
-if(!(v>=0.25&&v<=1))v=1;
-return v}
-function applyHudOpacity(v,save){
-v=Math.min(1,Math.max(0.25,+v||1));
-document.documentElement.style.setProperty('--hud-opacity',String(v));
-if(save)try{localStorage.setItem(HUD_OPACITY_KEY,String(v))}catch(_){}}
+function clampHudWOp(v){v=parseFloat(v);if(!(v>=0.25&&v<=1))v=1;return Math.round(v*20)/20}
+let hudWOp={};
+function loadHudWOp(){
+let legacy=1;
+try{const g=parseFloat(localStorage.getItem(HUD_OPACITY_KEY));if(g>=0.25&&g<=1)legacy=g}catch(_){}
+hudWOp={};for(const id of HUD_WOP_IDS)hudWOp[id]=legacy;
+try{const raw=JSON.parse(localStorage.getItem(HUD_WOP_KEY)||'null');if(raw&&typeof raw==='object'){for(const id of HUD_WOP_IDS){const n=parseFloat(raw[id]);if(n>=0.25&&n<=1)hudWOp[id]=clampHudWOp(n)}}}catch(_){}}
+function saveHudWOp(){try{localStorage.setItem(HUD_WOP_KEY,JSON.stringify(hudWOp))}catch(_){}}
+function applyHudWOp(save){
+const root=document.documentElement;
+for(const id of HUD_WOP_IDS){const v=clampHudWOp(hudWOp[id]);hudWOp[id]=v;root.style.setProperty('--hud-op-'+id,String(v))}
+if(save)saveHudWOp()}
+function setHudWOp(id,v){if(!HUD_WOP_IDS.includes(id))return;hudWOp[id]=clampHudWOp(v);applyHudWOp(true)}
+loadHudWOp();
 function applyHudVis(){
 for(const id of HUD_OPT_WIDGETS){const el=$(HUD_EL[id]);if(el)el.classList.toggle('hud-off',!hudOptOn(id))}
 syncHudSoundBtn();
@@ -929,6 +971,7 @@ hudOpt[id]=!hudOptOn(id);
 if(id==='sound'){soundOn=hudOpt.sound;if(!soundOn)stopVoices()}
 else if(id==='voices'&&!hudOpt.voices)stopVoiceOnly();
 else if(id==='banners'&&!hudOpt.banners)hideHudAlert();
+else if(id==='ganks'&&!hudOpt.ganks){const el=alertEl();if(el&&!el.classList.contains('has-banner'))hideHudAlert()}
 else if(id==='items'&&!hudOpt.items)hideHudItem();
 saveHudOpt();
 applyHudVis()}
@@ -938,14 +981,20 @@ let html='';
 for(const sec of HUD_OPT_MENU){
 html+=`<div class="hud-vis-lab">${esc(sec.lab)}</div>`;
 for(const it of sec.items){
-const on=hudOptOn(it.id);
-html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}
+const hasOpt=!!(it.id&&Object.prototype.hasOwnProperty.call(HUD_OPT_DEF,it.id));
+const hasWop=!!it.wop;
+const on=!hasOpt||hudOptOn(it.id);
+if(hasWop){
+html+=`<div class="hud-vis-row hud-vis-widget"><div class="hud-vis-head"><span>${esc(it.name)}</span>`;
+if(hasOpt)html+=`<button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button>`;
+const n=Math.round(clampHudWOp(hudWOp[it.wop])*100);
+html+=`</div><div class="hud-vis-opac-line"><input type="range" data-wop="${it.wop}" min="25" max="100" step="5" value="${n}" ${on?'':'disabled'} aria-valuemin="25" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div></div>`}
+else{
+html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}}
 if(sec.lab==='Audio'){for(const v of HUD_VOL_SLIDERS){const n=Math.round(hudVol01(v.id)*100);
 html+=`<div class="hud-vis-row hud-vis-opac"><span>${esc(v.name)}</span><input type="range" data-vol="${v.id}" min="0" max="100" step="5" value="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div>`}}
 }
-const pct=Math.round(hudOpacityValue()*100);
-html+=`<div class="hud-vis-lab">Affichage</div><div class="hud-vis-row hud-vis-opac"><span>Opacité</span><input type="range" id="hud-opacity" min="25" max="100" step="5" value="${pct}" aria-valuemin="25" aria-valuemax="100" aria-valuenow="${pct}"><b id="hud-opacity-val">${pct} %</b></div>`;
-html+=`<div class="hud-vis-lab">Overlay</div><div class="hud-vis-btns"><button type="button" data-hud-act="reset">Reset dispo</button><button type="button" class="hud-vis-quit" data-hud-act="close">Quitter</button></div>`;
+html+=`<div class="hud-vis-lab">Overlay</div><div class="hud-vis-btns"><button type="button" data-hud-act="keep"${hudGeomKeep?' class="on"':''}>${hudGeomKeep?'Sauvé ✓':'Sauver dispo'}</button><button type="button" data-hud-act="reset">Reset dispo</button></div><div class="hud-vis-hint">Sauver : tes positions survivent aux mises à jour.</div><div class="hud-vis-btns"><button type="button" class="hud-vis-quit" data-hud-act="close">Quitter</button></div>`;
 if(hudForceUI){
 const fr=!!hudStudio.freeze;
 html+=`<div class="hud-vis-lab">Studio</div><div class="hud-vis-row"><span>Figer</span><button type="button" class="hud-sw${fr?' on':''}" data-studio="freeze" role="switch" aria-checked="${fr}" title="Garder bannière / achat à l'écran"></button></div><div class="hud-vis-btns"><button type="button" data-studio="banner">Bannière</button><button type="button" data-studio="item">Achat</button><button type="button" data-studio="hide">Masquer</button></div><div class="hud-vis-hint">Bannière cycle les PNG. Figer coupe l'anim et le timer.</div>`}
@@ -958,11 +1007,11 @@ else if(a==='banner')previewStudioBanner();
 else if(a==='item')previewStudioItem();
 else if(a==='hide'){hideHudAlert();hideHudItem();reportHudHits()}});
 m.querySelectorAll('[data-hud-act]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
-if(b.dataset.hudAct==='reset')resetHudLayout();
+if(b.dataset.hudAct==='keep')keepHudLayout();
+else if(b.dataset.hudAct==='reset')resetHudLayout();
 else if(b.dataset.hudAct==='close')closeHudOverlay()});
 m.querySelectorAll('[data-vol]').forEach(sl=>sl.oninput=()=>{setHudVol(sl.dataset.vol,+sl.value);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)});
-const sl=$('hud-opacity');
-if(sl)sl.oninput=()=>{const v=(+sl.value)/100;applyHudOpacity(v,true);const lab=$('hud-opacity-val');if(lab)lab.textContent=Math.round(v*100)+' %';sl.setAttribute('aria-valuenow',String(Math.round(v*100)))}}
+m.querySelectorAll('[data-wop]').forEach(sl=>sl.oninput=()=>{setHudWOp(sl.dataset.wop,(+sl.value)/100);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)})}
 function closeHudVisMenu(){
 const m=$('hud-vis-menu'),b=$('hud-vis-btn');
 if(m)m.classList.add('hidden');
@@ -1052,7 +1101,7 @@ const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');
 if(te)te.innerHTML=(liveState.enemies||[]).map((p,i)=>hudTabRow(p,i,false)).join('');
 if(ta)ta.innerHTML=hudAll.map((p,i)=>hudTabRow(p,i,true)).join('');
 bindHudTracks();
-tickHud();syncHudExpand()}
+tickHud();syncHudExpand();requestAnimationFrame(keepHudWidgetsOnScreen)}
 function tickHud(){
 syncHudExpand();
 const on=liveOn();
@@ -1089,7 +1138,8 @@ let lastHudW=0,lastHudH=0;
 function reportHudSize(){if(!HUDMODE)return;
 const w=innerWidth||0,h=innerHeight||0;
 if(w!==lastHudW||h!==lastHudH){lastHudW=w;lastHudH=h;tabMetrics();
-fetch('/api/hud/bounds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({w,h})}).catch(()=>{})}
+fetch('/api/hud/bounds',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({w,h})}).catch(()=>{});
+requestAnimationFrame(keepHudWidgetsOnScreen)}
 reportHudHits()}
 function reportHudHits(){if(!HUDMODE)return;
 const hits=[];
@@ -1126,7 +1176,7 @@ const g=hudWidgetPos(id);
 fetch('/api/hud/drag',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,mode,x:g.x,y:g.y,scale:g.scale})}).catch(()=>{})};
 document.querySelectorAll('[data-hud-drag]').forEach(btn=>btn.onpointerdown=start(btn.dataset.hudDrag,'drag'));
 document.querySelectorAll('[data-hud-resize]').forEach(btn=>btn.onpointerdown=start(btn.dataset.hudResize,'resize'));
-window.addEventListener('pointerup',()=>{document.querySelectorAll('.hud-grip-on').forEach(w=>w.classList.remove('hud-grip-on'));reportHudHits()})}
+window.addEventListener('pointerup',()=>{document.querySelectorAll('.hud-grip-on').forEach(w=>w.classList.remove('hud-grip-on'));keepHudWidgetsOnScreen();reportHudHits()})}
 async function pollInput(){
 try{const s=await(await fetch('/api/input?since='+inputSeq)).json();
 if(typeof s.seq==='number')inputSeq=s.seq;
@@ -1135,10 +1185,10 @@ if(s.tracks)pullTracks(s.tracks);
 if(s.drag&&s.drag.id)window.__hudMove(s.drag);
 if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e)}catch(_){}}
 async function loadHudGeom(){
-try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:4,widgets:hudDefaultGeom()})}
+try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:5,widgets:hudDefaultGeom()})}
 reportHudSize()}
 if(HUDMODE){
-applyHudOpacity(hudOpacityValue(),false);applyHudVis();
+applyHudWOp(false);applyHudVis();
 loadHudForceUI().then(()=>{syncHudFreezeClass();if($('hud-vis-menu')&&!$('hud-vis-menu').classList.contains('hidden'))renderHudVisMenu()});
 bindHudDrag();
 document.querySelectorAll('#hud .hud-widget').forEach(w=>{w.addEventListener('mouseenter',()=>reportHudHits());w.addEventListener('mouseleave',()=>reportHudHits())});

@@ -991,6 +991,11 @@ func apiHUDReset(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, hudGeomSnapshot())
 }
 
+func apiHUDKeep(w http.ResponseWriter, r *http.Request) {
+	hudKeepPos()
+	writeJSON(w, hudGeomSnapshot())
+}
+
 func apiHUDClose(w http.ResponseWriter, r *http.Request) {
 	hudCloseWindow()
 	writeJSON(w, map[string]any{"ok": true})
@@ -1121,6 +1126,7 @@ func main() {
 	mux.HandleFunc("/api/hud/drag", apiHUDDrag)
 	mux.HandleFunc("/api/hud/geom", apiHUDGeom)
 	mux.HandleFunc("/api/hud/reset", apiHUDReset)
+	mux.HandleFunc("/api/hud/keep", apiHUDKeep)
 	mux.HandleFunc("/api/hud/close", apiHUDClose)
 	mux.HandleFunc("/api/tracks", apiTracks)
 	mux.HandleFunc("/api/demo", apiDemo)

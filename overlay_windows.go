@@ -517,12 +517,20 @@ func hudSetBounds(_, _ int) {
 
 func hudResetPos() {
 	sw, sh := hudScreenSize()
-	g := hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
+	g := hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(sw, sh)}
 	hudGeomReplace(g)
+	removeHudLayoutFile()
 	hudEvalGeom(g)
 	if h := hudHWND(); windowAlive(h) {
 		procPostMessageW.Call(uintptr(h), wmHudBounds, 0, 0)
 	}
+}
+
+func hudKeepPos() {
+	g := hudGeomSnapshot()
+	g.Keep = true
+	hudGeomReplace(g)
+	hudEvalGeom(hudGeomSnapshot())
 }
 
 func hudBeginDrag() {}
@@ -596,6 +604,10 @@ func hudGeomPath() string {
 	return filepath.Join(filepath.Dir(hudProfileDir()), "hud-geom.json")
 }
 
+func hudLayoutPath() string {
+	return filepath.Join(filepath.Dir(hudProfileDir()), "hud-layout.json")
+}
+
 func hudGeomSnapshot() hudGeomDisk {
 	sw, sh := hudScreenSize()
 	hudWidgets.mu.Lock()
@@ -618,12 +630,12 @@ func hudWidgetsPut(id string, w hudWidgetGeom) {
 		return
 	}
 	sw, sh := hudScreenSize()
-	w = clampHudWidget(w, sw, sh)
+	w = clampHudWidgetID(id, w, sw, sh)
 	hudWidgets.mu.Lock()
 	if hudWidgets.g.Widgets == nil {
 		hudWidgets.g.Widgets = map[string]hudWidgetGeom{}
 	}
-	hudWidgets.g.V = 3
+	hudWidgets.g.V = hudGeomVer
 	hudWidgets.g.Widgets[id] = w
 	hudWidgets.mu.Unlock()
 	hudDragLive.mu.Lock()
@@ -634,13 +646,24 @@ func hudWidgetsPut(id string, w hudWidgetGeom) {
 
 func loadHudGeomFile() hudGeomDisk {
 	sw, sh := hudScreenSize()
-	b, err := os.ReadFile(hudGeomPath())
-	if err != nil {
-		return hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
+	g := hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(sw, sh)}
+	if b, err := os.ReadFile(hudGeomPath()); err == nil {
+		var disk hudGeomDisk
+		if json.Unmarshal(b, &disk) == nil {
+			g = disk
+		}
 	}
-	var g hudGeomDisk
-	if json.Unmarshal(b, &g) != nil {
-		return hudGeomDisk{V: 4, Widgets: hudDefaultWidgets(sw, sh)}
+	if !g.Keep {
+		if snap, ok := loadHudLayoutFile(); ok {
+			g.Widgets = snap.Widgets
+			g.Keep = true
+			if g.V < 2 {
+				g.V = snap.V
+			}
+			if g.V < 2 {
+				g.V = 2
+			}
+		}
 	}
 	return hudGeomMerge(g, sw, sh)
 }
@@ -652,6 +675,35 @@ func saveHudGeomFile(g hudGeomDisk) {
 		return
 	}
 	_ = os.WriteFile(hudGeomPath(), b, 0o644)
+	if g.Keep {
+		saveHudLayoutFile(g)
+	}
+}
+
+func loadHudLayoutFile() (hudGeomDisk, bool) {
+	b, err := os.ReadFile(hudLayoutPath())
+	if err != nil {
+		return hudGeomDisk{}, false
+	}
+	var g hudGeomDisk
+	if json.Unmarshal(b, &g) != nil || g.Widgets == nil {
+		return hudGeomDisk{}, false
+	}
+	return g, true
+}
+
+func saveHudLayoutFile(g hudGeomDisk) {
+	g.Keep = true
+	_ = os.MkdirAll(filepath.Dir(hudLayoutPath()), 0o755)
+	b, err := json.Marshal(g)
+	if err != nil {
+		return
+	}
+	_ = os.WriteFile(hudLayoutPath(), b, 0o644)
+}
+
+func removeHudLayoutFile() {
+	_ = os.Remove(hudLayoutPath())
 }
 
 func saveHudGeom(_ syscall.Handle) {
