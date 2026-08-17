@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CD Scout — Je punis la draft en style S.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/landing.css" />
+  <script type="importmap">
+    { "imports": { "three": "./vendor/three.module.js" } }
+  </script>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <div id="flashbang" aria-hidden="true"></div>
+  <header class="nav">
+    <a class="logo" href="#"><i></i> CD Scout</a>
+    <ul class="nav-links">
+      <li><a href="#tarifs">Fonctionnalités</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="https://github.com/sologames7/lol-cd-scout-native/releases">Mises à jour</a></li>
+      <li><a href="https://github.com/sologames7/lol-cd-scout-native">Aide</a></li>
+    </ul>
+    <a class="btn-ghost" href="https://github.com/sologames7/lol-cd-scout-native">GitHub</a>
+  </header>
+  <p id="scroll-hint"><kbd>E</kbd> Allumer la lanterne</p>
+  <section id="cinematic"></section>
+  <section class="rest" id="tarifs">
+    <h2>Un exe. Pas de compte. Pas de cloud.</h2>
+    <p id="aide">CD Scout tourne en local sur Windows, lit le client League, et pose un HUD par-dessus. Scouting en draft, timers en jeu, alertes d'objectifs. Toi tu punis.</p>
+    <div class="price">
+      <article>
+        <small>OUTIL PERSO</small>
+        <p><strong>0 €</strong></p>
+        <p>Télécharge, lance, grimpe. Mises à jour depuis GitHub Releases.</p>
+      </article>
+      <article>
+        <small>STACK</small>
+        <p><strong>LOCAL</strong></p>
+        <p>127.0.0.1 · LCU · Live Client Data. Rien n'est injecté dans League.</p>
+      </article>
+    </div>
+  </section>
+  <footer class="foot">
+    <span>CD Scout — companion LoL</span>
+    <span>Fenêtré sans bordure pour l'overlay</span>
+  </footer>
+  <script type="module" src="js/cinematic.js"></script>
+</body>
+</html>
