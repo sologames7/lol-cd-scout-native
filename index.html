@@ -119,12 +119,18 @@ html.hudmode .hud-btns{display:flex}
 .hf-spells{display:flex;align-items:center;justify-content:center;gap:3px;flex-shrink:0}
 .hf-sum,.hf-ult{position:relative;width:40px;height:40px;padding:0;border:0;border-radius:7px;background:#1a2438;overflow:hidden;cursor:pointer;flex-shrink:0;aspect-ratio:1}
 .hf-sum img,.hf-sum .hr-fi,.hf-ult img{width:40px;height:40px;display:block;border-radius:7px;object-fit:cover;flex-shrink:0}
-.hf-sum .hv,.hf-ult .hv{position:absolute;inset:0;display:grid;place-items:center;font-family:'Chakra Petch',Inter,sans-serif;font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;line-height:.9;letter-spacing:-.06em;text-align:center;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;background:rgba(0,0,0,.42);pointer-events:none}
-.hf-sum:not(.cd) .hv,.hf-ult:not(.cd) .hv{display:none}
-.hf-sum.cd img,.hf-ult.cd img{filter:grayscale(1) brightness(.42)}
-.hf-sum.cd .hv,.hf-ult.cd .hv{color:#ff6b6b;background:rgba(0,0,0,.58)}
-.hf-sum.up,.hf-ult.up{box-shadow:0 0 0 1px var(--accent)}
 .hf.dead .rk{filter:grayscale(.45) contrast(.88)}
+/* Voile de CD façon League : icône grisée + sweep + secondes, uniquement pendant le CD */
+.cd-icon{position:relative}
+.cd-icon .cd-sweep{position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:conic-gradient(from -90deg,rgba(0,0,0,.78) calc(var(--cd-p,0)*1%),transparent 0);opacity:0}
+.cd-icon .qi{position:relative;display:block;line-height:0;overflow:hidden;border-radius:6px}
+.cd-icon .qi .cd-sweep{border-radius:6px}
+.cd-icon.cd .cd-sweep{opacity:1}
+.cd-icon>.hv,.cd-icon .qi>.hv{position:absolute;inset:0;display:none;place-items:center;margin:0;z-index:2;font-family:'Chakra Petch',Inter,sans-serif;font-size:16px;font-weight:900;font-variant-numeric:tabular-nums;line-height:.9;letter-spacing:-.04em;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;pointer-events:none;background:transparent}
+.hf-sum>.hv,.hf-ult>.hv{font-size:20px}
+.cd-icon.cd>.hv,.cd-icon.cd .qi>.hv{display:grid}
+.cd-icon.cd img{filter:grayscale(.45) brightness(.48)}
+.cd-icon.up{box-shadow:0 0 0 1px var(--accent)}
 .hud-top{display:flex;align-items:center;gap:6px;min-width:0}
 .hud-logo{display:none}
 .hud-clock{font-family:'Chakra Petch',Inter,sans-serif;font-size:15px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;flex-shrink:0;cursor:pointer;-webkit-app-region:no-drag}.hud-clock.copied{color:var(--accent)}
@@ -186,6 +192,8 @@ button.hr-sk[data-tip]{cursor:pointer}
 .hr-sk.cd .hv{color:#fecaca}.hr-sk.up .hv{color:var(--accent)}
 .hr-sk.cd .qi i{color:#fecaca;border-color:rgba(248,113,113,.7)}
 .hr-sk.up .qi i{color:var(--accent);border-color:rgba(91,231,196,.65)}
+.hr-ci{width:22px;min-width:22px;padding:0;font-size:8px;font-weight:900;letter-spacing:.04em;color:#8d9bb0;background:rgba(122,162,255,.08)}
+.hr-ci.on{color:#bcd0ff;background:rgba(122,162,255,.22);box-shadow:inset 0 0 0 1px rgba(122,162,255,.55)}
 body.hudmode .sp-tip{width:min(280px,calc(100vw - 10px));padding:8px;gap:6px;background:#0c101c}
 body.hudmode .sp-tip-clip{height:110px}
 body.hudmode .sp-tip p{font-size:11px}
@@ -193,7 +201,6 @@ body.hudmode .sp-tip p{font-size:11px}
 .hud-wait{display:grid;place-content:center;gap:8px;text-align:center;color:var(--muted);padding:16px 12px;border-radius:12px;background:rgba(16,24,39,.45)}
 .hud-wait strong{font-family:'Space Grotesk',Inter,sans-serif;font-size:16px;color:#dbe6f5}.hud-wait span{font-size:11px;line-height:1.45}
 html.hudmode #hud .hr.dead .rk{filter:grayscale(.35) contrast(.9)}
-html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter:saturate(.55)}
 /* Cartes Tab : fond invisible, hauteur = row scoreboard League (--tab-row-h, 52 px @ 1080p) */
 :root{--tab-row-h:52px}
 .hud-tab{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;z-index:18}
@@ -205,14 +212,12 @@ html.hudmode #hud .hr-tm.cd .hr-fi,html.hudmode #hud .hr-sk.hr-sum.cd img{filter
 .hud-tab-row .hr-sk{width:42px;min-width:42px;flex:none;padding:0;border:0;background:transparent;gap:2px;position:relative}
 .hud-tab-row .hr-sk img,.hud-tab-row .hr-sk .hr-fi{width:36px;height:36px;border-radius:6px}
 .hud-tab-row .hr-sk .qi{position:relative;display:block}
-.hud-tab-row .hr-sk:not(.hr-sum) .qi .hv{position:absolute;inset:0;display:grid;place-items:center;margin:0;font-size:16px;font-weight:900;letter-spacing:-.04em;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;background:rgba(0,0,0,.48);border-radius:6px;pointer-events:none;z-index:1}
-.hud-tab-row .hr-sk:not(.hr-sum).cd .qi .hv{color:#ff6b6b;background:rgba(0,0,0,.62)}
-.hud-tab-row .hr-sk:not(.hr-sum).up .qi .hv{color:#fff}
-.hud-tab-row .hr-sk:not(.hr-sum).cd img{filter:grayscale(.35) brightness(.55)}
 .hud-tab-row .hr-sk .hk{font-family:'Chakra Petch',Inter,sans-serif;font-size:10px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;line-height:1;color:#d4a5ff;text-shadow:0 1px 2px #000;white-space:nowrap}
-.hud-tab-row .hr-sum .hv{font-size:11px;line-height:1;position:static;inset:auto;display:block;background:none;text-shadow:none}
-.hud-tab-row .hr-sk .qi i{display:block;left:0;top:0;font-size:8px;padding:1px 3px;text-transform:lowercase;z-index:2}
+.hud-tab-row .hr-sk .qi i{display:block;left:0;top:0;font-size:8px;padding:1px 3px;text-transform:lowercase;z-index:3}
 .hud-tab-row .hr-p .qi i{text-transform:none}
+.hud-tab-row .hr-sk.cd,.hud-tab-row .hr-sk.up{background:transparent}
+.hud-tab-row .hr-sk.cd img{filter:grayscale(.4) brightness(.5)}
+.hud-tab-row .hr-ci{width:22px;min-width:22px;align-self:stretch}
 #hud-w-tab-enemies .hud-tab-row{justify-content:flex-end}
 #hud-w-alert{z-index:40}#hud-w-item{z-index:38}#hud-w-menu{z-index:22}#hud-w-objs{z-index:16}
 /* Permanent : barre horizontale, sorts 2× plus grands */
@@ -538,11 +543,44 @@ const fmtSec=s=>{if(!(s>0))return'—';s=Math.round(s*10)/10;return String(s).re
 const fmtCD=fmtSec;
 const fmtCDTick=s=>{if(!(s>0))return'—';return Math.max(0,Math.round(s))+'s'};
 const pid=p=>`${p.riotId||''}#${p.key}`; // le riotId peut être vide (bots) : le champion, unique par partie, garantit une clé distincte
-function summCD(p,s){if(!s.cd)return 0;return ciSet.has(pid(p))?s.cd*(100+p.summHaste)/(100+p.summHaste+18):s.cd}
+function summCD(p,s){if(!s.cd)return 0;return (ciSet.has(pid(p))||p.cosmicInsight)?s.cd*(100+p.summHaste)/(100+p.summHaste+18):s.cd}
 function flashTrackKey(p){const si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');return si<0?'':`${pid(p)}|S${si}`}
 function isEnemyFlashKey(k){return ((liveState&&liveState.enemies)||[]).some(p=>flashTrackKey(p)===k)}
 function flashCallout(){return enemyCallout({ult:false})}
 const CALL_SUM_MIN=10,CALL_ULT_MIN=5;
+let liveSkipAuto={};
+function cdSweep(){return '<span class="cd-sweep" aria-hidden="true"></span>'}
+function cdIconTxt(rest){const s=Math.max(0,Math.round(rest));return s>=60?mmss(s):String(s)}
+function paintCdEl(el,now){
+const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,rest=tr?tr.end-now:0,on=rest>0.05;
+el.classList.toggle('cd',on);el.classList.toggle('up',!on&&base>0);
+const frac=on?Math.max(0,Math.min(1,rest/(tr.total||base||1))):0;
+el.style.setProperty('--cd-p',(frac*100).toFixed(2));
+const val=el.querySelector('.hv');if(val)val.textContent=on?cdIconTxt(rest):''}
+function applyRemainTrack(k,cd,rest,now){
+if(liveSkipAuto[k]&&liveSkipAuto[k]>now){if(!(rest>0.4))delete liveSkipAuto[k];return 0}
+const tr=liveTracks[k];
+if(rest>0.4&&cd>0){const end=now+rest;if(!tr||tr.auto||Math.abs(tr.end-end)>0.85){liveTracks[k]={end,total:cd,auto:true};return 1}return 0}
+if(tr&&tr.auto){delete liveTracks[k];return 1}return 0}
+function syncRemainTracks(){
+if(!liveOn())return;const now=gameNow();let n=0;
+const visit=p=>{
+const P=pid(p);
+if(p.cosmicInsight)ciSet.add(P);
+(p.spells||[]).forEach(s=>{n+=applyRemainTrack(`${P}|${s.spell}`,s.cd||0,+(s.remain||0),now)});
+(p.summoners||[]).forEach((s,si)=>{n+=applyRemainTrack(`${P}|S${si}`,summCD(p,s),+(s.remain||0),now)})};
+for(const p of [...(liveState.enemies||[]),...(liveState.allies||[])])visit(p);
+if(n)pushTracks()}
+function toggleTrack(k,cd){
+if(liveTracks[k]){if(liveTracks[k].auto)liveSkipAuto[k]=gameNow()+12;delete liveTracks[k]}
+else{if(!(cd>0))return;delete liveSkipAuto[k];liveTracks[k]={end:gameNow()+cd,total:cd}}
+if(isEnemyFlashKey(k))copyFlashCallout();pushTracks();renderLive()}
+function pruneTracks(now){let n=0;for(const k in liveTracks){if(liveTracks[k].end<=now){delete liveTracks[k];n++}}if(n)pushTracks();return n}
+function pushTracks(){fetch('/api/tracks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tracks:liveTracks,ci:[...ciSet]})}).catch(()=>{})}
+function pullTracks(m){
+if(!m||typeof m!=='object')return;
+if(m.tracks&&typeof m.tracks==='object'){liveTracks=m.tracks;if(Array.isArray(m.ci))ciSet=new Set(m.ci);return}
+liveTracks=m}
 function summShort(s){
 const x=String(s&&s.slug||'');
 if(/Flash/i.test(x))return'F';if(/Dot/i.test(x))return'I';if(/Heal/i.test(x))return'H';
@@ -574,10 +612,6 @@ const t=enemyCallout(opts),erase=(opts&&opts.replace)?7:0,q=erase?'?erase='+eras
 if(t||erase)fetch('/api/clipboard'+q,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:t||''}).catch(()=>{if(t&&navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).catch(()=>{})});
 markCallCopied(!!t);return t}
 function copyFlashCallout(){return copyEnemyCallout({ult:false})}
-function toggleTrack(k,cd){if(liveTracks[k])delete liveTracks[k];else{if(!(cd>0))return;liveTracks[k]={end:gameNow()+cd,total:cd}}if(isEnemyFlashKey(k))copyFlashCallout();pushTracks();renderLive()}
-function pruneTracks(now){let n=0;for(const k in liveTracks){if(liveTracks[k].end<=now){delete liveTracks[k];n++}}if(n)pushTracks();return n}
-function pushTracks(){if(!HUDMODE)return;fetch('/api/tracks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(liveTracks)}).catch(()=>{})}
-function pullTracks(m){if(!m||typeof m!=='object')return;liveTracks=m}
 const RING_C=(2*Math.PI*61).toFixed(1);
 function liveTile(p,i,ally){
 const sc=liveScout[p.key],P=pid(p);
@@ -622,7 +656,7 @@ const allies=liveState.allies||[];$('live-ally-count').textContent=allies.length
 $('live-allies').innerHTML=allies.map((p,i)=>liveTile(p,i,true)).join('');
 document.querySelectorAll('#live .ring-wrap').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.rkey,+el.dataset.rcd));
 document.querySelectorAll('#live [data-track]').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.track,+el.dataset.cd));
-document.querySelectorAll('#live [data-ci]').forEach(el=>el.onclick=()=>{const id=el.dataset.ci;ciSet.has(id)?ciSet.delete(id):ciSet.add(id);renderLive()});
+document.querySelectorAll('#live [data-ci]').forEach(el=>el.onclick=()=>{const id=el.dataset.ci;ciSet.has(id)?ciSet.delete(id):ciSet.add(id);pushTracks();renderLive()});
 renderGold(liveState.gold);
 tickLive()}
 const fmtK=v=>Math.abs(v)>=1000?String((v/1000).toFixed(1)).replace('.',',')+'k':String(Math.round(v));
@@ -1046,27 +1080,29 @@ const cd=s.cd||0,isP=s.spell==='P',isR=s.spell==='R',k=`${P}|${s.spell}`;
 const note=((liveScout[p.key]&&liveScout[p.key].important)||[]).find(x=>x.spell===s.spell&&x.note);
 const hint=cd?(isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'Clic quand il l\'utilise (re-clique pour annuler).'):'';
 const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
-const shown=cd?fmtCD(cd):'';
 const head0=spellBadge(s,'qi')||`<span class="qi"><b>${esc(s.spell)}</b></span>`;
-const head=cd?head0.replace('</span>',`<span class="hv">${shown}</span></span>`):head0;
+const head=head0.replace('</span>',cdSweep()+'<span class="hv"></span></span>');
 const cost=`<span class="hk">${esc(spellCostLabel(s))}</span>`;
-const cls='hr-sk'+(isP?' hr-p':'')+(isR?' hr-r':'');
-if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head}${cost}</div>`;
+const cls='hr-sk cd-icon'+(isP?' hr-p':'')+(isR?' hr-r':'');
+if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head0}${cost}</div>`;
 return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}${cost}</button>`}
 function hudSumChip(s,si,p,P,ally,i){
 const k=`${P}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
 const hint=isF&&!ally?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
 const icon=s.slug?`<img class="hr-fi" src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
-return `<button type="button" class="hr-sk hr-sum" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}<span class="hv">${cd?mmss(cd):'—'}</span></button>`}
+return `<button type="button" class="hr-sk hr-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
 function hudMenuSum(p,s,si,i){
 const k=`${pid(p)}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
 const hint=isF?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
 const icon=s.slug?`<img src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
-return `<button type="button" class="hf-sum" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}<span class="hv">—</span></button>`}
+return `<button type="button" class="hf-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
 function hudUltChip(p,i){
 const r=(p.spells||[]).find(s=>s.spell==='R');if(!r)return '';
 const k=`${pid(p)}|R`,cd=r.cd||0,ic=spellIcon(r);
-return `<button type="button" class="hf-ult" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}">${ic?`<img src="${ic}" alt="">`:'<b>R</b>'}<span class="hv"></span></button>`}
+return `<button type="button" class="hf-ult cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}">${ic?`<img src="${ic}" alt="">`:'<b>R</b>'}${cdSweep()}<span class="hv"></span></button>`}
+function hudCIChip(p){
+const P=pid(p),on=ciSet.has(P)||!!p.cosmicInsight;
+return `<button type="button" class="hr-sk hr-ci${on?' on':''}" data-ci="${esc(P)}" title="Cosmic Insight : +18 haste sorts d'invocateur">CI</button>`}
 function hudMenuChip(p,i){
 const dead=p.isDead?(gameNow()+p.respawn):0;
 const sums=(p.summoners||[]).map((s,si)=>hudMenuSum(p,s,si,i)).join('');
@@ -1075,9 +1111,9 @@ return `<div class="hf${tc?' '+tc:''}" data-slot="${i+1}" data-dead="${dead}" ti
 function hudTabRow(p,i,ally){
 const P=pid(p);
 const spells=(p.spells||[]).map(s=>hudSpellChip(s,p,P,ally,i)).join('');
-const sums=ally?'':(p.summoners||[]).map((s,si)=>hudSumChip(s,si,p,P,ally,i)).join('');
+const sums=(p.summoners||[]).map((s,si)=>hudSumChip(s,si,p,P,ally,i)).join('');
 const tc=tierClass(p.tier);
-return `<div class="hud-tab-row hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}" data-hud-hit data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}" title="${esc(playerLabel(p))}"><div class="hr-spells">${spells}${sums}</div></div>`}
+return `<div class="hud-tab-row hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}" data-hud-hit data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}" title="${esc(playerLabel(p))}"><div class="hr-spells">${spells}${sums}${hudCIChip(p)}</div></div>`}
 function syncHudExpand(){
 const tab=!!tabUntil&&Date.now()<tabUntil;
 document.documentElement.classList.toggle('hud-tab-on',tab);
@@ -1086,14 +1122,27 @@ document.documentElement.classList.toggle('idle',!liveOn());
 document.body.classList.toggle('idle',!liveOn());
 reportHudHits()}
 function bindHudTracks(){
-document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)})}
+document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)});
+document.querySelectorAll('#hud [data-ci]').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();const id=el.dataset.ci;ciSet.has(id)?ciSet.delete(id):ciSet.add(id);pushTracks();hudRosterSig='';renderHud()})}
+function liveRosterSig(){
+const pack=p=>[pid(p),p.level,p.isDead?1:0,p.abilityHaste,p.summHaste,(ciSet.has(pid(p))||p.cosmicInsight)?1:0,(p.spells||[]).map(s=>`${s.spell}:${Math.round((s.cd||0)*10)}:${s.rank||''}`).join(','),(p.summoners||[]).map(s=>`${s.slug}:${Math.round(summCD(p,s)*10)}`).join(',')].join('/');
+const obj=liveState.objectives||{};
+const ok=Object.keys(obj).sort().map(k=>k+':'+(obj[k].gone?1:0)+':'+Math.round(obj[k].nextAt||0)+':'+(obj[k].note||'')+':'+(obj[k].kind||'')).join('|');
+return (liveState.enemies||[]).map(pack).join(';')+'#'+(liveState.allies||[]).map(pack).join(';')+'#'+ok}
+let hudRosterSig='';
+function refreshHudDead(now){
+const apply=(list,root)=>{if(!root)return;(list||[]).forEach((p,i)=>{const dead=p.isDead?(now+p.respawn):0;root.querySelectorAll('[data-slot="'+(i+1)+'"]').forEach(el=>{el.dataset.dead=dead})})};
+apply(liveState.enemies,$('hud-flashes'));apply(liveState.enemies,$('hud-tab-enemies'));apply(liveState.allies,$('hud-tab-allies'))}
 function renderHud(){
 const on=liveOn();
 $('hud-state').title=on?(window.__liveDemo?'DÉMO':'EN JEU'):'ATTENTE';
 $('hud-state').classList.toggle('on',on);
-if(!on){$('hud-objs').innerHTML='';$('hud-flashes').innerHTML='';
+if(!on){hudRosterSig='';$('hud-objs').innerHTML='';$('hud-flashes').innerHTML='';
 const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');if(te)te.innerHTML='';if(ta)ta.innerHTML='';
 markCallCopied(false);syncHudExpand();return}
+const sig=liveRosterSig();
+if(sig===hudRosterSig&&$('hud-flashes').children.length){tickHud();return}
+hudRosterSig=sig;
 $('hud-objs').innerHTML=OBJ_ORDER.map(([k,c])=>hudObj(k,c)).join('');
 $('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudMenuChip(p,i)).join('');
 const hudAll=liveState.allies||[];
@@ -1107,7 +1156,8 @@ syncHudExpand();
 const on=liveOn();
 if(!on){markCallCopied(false);return}
 const now=gameNow();
-if(pruneTracks(now)){renderHud();return}
+if(pruneTracks(now)){hudRosterSig='';renderHud();return}
+refreshHudDead(now);
 if(Date.now()>=copiedUntil)markCallCopied(false);
 document.querySelectorAll('#hud-objs .hobj').forEach(el=>{const s=el.querySelector('strong');
 if(el.dataset.gone){s.textContent='—';return}
@@ -1116,17 +1166,11 @@ s.textContent=rest>0?mmss(rest):'en vie';
 el.classList.toggle('live',rest<=0);
 el.classList.toggle('hot',rest>0&&rest<=45);
 el.classList.toggle('warn',rest>45&&rest<=120)});
-document.querySelectorAll('#hud .hr, #hud .hf, #hud .hf-ult').forEach(row=>{
+document.querySelectorAll('#hud .hr, #hud .hf').forEach(row=>{
 const dead=+row.dataset.dead||0,isDead=dead>now;
 row.classList.toggle('dead',isDead);
-if(isDead){const b=row.querySelector('[data-dead-t]');if(b)b.textContent=Math.ceil(dead-now)+'s'}
-const tms=row.hasAttribute('data-tm')?[row]:[...row.querySelectorAll('[data-tm]')];
-tms.forEach(el=>{
-const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,val=el.querySelector('.hv');
-el.classList.remove('cd','up');
-const perm=el.classList.contains('hf-sum')||el.classList.contains('hf-ult');
-if(tr&&tr.end-now>0){el.classList.add('cd');if(val)val.textContent=perm?String(Math.max(0,Math.round(tr.end-now))):(el.dataset.kind==='spell'?fmtCDTick(tr.end-now):mmss(tr.end-now))}
-else{if(val)val.textContent=perm?'':(base?(el.dataset.kind==='spell'?fmtCD(base):mmss(base)):'—');if(perm&&base>0)el.classList.add('up')}})});
+if(isDead){const b=row.querySelector('[data-dead-t]');if(b)b.textContent=Math.ceil(dead-now)+'s'}});
+document.querySelectorAll('#hud [data-tm]').forEach(el=>paintCdEl(el,now));
 checkAlerts(now);checkVoices()}
 function applyHotkey(e){
 if(e.kind==='allsum'){copyEnemyCallout({ult:true,replace:true});return}
@@ -1182,6 +1226,8 @@ try{const s=await(await fetch('/api/input?since='+inputSeq)).json();
 if(typeof s.seq==='number')inputSeq=s.seq;
 if(s.tab){tabUntil=Date.now()+450;syncHudExpand()}
 if(s.tracks)pullTracks(s.tracks);
+if(Array.isArray(s.ci))ciSet=new Set(s.ci);
+if(s.tracks||s.ci){if(liveOn())tickHud()}
 if(s.drag&&s.drag.id)window.__hudMove(s.drag);
 if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e)}catch(_){}}
 async function loadHudGeom(){
@@ -1208,7 +1254,7 @@ async function maybeAutoHud(){
 if(HUDMODE||autoHudDone||localStorage.getItem('cdscout.autohud')==='0'||!liveOn())return;
 autoHudDone=true;
 try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)return;await fetch('/api/hud/open',{method:'POST'})}catch(_){}}
-function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();firedAlerts=new Set();stopVoices();setDemoLiveActive(false);fetch('/api/demo',{method:'DELETE'}).catch(()=>{});renderLive()}
+function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();liveSkipAuto={};firedAlerts=new Set();stopVoices();setDemoLiveActive(false);fetch('/api/demo',{method:'DELETE'}).catch(()=>{});renderLive()}
 function parseSpellCD(s){const t=String(s||'');if(!t||t==='—'||t==='auto')return 0;const m=t.match(/(\d+(?:[.,]\d+)?)/);if(!m)return 0;let v=parseFloat(m[1].replace(',','.'));if(/min/i.test(t))v*=60;return v}
 function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;
 const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
@@ -1317,7 +1363,9 @@ async function pollLive(){
 try{const s=await(await fetch('/api/live')).json();
 if(s.active){
 if(s.demo){if(!window.__liveDemo){liveState=s;liveAt=Date.now()}window.__liveDemo=true;setDemoLiveActive(true)}
-else{const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;setDemoLiveActive(false);liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();firedAlerts=new Set();stopVoices();maybeAutoHud()}}
+else{const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;setDemoLiveActive(false);liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();liveSkipAuto={};firedAlerts=new Set();stopVoices();pushTracks();maybeAutoHud()}}
+if(!HUDMODE){try{const t=await(await fetch('/api/tracks')).json();pullTracks(t)}catch(_){}}
+syncRemainTracks();
 const missing=[...new Set([...(s.enemies||[]),...(s.allies||[])].map(p=>p.key).filter(k=>k&&!liveScout[k]))];
 if(missing.length){fetchCards(missing).then(list=>{for(const c of list)liveScout[c.key]=c;if(liveOn())renderLive()}).catch(()=>{})}
 }else if(window.__liveDemo)return;

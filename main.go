@@ -1008,7 +1008,7 @@ func apiInput(w http.ResponseWriter, r *http.Request) {
 	out := map[string]any{
 		"supported": hudSupported(), "tab": tab, "seq": seq, "events": events,
 		"pinned": pinned, "noActivate": noActivate, "window": window, "hold": hudHold(),
-		"tracks": hudTracksGet(),
+		"tracks": hudTracksGet(), "ci": hudCIGet(),
 	}
 	if d, ok := hudDragLiveCopy(); ok {
 		out["drag"] = d

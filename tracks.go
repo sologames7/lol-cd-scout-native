@@ -13,12 +13,23 @@ import (
 type clientTrack struct {
 	End   float64 `json:"end"`
 	Total float64 `json:"total"`
+	Auto  bool    `json:"auto,omitempty"`
+}
+
+type tracksPayload struct {
+	Tracks map[string]clientTrack `json:"tracks,omitempty"`
+	CI     []string               `json:"ci,omitempty"`
 }
 
 var hudTracks = struct {
 	mu sync.Mutex
 	m  map[string]clientTrack
 }{m: map[string]clientTrack{}}
+
+var hudCI = struct {
+	mu  sync.Mutex
+	ids []string
+}{}
 
 func hudTracksGet() map[string]clientTrack {
 	hudTracks.mu.Lock()
@@ -42,19 +53,67 @@ func hudTracksPut(m map[string]clientTrack) {
 
 func hudTracksClear() {
 	hudTracksPut(nil)
+	hudCIPut(nil)
+}
+
+func hudCIGet() []string {
+	hudCI.mu.Lock()
+	defer hudCI.mu.Unlock()
+	out := make([]string, len(hudCI.ids))
+	copy(out, hudCI.ids)
+	return out
+}
+
+func hudCIPut(ids []string) {
+	hudCI.mu.Lock()
+	defer hudCI.mu.Unlock()
+	if len(ids) == 0 {
+		hudCI.ids = nil
+		return
+	}
+	out := make([]string, 0, len(ids))
+	seen := make(map[string]struct{}, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	hudCI.ids = out
 }
 
 func apiTracks(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		writeJSON(w, hudTracksGet())
+		writeJSON(w, tracksPayload{Tracks: hudTracksGet(), CI: hudCIGet()})
 	case http.MethodPost:
-		var m map[string]clientTrack
-		if err := json.NewDecoder(io.LimitReader(r.Body, 64<<10)).Decode(&m); err != nil && err != io.EOF {
+		raw, err := io.ReadAll(io.LimitReader(r.Body, 64<<10))
+		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		hudTracksPut(m)
+		if len(raw) > 0 {
+			var wrap tracksPayload
+			if json.Unmarshal(raw, &wrap) == nil && (wrap.Tracks != nil || wrap.CI != nil) {
+				if wrap.Tracks != nil {
+					hudTracksPut(wrap.Tracks)
+				}
+				if wrap.CI != nil {
+					hudCIPut(wrap.CI)
+				}
+			} else {
+				var m map[string]clientTrack
+				if err := json.Unmarshal(raw, &m); err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+				hudTracksPut(m)
+			}
+		}
 		writeJSON(w, map[string]any{"ok": true})
 	default:
 		http.Error(w, "GET/POST", http.StatusMethodNotAllowed)

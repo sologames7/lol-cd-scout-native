@@ -15,6 +15,19 @@ func TestHudTracksRoundtrip(t *testing.T) {
 	}
 }
 
+func TestHudCIRoundtrip(t *testing.T) {
+	hudTracksClear()
+	hudCIPut([]string{"Ahri#Ahri", "", "Ahri#Ahri", "Zed#Zed"})
+	got := hudCIGet()
+	if len(got) != 2 || got[0] != "Ahri#Ahri" || got[1] != "Zed#Zed" {
+		t.Fatalf("ci: %#v", got)
+	}
+	hudTracksClear()
+	if len(hudCIGet()) != 0 {
+		t.Fatal("clear CI incomplet")
+	}
+}
+
 func TestDemoLive(t *testing.T) {
 	setDemoLive(nil)
 	if demoLiveOn() {
