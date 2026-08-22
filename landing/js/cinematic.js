@@ -5,6 +5,7 @@ import { createKnife } from './knife.js';
 import { createSpellToken, loadSummonerTextures } from './summoners.js';
 import { loadIconicSpells } from './spells.js';
 import { createHold, createHandLantern } from './hold.js';
+import { loadShopCatalog, createItemMesh } from './items.js';
 import { makeLandingStage } from './stage3d.js';
 import { createCRT } from './crt.js';
 import {
@@ -36,7 +37,7 @@ function lockScroll(on) {
 
 function autoScrollLanding() {
   lockScroll(false);
-  const dest = document.getElementById('tarifs');
+  const dest = document.getElementById('produit');
   if (!dest) return;
   const from = window.scrollY;
   const top = Math.max(0, dest.getBoundingClientRect().top + window.scrollY - 24);
@@ -59,19 +60,19 @@ async function boot() {
     canvas, antialias: true, alpha: false, powerPreference: 'high-performance',
   });
   renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
-  renderer.setClearColor(0x120e0c, 1);
+  renderer.setClearColor(0x121018, 1);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 0.78;
   if (THREE.SRGBColorSpace) renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0x1a1410, 8, 16);
+  scene.fog = new THREE.Fog(0x1a1814, 9, 18);
   const camera = new THREE.PerspectiveCamera(64, 1, 0.06, 40);
   camera.position.set(0, 0.08, 0.2);
 
   const amb = new THREE.AmbientLight(0x5a4a3c, 0.16);
   scene.add(amb);
-  const hemi = new THREE.HemisphereLight(0x8a7060, 0x2a1c14, 0.18);
+  const hemi = new THREE.HemisphereLight(0x8a7060, 0x2a2418, 0.18);
   scene.add(hemi);
   const key = new THREE.DirectionalLight(0xffe0b0, 0.12);
   key.position.set(-0.6, 2.2, 1.4);
@@ -80,13 +81,19 @@ async function boot() {
   const muzzle = new THREE.PointLight(0xffe08a, 0, 5, 2);
   scene.add(muzzle);
 
-  const hold = createHold();
+  let catalog = [];
+  try {
+    catalog = await loadShopCatalog();
+  } catch (err) {
+    console.warn('shop catalog', err);
+  }
+  const hold = createHold(catalog);
   scene.add(hold.root);
 
   const smokeTex = await loadTex('assets/smoke.png');
 
   const knife = createKnife();
-  knife.scale.setScalar(0.85);
+  knife.scale.setScalar(1.05);
   camera.add(knife);
 
   const lantern = createHandLantern();
@@ -110,7 +117,7 @@ async function boot() {
   const shards = makeShards(scene);
   const smoke = makeSmoke(scene, smokeTex);
   const barrelSmoke = makeBarrelSmoke(scene, smokeTex);
-  const coins = await makeCoins(scene);
+  const coins = await makeCoins(scene, catalog);
   const landing = await makeLandingStage(scene);
   const crt = createCRT(renderer);
 
@@ -122,7 +129,7 @@ async function boot() {
     shots: 0,
     recoil: 0,
     reveal: 0,
-    rHeld: false,
+    qHeld: false,
     flash: 0,
     sparkle: false,
     t: 0,
@@ -142,7 +149,7 @@ async function boot() {
     lantern.glass.color.set(0xffe8b8);
     lantern.glass.opacity = 0.62;
     playIgnite();
-    setHint('<kbd>R</kbd> + clic gauche — Enfoncer la porte');
+    setHint('<kbd>Q</kbd> + clic gauche — Fendre le hayon');
   };
 
   const smashDoor = () => {
@@ -226,14 +233,14 @@ async function boot() {
       ev.preventDefault();
       lightLantern();
     }
-    if (ev.code === 'KeyR') {
+    if (ev.code === 'KeyQ') {
       ev.preventDefault();
-      st.rHeld = true;
+      st.qHeld = true;
       smashDoor();
     }
   });
   window.addEventListener('keyup', (ev) => {
-    if (ev.code === 'KeyR') st.rHeld = false;
+    if (ev.code === 'KeyQ') st.qHeld = false;
   });
 
   const resize = () => {
@@ -269,10 +276,10 @@ function apply(dt, ctx) {
   const st = ctx.st;
   if (st.phase >= Phase.LIT) st.lit = Math.min(1, st.lit + dt * 2.4);
   if (st.phase === Phase.KICK) {
-    st.kickT = Math.min(1, st.kickT + dt * 1.55);
+    st.kickT = Math.min(1, st.kickT + dt * 1.85);
     if (st.kickT >= 1) {
       st.phase = Phase.AIM;
-      setHint('Clic gauche — Tirer sur le coffre');
+      setHint('Clic gauche — Tirer sur le coffre-fort');
       if (!st.sparkle) {
         startSparkle();
         st.sparkle = true;
@@ -298,22 +305,29 @@ function apply(dt, ctx) {
 
   ctx.camera.position.z = lerp(0.18, lerp(-0.85, -1.45, st.reveal), through);
   ctx.camera.position.x = shake * Math.sin(st.t * 18);
-  ctx.camera.position.y = 0.08 + (1 - camLock) * (stab * (1 - retract) * 0.04 + recoil * 0.03);
-  ctx.camera.rotation.z = (1 - camLock) * ((1 - stab) * 0.02 + stab * (1 - retract) * 0.08 - recoil * 0.03);
+  ctx.camera.position.y = 0.08 + (1 - camLock) * (stab * (1 - retract) * 0.03 + recoil * 0.03);
+  ctx.camera.rotation.z = (1 - camLock) * ((1 - stab) * -0.04 + stab * (1 - retract) * 0.18 - recoil * 0.03);
   ctx.camera.rotation.x = lerp(0.02, -0.04, through);
 
   const kOut = retract;
+  const slash = stab * stab * (3 - 2 * stab);
   ctx.knife.visible = st.phase < Phase.AIM;
   ctx.knife.position.set(
-    lerp(0.62, lerp(0.06, 0.55, kOut), stab),
-    lerp(-0.48, lerp(-0.08, -0.7, kOut), stab),
-    lerp(-0.35, lerp(-2.05, -0.2, kOut), stab),
+    lerp(0.72, lerp(-0.55, 0.85, kOut), slash),
+    lerp(0.38, lerp(-0.42, -0.55, kOut), slash),
+    lerp(-0.42, lerp(-1.55, -0.18, kOut), slash),
   );
   ctx.knife.rotation.set(
-    lerp(0.95, lerp(0.05, 0.7, kOut), stab),
-    lerp(-0.55, 0.05, stab),
-    lerp(0.85, lerp(-0.35, 0.4, kOut), stab),
+    lerp(-0.55, lerp(0.95, 0.35, kOut), slash),
+    lerp(0.55, lerp(-0.35, 0.15, kOut), slash),
+    lerp(-1.35, lerp(1.55, 0.4, kOut), slash),
   );
+  const trail = ctx.knife.getObjectByName('slash');
+  if (trail) {
+    const cut = slash * (1 - kOut);
+    trail.material.opacity = cut > 0.12 && cut < 0.95 ? 0.55 * Math.sin(cut * Math.PI) : 0;
+    trail.scale.setScalar(0.7 + cut * 0.9);
+  }
 
   const bob = Math.sin(st.t * 2.2) * 0.01;
   ctx.lantern.root.position.set(-0.42 + recoil * 0.02, -0.34 + bob + stab * 0.04, -0.55);
@@ -487,7 +501,7 @@ function makeBarrelSmoke(scene, tex) {
   };
 }
 
-async function makeCoins(scene) {
+async function makeCoins(scene, catalog = []) {
   const loader = new GLTFLoader();
   let proto = null;
   try {
@@ -520,12 +534,25 @@ async function makeCoins(scene) {
   for (const s of iconic) {
     plan.push({ type: 'spell', kind: s });
   }
+  const floatItems = [
+    ...catalog.filter((i) => i.rarity === 'legendary').slice(0, 10),
+    ...catalog.filter((i) => i.rarity === 'epic').slice(0, 4),
+    ...catalog.filter((i) => i.rarity === 'boots').slice(0, 2),
+    ...catalog.filter((i) => i.rarity === 'consumable').slice(0, 3),
+    ...catalog.filter((i) => i.rarity === 'trinket').slice(0, 2),
+    ...catalog.filter((i) => i.rarity === 'basic').slice(0, 3),
+  ];
+  for (const it of floatItems) {
+    plan.push({ type: 'item', kind: it });
+  }
 
   const items = [];
   const spawn = (spec, band) => {
     let c;
     if (spec.type === 'spell') {
       c = createSpellToken(spec.kind);
+    } else if (spec.type === 'item') {
+      c = createItemMesh(spec.kind, { price: false });
     } else {
       c = proto.clone(true);
       c.traverse((o) => {
@@ -536,7 +563,9 @@ async function makeCoins(scene) {
       });
     }
     const extra = c.getObjectByName('extra');
-    const base = spec.type === 'spell' ? 0.2 + Math.random() * 0.05 : 0.16 + Math.random() * 0.06;
+    const base = spec.type === 'spell' ? 0.2 + Math.random() * 0.05
+      : spec.type === 'item' ? 0.18 + Math.random() * 0.06
+        : 0.16 + Math.random() * 0.06;
     c.scale.setScalar(base);
     scene.add(c);
     const yRest = band === 'high' ? 1.22 + Math.random() * 0.38 : -0.52 - Math.random() * 0.18;

@@ -31,7 +31,7 @@ func hudSetHits([]hudHit) {}
 func hudSetBounds(int, int) {}
 
 func hudResetPos() {
-	hudGeomReplace(hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(1920, 1080)})
+	hudGeomReplace(hudGeomDisk{V: hudGeomVer, Side: "blue", Widgets: hudDefaultWidgets(1920, 1080)})
 }
 
 func hudKeepPos() {}
@@ -49,9 +49,11 @@ func autoOpenHudForGame(string) {}
 func inputSince(uint64) (bool, uint64, []inputEvent) { return false, 0, []inputEvent{} }
 
 func hudGeomSnapshot() hudGeomDisk {
-	return hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(1920, 1080)}
+	return hudGeomDisk{V: hudGeomVer, Side: "blue", Widgets: hudDefaultWidgets(1920, 1080)}
 }
 
 func hudGeomReplace(g hudGeomDisk) {}
+
+func hudSetSide(string) {}
 
 func hudDragLiveCopy() (hudDragReq, bool) { return hudDragReq{}, false }

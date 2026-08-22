@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LoL CD Scout</title>
-<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD';try{var ids=['menu','objs','alert','item','tabE','tabA'],g=parseFloat(localStorage.getItem('cdscout.hudopacity'));if(!(g>=0.25&&g<=1))g=1;var raw=JSON.parse(localStorage.getItem('cdscout.hudwopacity')||'null')||{};for(var i=0;i<ids.length;i++){var v=parseFloat(raw[ids[i]]);if(!(v>=0.25&&v<=1))v=g;document.documentElement.style.setProperty('--hud-op-'+ids[i],String(v))}}catch(e){}}})()</script>
+<script>(function(){if(/\bhud=/.test(location.search)||location.pathname==='/hud'){document.documentElement.classList.add('hudmode');if(/panel=track/.test(location.search))document.documentElement.classList.add('hud-track');document.title='CD Scout HUD';try{var ids=['menu','objs','alert','item','cds','buffs','spE0','spE1','spE2','spE3','spE4','spA0','spA1','spA2','spA3','spA4','sumE0','sumE1','sumE2','sumE3','sumE4','sumA0','sumA1','sumA2','sumA3','sumA4'],g=parseFloat(localStorage.getItem('cdscout.hudopacity'));if(!(g>=0.25&&g<=1))g=1;var raw=JSON.parse(localStorage.getItem('cdscout.hudwopacity')||'null')||{},css='';for(var i=0;i<ids.length;i++){var id=ids[i],v=parseFloat(raw[id]);if(!(v>=0.25&&v<=1)){if(/E\d$/.test(id))v=parseFloat(raw.tabE);else if(/A\d$/.test(id))v=parseFloat(raw.tabA)}if(!(v>=0.25&&v<=1))v=g;document.documentElement.style.setProperty('--hud-op-'+id,String(v));if(/^sp|^sum/.test(id))css+='#hud-w-'+id+'{opacity:var(--hud-op-'+id+',1)}'}if(css){var st=document.createElement('style');st.textContent=css;document.head.appendChild(st)}}catch(e){}}})()</script>
 <link rel="icon" type="image/png" href="/logo.png">
 <link rel="apple-touch-icon" href="/logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Chakra+Petch:wght@600;700&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -90,11 +90,12 @@ html.hudmode #hud,body.hudmode #hud{display:block;position:fixed;inset:0;width:1
 #hud-w-objs{opacity:var(--hud-op-objs,1)}
 #hud-w-alert{opacity:var(--hud-op-alert,1)}
 #hud-w-item{opacity:var(--hud-op-item,1)}
-#hud-w-tab-enemies{opacity:var(--hud-op-tabE,1)}
-#hud-w-tab-allies{opacity:var(--hud-op-tabA,1)}
+#hud-w-tab-enemies,#hud-w-tab-allies{display:none!important}
+#hud-w-cds{opacity:var(--hud-op-cds,1)}
+#hud-w-buffs{opacity:var(--hud-op-buffs,1)}
 html.hudmode #hud-vis-menu{opacity:1}
-html.hudmode.hud-vis-open #hud-w-menu{opacity:1}
-html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait{opacity:var(--hud-op-menu,1)}
+html.hudmode.hud-vis-open #hud-w-cds{opacity:1}
+html.hudmode.hud-vis-open #hud-cds-list,html.hudmode.hud-vis-open #hud-wait{opacity:var(--hud-op-cds,1)}
 .hud-widget{position:absolute;left:0;top:0;z-index:12;transform-origin:top left;box-sizing:border-box;overflow:visible;width:max-content;max-width:none}
 .hud-widget.hidden,.hud-widget.hud-off{display:none!important}
 .hud-grip{position:absolute;left:2px;top:2px;z-index:8;display:flex;align-items:center;gap:4px;margin:0;opacity:0;pointer-events:none;transition:opacity .12s}
@@ -103,9 +104,9 @@ html.hudmode.hud-vis-open #hud-flashes,html.hudmode.hud-vis-open #hud-wait{opaci
 #hud-w-alert .hud-pop-grip .hud-drag,#hud-w-alert .hud-pop-grip .hud-resize,#hud-w-item .hud-pop-grip .hud-drag,#hud-w-item .hud-pop-grip .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;opacity:1;pointer-events:auto}
 .hud-block{background:#121c2c;border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:6px;box-sizing:border-box}
 .hud-mini{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
-.hud-flashes{display:flex;flex-direction:row;align-items:flex-start;gap:6px;width:max-content}
-html.hudmode.idle #hud-flashes,html.hudmode.idle #hud-w-objs{display:none!important}
-html.hudmode:not(.hud-tab-on) #hud-w-tab-enemies,html.hudmode:not(.hud-tab-on) #hud-w-tab-allies{display:none!important}
+.hud-flashes{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:max-content}
+html.hudmode.idle #hud-flashes,html.hudmode.idle #hud-w-menu,html.hudmode.idle #hud-cds-list,html.hudmode.idle #hud-w-objs,html.hudmode.idle #hud-w-buffs{display:none!important}
+html.hudmode:not(.hud-tab-on) .hud-widget[data-hud^="sp"],html.hudmode:not(.hud-tab-on) .hud-widget[data-hud^="sum"]{display:none!important}
 html.hudmode:not(.idle) .hud-wait{display:none!important}
 html.hudmode.idle .hud-wait{padding:10px;gap:6px}html.hudmode.idle .hud-wait span{display:none}html.hudmode.idle .hud-wait strong{font-size:14px}
 .hud-drag,.hud-resize{width:26px;height:26px;padding:0;border-radius:8px;background:#243044;color:#8d9bb0;font-size:15px;line-height:1;flex-shrink:0;border:1px solid var(--border);cursor:grab}
@@ -204,6 +205,7 @@ html.hudmode #hud .hr.dead .rk{filter:grayscale(.35) contrast(.9)}
 /* Cartes Tab : fond invisible, hauteur = row scoreboard League (--tab-row-h, 52 px @ 1080p) */
 :root{--tab-row-h:52px}
 .hud-tab{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none;z-index:18}
+.hud-tab-sp,.hud-tab-sum{pointer-events:auto}
 .hud-tab .hud-grip{pointer-events:none}
 .hud-tab:hover .hud-grip,.hud-tab.hud-grip-on .hud-grip{pointer-events:auto}
 .hud-tab-list{display:flex;flex-direction:column;background:transparent;pointer-events:none;gap:4px}
@@ -219,24 +221,84 @@ html.hudmode #hud .hr.dead .rk{filter:grayscale(.35) contrast(.9)}
 .hud-tab-row .hr-sk.cd img{filter:grayscale(.4) brightness(.5)}
 .hud-tab-row .hr-ci{width:22px;min-width:22px;align-self:stretch}
 #hud-w-tab-enemies .hud-tab-row{justify-content:flex-end}
-#hud-w-alert{z-index:40}#hud-w-item{z-index:38}#hud-w-menu{z-index:22}#hud-w-objs{z-index:16}
-/* Permanent : barre horizontale, sorts 2× plus grands */
-#hud-w-menu{width:max-content;display:flex;flex-direction:column;align-items:flex-end}
-#hud-w-menu .hud-block{padding:5px;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
-#hud-w-menu .hud-mini{flex-direction:row;align-items:center;gap:6px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
-#hud-w-menu .hud-call{min-width:42px;font-family:'Chakra Petch',Inter,sans-serif;letter-spacing:.06em;font-weight:800;background:rgba(255,122,40,.22);border-color:rgba(255,150,70,.5);color:#ffc090}
-#hud-w-menu .hud-call:hover{background:rgba(255,122,40,.36);border-color:rgba(255,170,90,.7);color:#ffe0c4}
-#hud-w-menu .hud-call.copied{background:rgba(255,176,48,.32);border-color:rgba(255,200,90,.65);color:#ffe8b8}
-#hud-w-menu .hud-drag,#hud-w-menu .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;position:static;opacity:1;pointer-events:auto}
-#hud-w-menu .hud-state{align-self:center}
-#hud-w-menu .hud-btns{display:flex;margin:0 0 0 auto;width:auto;gap:4px}
-#hud-w-menu .hbtn{height:22px;padding:0 7px;font-size:10px;letter-spacing:0;border-radius:6px;width:auto}
-#hud-w-menu .hud-flashes{width:max-content;padding:5px;gap:6px}
-#hud-w-menu .hf{width:auto;padding:4px}
-#hud-w-menu .hud-wait{width:max-content;min-width:180px;padding:8px 12px}
-#hud-w-menu .hud-wait strong{font-size:13px}
+.hud-tab-row{flex-wrap:wrap;align-items:flex-start}
+.hud-tab-row .hr-runes{order:1;flex-direction:row;gap:2px}
+.hud-tab-row .hr-runes img{width:14px;height:14px}
+.hud-tab-row .hr-spells{order:2;width:100%;justify-content:flex-start;gap:2px;flex-wrap:wrap}
+.hud-tab-row .hr-items,.hud-tab-row .items-row{order:3;width:100%;justify-content:flex-start;min-height:0}
+.hud-tab-row .hr-sk{flex-direction:row;width:auto;min-width:0;align-items:center;gap:2px}
+.hud-tab-row .hr-sk img,.hud-tab-row .hr-sk .hr-fi{width:32px;height:32px}
+.sk-key{color:#f5d76e;font-family:'Chakra Petch',Inter,sans-serif;font-size:10px;font-weight:800;text-shadow:0 1px 2px #000;line-height:1}
+.sk-cd{color:#f5d76e;font-family:'Chakra Petch',Inter,sans-serif;font-size:11px;font-weight:800;font-variant-numeric:tabular-nums}
+.sk-mana{color:#7ec8ff;font-family:'Chakra Petch',Inter,sans-serif;font-size:10px;font-weight:700}
+.hr-p img{width:22px;height:22px}
+.hud-tab-row .hr-p img{width:22px;height:22px}
+.hud-tab-row .cd-icon>.sk-cd.hv,.cds-chip>.sk-cd.hv{position:static;display:inline;inset:auto;place-items:unset;font-size:11px;font-weight:800;color:#f5d76e;text-shadow:0 1px 2px #000;background:none}
+.hud-tab-row .cd-icon.cd>.sk-cd.hv,.cds-chip.cd>.sk-cd.hv{display:inline}
+.hud-tab-row .cd-icon.up{box-shadow:none}
+.hud-tab-sp .hud-tab-row,.hud-tab-sum .hud-tab-row{flex-wrap:nowrap;align-items:center;height:var(--tab-row-h);min-height:var(--tab-row-h);overflow:visible}
+.hud-tab-sp .hr-spells{order:unset;width:auto;flex-wrap:nowrap;min-height:0}
+.hud-tab-sp .hr-sk{flex-direction:row;align-items:center;gap:3px;width:auto;min-width:0;padding:0}
+.hud-tab-sp .hr-sk img,.hud-tab-sp .hr-sk .hr-fi{width:28px;height:28px;border-radius:5px}
+.hud-tab-sp .hr-p img{width:22px;height:22px}
+.hud-tab-sp .hr-sk .qi{position:relative;display:block;line-height:0;overflow:hidden;border-radius:5px}
+.hud-tab-sp .hr-sk .qi i{position:absolute;left:0;bottom:0;top:auto;transform:none;width:auto;height:auto;display:block;margin:0;padding:1px;border:1px solid rgba(0,0,0,.8);border-radius:2px;background:rgba(0,0,0,.75);color:#f5d76e;font-style:normal;font-family:'Chakra Petch',Inter,sans-serif;font-size:8px;font-weight:800;line-height:1;text-transform:none;z-index:3;pointer-events:none;text-shadow:0 0 2px #000,0 1px 2px #000}
+.hud-tab-sp .sk-meta{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:0;line-height:1.05;min-width:1.6ch}
+.hud-tab-sp .sk-cd{color:#f5d76e;font-size:11px}
+.hud-tab-sp .sk-mana{color:#7ec8ff;font-size:10px}
+.hud-tab-sum .hr-spells{order:unset;width:auto;flex-wrap:nowrap;gap:3px;border:0}
+.hud-tab-sum .hr-sk{position:relative;width:36px;min-width:36px;height:36px;padding:0;flex-direction:column;gap:0;overflow:hidden}
+.hud-tab-sum .hr-sk img,.hud-tab-sum .hr-sk .hr-fi{width:36px;height:36px;border-radius:6px}
+.hud-tab-sum .cd-icon>.hv{position:absolute;inset:0;display:none;place-items:center;margin:0;z-index:2;font-size:16px;font-weight:900;color:#fff;text-shadow:0 1px 2px #000,0 0 8px #000;background:transparent}
+.hud-tab-sum .cd-icon.cd>.hv{display:grid}
+.hud-cds{display:flex;flex-direction:column;gap:4px;min-width:140px;padding:5px}
+.cds-row{display:flex;align-items:center;gap:6px}
+.cds-pic{width:28px;height:28px;border-radius:6px;object-fit:cover;background:#243044;flex-shrink:0}
+.cds-chips{display:flex;gap:3px;align-items:center}
+.cds-chip{display:flex;align-items:center;gap:2px;padding:2px 4px;border:0;border-radius:6px;background:rgba(0,0,0,.28);color:#e7eefb;cursor:pointer}
+.cds-chip img{width:22px;height:22px;border-radius:4px;object-fit:cover}
+.cds-chip.cd img{filter:grayscale(.4) brightness(.5)}
+#hud-w-buffs{z-index:16}
+.hud-buffs{display:flex;flex-direction:column;gap:4px;min-width:120px;padding:5px 6px}
+.hb-row{display:flex;align-items:center;gap:6px}
+.hb-kind{width:18px;height:18px;object-fit:contain;flex-shrink:0;background:#1a2438;border-radius:4px}
+.hb-t{margin:0;font-family:'Chakra Petch',Inter,sans-serif;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:0;min-width:3.2ch}
+.hb-row.b-baron .hb-t{color:#c98af7}
+.hb-row.b-elder .hb-t{color:#fbbf24}
+.hb-pics{display:flex;gap:2px;flex-wrap:wrap}
+.hb-pics img{width:22px;height:22px;border-radius:5px;object-fit:cover;border:1px solid rgba(255,255,255,.22);background:#243044}
+.hb-pics img.ally{border-color:rgba(91,231,196,.75)}
+.hb-pics img.enemy{border-color:rgba(248,113,113,.75)}
+.obj-buffs{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.obj-buff{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(180deg,#111b2e,#0c1424)}
+.obj-buff.b-baron{border-color:rgba(192,132,252,.4)}.obj-buff.b-baron strong{color:#c98af7}
+.obj-buff.b-elder{border-color:rgba(251,191,36,.4)}.obj-buff.b-elder strong{color:#fbbf24}
+.obj-buff img.ob-kind{width:18px;height:18px;object-fit:contain}
+.obj-buff strong{font-family:'Chakra Petch',Inter,sans-serif;font-size:14px;font-variant-numeric:tabular-nums}
+.obj-buff .ob-pics{display:flex;gap:2px}
+.obj-buff .ob-pics img{width:20px;height:20px;border-radius:4px;object-fit:cover;border:1px solid rgba(255,255,255,.2)}
+.obj-buff .ob-pics img.ally{border-color:rgba(91,231,196,.7)}.obj-buff .ob-pics img.enemy{border-color:rgba(248,113,113,.7)}
+#hud-w-alert{z-index:40}#hud-w-item{z-index:38}#hud-w-cds{z-index:22}#hud-w-menu{z-index:18}#hud-w-objs{z-index:16}
+/* Permanent : mini-barre + CD encore down. Barre Flash = widget optionnel. */
+#hud-w-cds{width:max-content;display:flex;flex-direction:column;align-items:flex-end}
+#hud-w-cds .hud-block{padding:5px;border-radius:8px;border:1px solid rgba(255,255,255,.14)}
+#hud-w-cds .hud-mini{flex-direction:row;align-items:center;gap:6px;width:max-content;flex-wrap:nowrap;padding:5px 8px}
+#hud-w-cds .hud-call{min-width:42px;font-family:'Chakra Petch',Inter,sans-serif;letter-spacing:.06em;font-weight:800;background:rgba(255,122,40,.22);border-color:rgba(255,150,70,.5);color:#ffc090}
+#hud-w-cds .hud-call:hover{background:rgba(255,122,40,.36);border-color:rgba(255,170,90,.7);color:#ffe0c4}
+#hud-w-cds .hud-call.copied{background:rgba(255,176,48,.32);border-color:rgba(255,200,90,.65);color:#ffe8b8}
+#hud-w-cds .hud-drag,#hud-w-cds .hud-resize{width:auto;height:22px;padding:0 6px;font-size:12px;border-radius:6px;position:static;opacity:1;pointer-events:auto}
+#hud-w-cds .hud-state{align-self:center}
+#hud-w-cds .hud-btns{display:flex;margin:0 0 0 auto;width:auto;gap:4px}
+#hud-w-cds .hbtn{height:22px;padding:0 7px;font-size:10px;letter-spacing:0;border-radius:6px;width:auto}
+#hud-w-cds .hud-cds{width:max-content;min-width:140px}
+#hud-w-cds .hud-wait{width:max-content;min-width:180px;padding:8px 12px}
+#hud-w-cds .hud-wait strong{font-size:13px}
+#hud-w-menu{width:max-content}
+#hud-w-menu .hud-flashes{width:max-content;padding:5px;gap:4px}
+#hud-w-menu .hf{flex-direction:row;align-items:center;width:auto;padding:3px;gap:4px}
+#hud-w-menu .hf-top,#hud-w-menu .hf-spells{flex-direction:row;align-items:center}
 .hud-vis{position:relative;flex-shrink:0}
-.hud-vis-menu{position:absolute;bottom:calc(100% + 4px);right:0;z-index:40;width:268px;max-height:min(78vh,720px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
+.hud-vis-menu{position:absolute;top:calc(100% + 4px);right:0;z-index:40;width:268px;max-height:min(78vh,720px);overflow:auto;padding:6px 6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:#121c2c;box-shadow:0 10px 28px rgba(0,0,0,.5);opacity:1}
 .hud-vis-lab{font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:#64758c;padding:8px 8px 3px}
 .hud-vis-lab:first-child{padding-top:2px}
 .hud-vis-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 8px;border-radius:7px;font-size:12px;font-weight:700;color:#dbe6f5;white-space:nowrap}
@@ -330,10 +392,10 @@ a.deeplol{color:var(--accent);font-size:10px;font-weight:800;text-decoration:non
 .ring-portrait[class*="t-"]{border-color:var(--tc);box-shadow:0 0 0 1px #000,0 0 14px color-mix(in srgb,var(--tc) 45%,transparent)}
 .ring-crest{position:absolute;right:8px;bottom:8px;width:26px;height:26px;z-index:3;pointer-events:none;object-fit:contain;filter:drop-shadow(0 2px 4px #000)}
 .hr-dl{display:inline-grid;place-items:center;margin-left:4px;width:14px;height:14px;border-radius:3px;background:#243044;color:var(--accent);font-size:9px;font-weight:900;border:1px solid #3d4a5c;vertical-align:middle;cursor:pointer}
-body.quiz-on #live,body.quiz-on #cs-enemies,body.quiz-on #cs-allies,body.quiz-on #cs-draft,body.quiz-on #train,body.quiz-on #highlights,body.quiz-on #idea{display:none!important}
+body.quiz-on #live,body.quiz-on #cs-enemies,body.quiz-on #cs-allies,body.quiz-on #cs-draft,body.quiz-on #game-plan,body.quiz-on #train,body.quiz-on #highlights,body.quiz-on #idea{display:none!important}
 body.quiz-on #quiz{display:block}
 #quiz{display:none}
-body.idea-on #live,body.idea-on #cs-enemies,body.idea-on #cs-allies,body.idea-on #cs-draft,body.idea-on #train,body.idea-on #highlights,body.idea-on #quiz{display:none!important}
+body.idea-on #live,body.idea-on #cs-enemies,body.idea-on #cs-allies,body.idea-on #cs-draft,body.idea-on #game-plan,body.idea-on #train,body.idea-on #highlights,body.idea-on #quiz{display:none!important}
 body.idea-on #idea{display:block}
 #idea{display:none}
 .idea-card{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:22px 24px;max-width:820px;display:flex;flex-direction:column;gap:14px}
@@ -394,9 +456,28 @@ body.idea-on #idea{display:block}
 .draft-empty{color:var(--muted);font-size:12px}
 .draft-item .role-badge{margin-left:6px;float:none;align-self:auto}
 @media(max-width:900px){.draft-grid{grid-template-columns:1fr}}
-</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><div class="demo-dd" id="demo-dd"><button type="button" id="demo-toggle" class="secondary ghost" aria-expanded="false" aria-haspopup="true" title="Modes démo">Démo <i class="chev"></i></button><div id="demo-menu" class="demo-menu hidden" role="menu"><button type="button" id="demo" role="menuitem">Démo draft</button><button type="button" id="demo-live" role="menuitem">Démo en jeu</button></div></div><button id="hud-open" class="secondary" title="Ouvre le widget HUD (blocs permanents + tracker Tab)">HUD en jeu</button><button id="quiz-open" class="secondary" title="Série de 10 questions difficiles : CD exacts, sorts, passifs">Quiz</button><button type="button" id="hl-open" class="secondary" title="Replays YouTube des moments forts (iframe)">Moments forts</button><button type="button" id="train-open" class="secondary" title="Cours Skill Capped (iframe, ou le site si l'embed est bloqué)">S'entraîner</button><button type="button" id="idea-open" class="secondary" title="Proposer une fonctionnalité (issue GitHub si c'est safe)">Idée</button><button id="quit" class="danger" title="Quitter CD Scout"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 3h10a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 2H5v14h9V5zm1 0h4v14h-4V5zM8.5 13a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>Quitter</button></section><section class="hero"><div><span id="hero-pill" class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis, alliés clés et propositions pick/ban apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
+#game-plan{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--border);border-radius:18px;padding:16px 18px}
+.plan-card{display:flex;flex-direction:column;gap:12px}
+.plan-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.plan-vs{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.plan-face{width:44px;height:44px;border-radius:12px;object-fit:cover;background:#0b1220;border:1px solid var(--border)}
+.plan-copy{flex:1;min-width:200px}
+.plan-copy h4{margin:0;font-size:16px}
+.plan-copy small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+.plan-actions{display:flex;gap:8px;flex-wrap:wrap}
+.plan-actions .secondary{height:40px}
+.plan-actions .secondary.live{border-color:rgba(91,231,196,.55);color:var(--accent)}
+.plan-sec{padding:10px 0;border-top:1px solid var(--border)}
+.plan-sec h4{margin:0 0 6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.plan-sec p{margin:0 0 8px;font-size:13px;line-height:1.5;color:#dbe6f5}
+.plan-sec p:last-child{margin-bottom:0}
+.plan-wait{color:var(--muted);font-size:13px;margin:0}
+#game-plan.compact .plan-sec{display:none}
+#game-plan.compact .plan-sec:last-child{display:block}
+</style></head><body><div class="shell"><header><div class="brand"><img class="brand-logo" src="/logo.png" alt="CD Scout" width="52" height="52"><div><div class="eyebrow">LEAGUE COMPANION</div><h1>CD Scout</h1></div></div><div class="status-wrap"><span id="dot" class="dot"></span><div><strong id="status">Recherche du client…</strong><small id="phase">—</small></div></div></header><section class="toolbar"><div class="search-wrap"><input id="search" autocomplete="off" placeholder="Chercher un champion (ex: Anivia)…"><div id="results" class="results hidden"></div></div><div class="demo-dd" id="demo-dd"><button type="button" id="demo-toggle" class="secondary ghost" aria-expanded="false" aria-haspopup="true" title="Modes démo">Démo <i class="chev"></i></button><div id="demo-menu" class="demo-menu hidden" role="menu"><button type="button" id="demo" role="menuitem">Démo draft</button><button type="button" id="demo-live" role="menuitem">Démo en jeu</button><button type="button" id="demo-live-red" role="menuitem">Démo Chaos (rouge)</button><button type="button" id="demo-plan" role="menuitem">Démo plan audio</button></div></div><button id="hud-open" class="secondary" title="Ouvre le widget HUD (blocs permanents + tracker Tab)">HUD en jeu</button><button id="quiz-open" class="secondary" title="Série de 10 questions difficiles : CD exacts, sorts, passifs">Quiz</button><button type="button" id="hl-open" class="secondary" title="Replays YouTube des moments forts (iframe)">Moments forts</button><button type="button" id="train-open" class="secondary" title="Cours Skill Capped (iframe, ou le site si l'embed est bloqué)">S'entraîner</button><button type="button" id="idea-open" class="secondary" title="Proposer une fonctionnalité (issue GitHub si c'est safe)">Idée</button><button id="quit" class="danger" title="Quitter CD Scout"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M5 3h10a2 2 0 0 1 2 2v14H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm9 2H5v14h9V5zm1 0h4v14h-4V5zM8.5 13a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5z"/></svg>Quitter</button></section><section class="hero"><div><span id="hero-pill" class="pill">AUTO</span><h2 id="hero-title">Lance League et entre en champ select.</h2><p id="hero-copy">Les ennemis, alliés clés et propositions pick/ban apparaîtront automatiquement.</p></div><div class="patch">Data Dragon <strong id="patch">16.15.1</strong></div></section><main>
 <section id="train" class="train hidden"><div class="section-title"><h3>Entraînement Skill Capped</h3><a class="deeplol" id="train-ext" href="https://www.skill-capped.com/lol/browse/course" target="_blank" rel="noopener noreferrer">Ouvrir le site ↗</a></div><p class="train-hint">Cours et smurf commentaries. Si le cadre reste vide, Skill Capped bloque l'embed — le lien ouvre le site (compte requis).</p><div class="train-wrap"><iframe id="train-frame" title="Skill Capped" allow="fullscreen" referrerpolicy="no-referrer-when-downgrade"></iframe></div></section>
 <section id="highlights" class="train hidden"><div class="section-title"><h3>Moments forts</h3><a class="deeplol" id="hl-ext" href="https://www.youtube.com/results?search_query=League+of+Legends+outplay" target="_blank" rel="noopener noreferrer">Ouvrir YouTube ↗</a></div><p class="train-hint">Iframe YouTube : outplays (Daily LoL Plays) et extraits LoL Esports. Un champion de la draft met à jour le lien de recherche. L'onglet Profil charge DeepLoL si le joueur n'est pas anonyme (sinon le site bloque souvent l'embed).</p><div class="hl-feeds" id="hl-feeds"></div><nav class="champ-nav hidden" id="hl-champs" aria-label="Champion des extraits"></nav><div class="train-wrap"><iframe id="hl-frame" title="Moments forts" allow="fullscreen; encrypted-media; picture-in-picture" referrerpolicy="strict-origin-when-cross-origin"></iframe></div></section>
+<section id="game-plan" class="hidden"><div class="section-title"><h3>Plan de jeu</h3><span id="plan-note">—</span></div><div class="plan-card"><div class="plan-top"><div id="plan-vs" class="plan-vs"></div><div class="plan-copy"><h4 id="plan-title">En attente du matchup</h4><small id="plan-cfg">Picks, runes et invocs dès que la draft les montre.</small></div><div class="plan-actions"><button type="button" id="plan-play" class="secondary" disabled>Écouter</button></div></div><div id="plan-body"></div></div></section>
 <section id="live" class="hidden"><div id="obj-bar" class="obj-bar"></div><div id="live-cards" class="tiles"></div><div class="gold-row"><div id="gold-main" class="gold-main"></div><div id="gold-roles" class="gold-grid"></div></div><div class="live-hint">Clique l'<strong>anneau</strong> d'un ennemi (ou <strong>Alt+1–5</strong> sur le HUD) quand il Flash → timer + les Flash ennemis encore en CD s'écrivent dans le chat League (ouvre le chat avec <strong>Entrée</strong> avant, le jeu refuse Ctrl+V). Clique le chip <strong>R</strong> quand il ult, re-clique pour annuler. <strong>CI</strong> = Cosmic Insight (+18 haste invocateur). CD Q/W/E au rang max plausible, rang de R exact, haste des items incluse (runes inconnues). Or <em>estimé</em> (CS + kills + assists + or passif) : Riot n'expose pas l'or exact des autres joueurs, la tendance est fiable.</div><div class="section-title" style="margin-top:16px"><h3>Alliés</h3><span id="live-ally-count">—</span></div><div id="live-allies" class="tiles"></div></section>
 <section id="cs-draft" class="hidden"><div class="section-title"><h3>Pick / Ban</h3><span id="draft-note">—</span></div><div class="draft-grid"><div class="draft-col bans"><h4>Bannir</h4><div id="draft-bans" class="draft-list"></div></div><div class="draft-col picks"><h4>Pick</h4><div id="draft-picks" class="draft-list"></div></div></div></section>
 <section id="cs-enemies"><div class="section-title"><h3>Ennemis détectés</h3><span id="enemy-count">0/5</span></div><nav id="champ-nav" class="champ-nav hidden" aria-label="Filtrer les ennemis"></nav><div id="cards" class="cards"></div><div id="empty" class="empty"><div class="empty-icon">⌁</div><strong>Aucun champion ennemi détecté</strong><span>Utilise la recherche, la démo draft ou la démo en jeu pour tester l'interface.</span></div></section>
@@ -408,10 +489,9 @@ body.idea-on #idea{display:block}
 <div id="page-item-pop" class="item-pop hidden"></div>
 <div id="sp-tip" class="sp-tip hidden"></div>
 <div id="hud">
-<div class="hud-widget" id="hud-w-menu" data-hud="menu">
-<div class="hud-block hud-mini" id="hud-mini-bar"><button type="button" class="hbtn hud-drag" data-hud-drag="menu" title="Déplacer">⠿</button><button type="button" class="hbtn hud-resize" data-hud-resize="menu" title="Redimensionner (ratio)">⤡</button><button type="button" id="hud-call" class="hbtn hud-call" title="Entrée pour ouvrir le chat, puis clic : colle les CD d'invoc ennemis encore utiles. /allsum dans le chat : sums + ult.">SUM</button><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-vis" id="hud-vis"><button type="button" id="hud-vis-btn" class="hbtn" title="Réglages overlay" aria-expanded="false" aria-haspopup="true">⚙</button><div id="hud-vis-menu" class="hud-vis-menu hidden" role="menu"></div></div></div>
+<div class="hud-widget hud-off" id="hud-w-menu" data-hud="menu">
+<div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="menu" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="menu" title="Redimensionner (ratio)">⤡</button></div>
 <div id="hud-flashes" class="hud-block hud-flashes"></div>
-<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Entrée puis SUM = CD invocs ennemis dans le chat.<br>/allsum = sums + ult. Alt+1–5 Flash · Tab cartes.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
 </div>
 <div class="hud-widget" id="hud-w-objs" data-hud="objs">
 <div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="objs" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="objs" title="Redimensionner (ratio)">⤡</button></div>
@@ -432,6 +512,15 @@ body.idea-on #idea{display:block}
 <div class="hud-widget hud-tab" id="hud-w-tab-allies" data-hud="tabA">
 <div class="hud-grip" data-hud-hit><button type="button" class="hud-drag" data-hud-drag="tabA" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="tabA" title="Redimensionner (ratio)">⤡</button></div>
 <div id="hud-tab-allies" class="hud-tab-list"></div>
+</div>
+<div class="hud-widget" id="hud-w-cds" data-hud="cds">
+<div class="hud-block hud-mini" id="hud-mini-bar"><button type="button" class="hbtn hud-drag" data-hud-drag="cds" title="Déplacer">⠿</button><button type="button" class="hbtn hud-resize" data-hud-resize="cds" title="Redimensionner (ratio)">⤡</button><button type="button" id="hud-call" class="hbtn hud-call" title="Entrée pour ouvrir le chat, puis clic : colle les CD d'invoc ennemis encore utiles. /allsum dans le chat : sums + ult.">SUM</button><span id="hud-state" class="hud-state" title="état">·</span><div class="hud-vis" id="hud-vis"><button type="button" id="hud-vis-btn" class="hbtn" title="Réglages overlay" aria-expanded="false" aria-haspopup="true">⚙</button><div id="hud-vis-menu" class="hud-vis-menu hidden" role="menu"></div></div></div>
+<div class="hud-block hud-cds hidden" id="hud-cds-list"></div>
+<div id="hud-wait" class="hud-block hud-wait"><strong>En attente</strong><span>Entrée puis SUM = CD invocs ennemis dans le chat.<br>/allsum = sums + ult. Alt+1–5 Flash · Tab cartes.</span><div style="display:flex;gap:6px;justify-content:center"><button type="button" id="hud-demo" class="hbtn">DÉMO</button></div></div>
+</div>
+<div class="hud-widget hidden" id="hud-w-buffs" data-hud="buffs">
+  <div class="hud-grip"><button type="button" class="hud-drag" data-hud-drag="buffs" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="buffs" title="Redimensionner (ratio)">⤡</button></div>
+  <div class="hud-block hud-buffs" id="hud-buffs-list"></div>
 </div>
 </div>
 <div id="upd" class="upd hidden"></div>
@@ -466,7 +555,7 @@ const dd=p=>`/ddragon/${version||'16.15.1'}/img/${p}`;
 const iconUrl=c=>dd('champion/'+encodeURIComponent(c.icon));
 const spellIcon=s=>s&&s.icon?dd(s.icon.split('/').map(encodeURIComponent).join('/')):'';
 const runeUrl=r=>r&&r.icon?`/ddragon/img/${r.icon.split('/').map(encodeURIComponent).join('/')}`:'';
-function runeIcons(p,cls){const r=p&&p.runes||{};const bits=[r.keystone,r.secondary].filter(x=>x&&x.icon).map((x,i)=>`<img class="${i?'hr-rt':'hr-rk'}" src="${runeUrl(x)}" title="${esc(x.name||'')}" alt="" loading="lazy">`);return bits.length?`<span class="${cls||'hr-runes'}">${bits.join('')}</span>`:''}
+function runeIcons(p,cls){const r=p&&p.runes||{};const bits=[r.keystone,r.secondary,...(Array.isArray(r.major)?r.major:[])].filter(x=>x&&x.icon).map((x,i)=>`<img class="${i?'hr-rt':'hr-rk'}" src="${runeUrl(x)}" title="${esc(x.name||'')}" alt="" loading="lazy">`);return bits.length?`<span class="${cls||'hr-runes'}">${bits.join('')}</span>`:''}
 const spellBadge=(s,cls)=>{const u=spellIcon(s);return u?`<span class="${cls}"><img src="${u}" alt="" loading="lazy"><i>${esc(s.spell)}</i></span>`:''};
 // Clips d'abilités du client League (CommunityDragon) : .../champion-abilities/0103/ability_0103_Q1.webm
 const CLIP_SLOT={P:'P1',Q:'Q1',W:'W1',E:'E1',R:'R1'};
@@ -520,9 +609,9 @@ if(st==='downloading'){el.className='upd';el.innerHTML=`<span class="utxt">Mise 
 if(st==='error'){el.className='upd err';el.innerHTML=`<span class="utxt">Mise à jour <b>${esc(u.latest)}</b> impossible : ${esc(u.error||'erreur inconnue')}</span>`;return}
 el.className='upd';el.innerHTML=`<span class="utxt">Version <b>${esc(u.latest)}</b> prête · elle s'installe au prochain lancement.</span><button type="button" id="upd-now">Redémarrer</button>`;
 $('upd-now').onclick=async()=>{el.innerHTML='<span class="utxt">Redémarrage…</span>';try{await fetch('/api/update',{method:'POST'})}catch(_){}setTimeout(()=>location.reload(),2500)}}
-async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(document.body.classList.contains('quiz-on')||document.body.classList.contains('idea-on')){$('dot').classList.toggle('on',!!s.connected||!!window.__liveDemo);$('status').textContent=window.__liveDemo?'Mode démo en jeu':(s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté'));$('phase').textContent=window.__liveDemo?'HUD sans partie':(s.phase||'—');lastPhase=s.phase||lastPhase;return}if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`+(s.myRole?` · toi ${s.myRole}`:''):'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.';if(!window.__manual)renderDraft(null)}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
+async function status(){try{const s=await (await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version;renderUpdate(s.update);if(document.body.classList.contains('quiz-on')||document.body.classList.contains('idea-on')){$('dot').classList.toggle('on',!!s.connected||!!window.__liveDemo);$('status').textContent=window.__liveDemo?'Mode démo en jeu':(s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté'));$('phase').textContent=window.__liveDemo?'HUD sans partie':(s.phase||'—');lastPhase=s.phase||lastPhase;return}if(window.__liveDemo){$('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';return}$('dot').classList.toggle('on',!!s.connected);$('status').textContent=s.connected?'League connecté':(s.phase==='Connection error'?'LCU occupé (Blitz?)':'League non détecté');$('phase').textContent=s.phase||'—';if(s.phase==='ChampSelect'){if(lastPhase!=='ChampSelect')window.__manual=false;$('hero-title').textContent='Champion select détectée';const nE=(s.enemies||[]).length,nA=(s.allyFocus||[]).length;$('hero-copy').textContent=(nE||nA)?`Ennemis ${nE}/5 · Alliés clés ${nA}/3`+(s.myRole?` · toi ${s.myRole}`:''):'En attente des picks visibles…';if(!window.__manual)await loadAuto(s)}else if(s.connected&&!(liveState&&liveState.active)){$('hero-title').textContent=`Client détecté · ${s.phase}`;$('hero-copy').textContent='CD Scout chargera automatiquement ennemis + SUPP/JGL/MID au prochain champion select.';if(!window.__manual)renderDraft(null)}if(!HUDMODE){const auto=(s.phase==='GameStart'||s.phase==='InProgress')&&lastPhase==='ChampSelect';if(s.phase==='ChampSelect'||s.phase==='GameStart'||s.phase==='InProgress'){if(s.phase==='ChampSelect'||s.phase==='InProgress')planQuery='';refreshPlan({auto})}else if(!window.__planDemo&&!liveOn()){const el=$('game-plan');if(el&&!planSpeaking)el.classList.add('hidden')}}lastPhase=s.phase||lastPhase}catch(e){$('status').textContent='Erreur locale'}}
 function closeDemoMenu(){const m=$('demo-menu'),t=$('demo-toggle');if(!m||!t)return;m.classList.add('hidden');t.classList.remove('open');t.setAttribute('aria-expanded','false')}
-function setDemoLiveActive(on){const b=$('demo-live'),t=$('demo-toggle');if(b){b.textContent=on?'Fermer démo':'Démo en jeu';b.classList.toggle('active',!!on)}if(t)t.classList.toggle('active',!!on)}
+function setDemoLiveActive(on){const b=$('demo-live'),r=$('demo-live-red'),t=$('demo-toggle');if(b){b.textContent=on?'Fermer démo':'Démo en jeu';b.classList.toggle('active',!!on)}if(r){r.textContent=on?'Fermer démo':'Démo Chaos (rouge)';r.classList.toggle('active',!!on)}if(t)t.classList.toggle('active',!!on)}
 $('demo-toggle').onclick=e=>{e.stopPropagation();const m=$('demo-menu'),t=$('demo-toggle'),open=m.classList.contains('hidden');m.classList.toggle('hidden');t.classList.toggle('open',open);t.setAttribute('aria-expanded',open?'true':'false')};
 $('quit').onclick=()=>{try{navigator.sendBeacon&&navigator.sendBeacon('/api/quit');fetch('/api/quit',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 document.body.innerHTML='<div style="padding:40px;font-family:system-ui;color:#ddd;background:#000;min-height:100vh"><h2>CD Scout fermé.</h2><p>Tu peux fermer cet onglet.</p></div>'};
@@ -543,8 +632,21 @@ const fmtSec=s=>{if(!(s>0))return'—';s=Math.round(s*10)/10;return String(s).re
 const fmtCD=fmtSec;
 const fmtCDTick=s=>{if(!(s>0))return'—';return Math.max(0,Math.round(s))+'s'};
 const pid=p=>`${p.riotId||''}#${p.key}`; // le riotId peut être vide (bots) : le champion, unique par partie, garantit une clé distincte
-function summCD(p,s){if(!s.cd)return 0;return (ciSet.has(pid(p))||p.cosmicInsight)?s.cd*(100+p.summHaste)/(100+p.summHaste+18):s.cd}
-function flashTrackKey(p){const si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');return si<0?'':`${pid(p)}|S${si}`}
+function summCD(p,s){
+if(!s||!s.cd)return 0;
+if(p&&p.cosmicInsight)return s.cd; // déjà dans summHaste serveur
+if(p&&ciSet.has(pid(p)))return s.cd*(100+p.summHaste)/(100+p.summHaste+18);
+return s.cd}
+function isFlashSumm(s){return !!(s&&(s.kind==='flash'||s.kind==='hexflash'||/hexflash|flash/i.test(s.slug||'')))}
+function flashIdx(p){const a=p&&p.summoners||[];const i=a.findIndex(isFlashSumm);return i}
+function flashTrackKey(p){const si=flashIdx(p);return si<0?'':`${pid(p)}|S${si}`}
+function liveByPid(id){if(!liveState||id==null||id==='')return null;for(const p of [...(liveState.enemies||[]),...(liveState.allies||[])])if(pid(p)===id)return p;return null}
+function pidFromTrack(k){const s=String(k||'');const i=s.lastIndexOf('|');return i<0?s:s.slice(0,i)}
+function summImg(s){
+const ic=s&&s.icon||'';
+if(/^perk-images\//i.test(ic))return `/ddragon/img/${ic.split('/').map(encodeURIComponent).join('/')}`;
+if(ic)return dd(ic.split('/').map(encodeURIComponent).join('/'));
+return s&&s.slug?summIcon(s.slug):''}
 function isEnemyFlashKey(k){return ((liveState&&liveState.enemies)||[]).some(p=>flashTrackKey(p)===k)}
 function flashCallout(){return enemyCallout({ult:false})}
 const CALL_SUM_MIN=10,CALL_ULT_MIN=5;
@@ -556,7 +658,7 @@ const tr=liveTracks[el.dataset.tm],base=+el.dataset.base||0,rest=tr?tr.end-now:0
 el.classList.toggle('cd',on);el.classList.toggle('up',!on&&base>0);
 const frac=on?Math.max(0,Math.min(1,rest/(tr.total||base||1))):0;
 el.style.setProperty('--cd-p',(frac*100).toFixed(2));
-const val=el.querySelector('.hv');if(val)val.textContent=on?cdIconTxt(rest):''}
+const val=el.querySelector('.hv');if(val){if(on)val.textContent=cdIconTxt(rest);else if(val.classList.contains('sk-cd')&&base>0)val.textContent=String(Math.round(base));else val.textContent=''}}
 function applyRemainTrack(k,cd,rest,now){
 if(liveSkipAuto[k]&&liveSkipAuto[k]>now){if(!(rest>0.4))delete liveSkipAuto[k];return 0}
 const tr=liveTracks[k];
@@ -571,9 +673,16 @@ if(p.cosmicInsight)ciSet.add(P);
 (p.summoners||[]).forEach((s,si)=>{n+=applyRemainTrack(`${P}|S${si}`,summCD(p,s),+(s.remain||0),now)})};
 for(const p of [...(liveState.enemies||[]),...(liveState.allies||[])])visit(p);
 if(n)pushTracks()}
-function toggleTrack(k,cd){
+function trackStart(p, cd){
+const now=gameNow();
+if(p&&p.isDead&&p.deathAt>0&&now>p.deathAt){
+const used=now-p.deathAt;
+return now+Math.max(0, cd-used)}
+return now+cd}
+function toggleTrack(k,cd,p){
+if(!p)p=liveByPid(pidFromTrack(k));
 if(liveTracks[k]){if(liveTracks[k].auto)liveSkipAuto[k]=gameNow()+12;delete liveTracks[k]}
-else{if(!(cd>0))return;delete liveSkipAuto[k];liveTracks[k]={end:gameNow()+cd,total:cd}}
+else{if(!(cd>0))return;delete liveSkipAuto[k];liveTracks[k]={end:trackStart(p,cd),total:cd}}
 if(isEnemyFlashKey(k))copyFlashCallout();pushTracks();renderLive()}
 function pruneTracks(now){let n=0;for(const k in liveTracks){if(liveTracks[k].end<=now){delete liveTracks[k];n++}}if(n)pushTracks();return n}
 function pushTracks(){fetch('/api/tracks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({tracks:liveTracks,ci:[...ciSet]})}).catch(()=>{})}
@@ -595,8 +704,8 @@ const P=pid(p),items=[];
 (p.summoners||[]).forEach((s,si)=>{
 const tr=liveTracks[`${P}|S${si}`];if(!tr)return;
 const rest=tr.end-now;if(!(rest>CALL_SUM_MIN))return;
-items.push({end:tr.end,txt:summShort(s)+' '+mmss(rest)})});
-if(withUlt){const tr=liveTracks[`${P}|R`];if(tr){const rest=tr.end-now;if(rest>CALL_ULT_MIN)items.push({end:tr.end,txt:'R '+mmss(rest)})}}
+items.push({end:tr.end,txt:summShort(s)+' '+mmss(tr.end)})});
+if(withUlt){const tr=liveTracks[`${P}|R`];if(tr){const rest=tr.end-now;if(rest>CALL_ULT_MIN)items.push({end:tr.end,txt:'R '+mmss(tr.end)})}}
 if(!items.length)continue;
 items.sort((a,b)=>a.end-b.end);
 parts.push({end:items[0].end,txt:(p.champion||'?')+' '+items.map(i=>i.txt).join(' ')})}
@@ -615,10 +724,10 @@ function copyFlashCallout(){return copyEnemyCallout({ult:false})}
 const RING_C=(2*Math.PI*61).toFixed(1);
 function liveTile(p,i,ally){
 const sc=liveScout[p.key],P=pid(p);
-let ringSi=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(ringSi<0)ringSi=0;
+let ringSi=flashIdx(p);if(ringSi<0)ringSi=0;
 const ringS=(p.summoners||[])[ringSi];
 const ringKey=`${P}|S${ringSi}`,ringCd=ringS?summCD(p,ringS):0;
-const ringLabel=ringS?(ringS.slug==='SummonerFlash'?'FLASH':String(ringS.name||ringS.slug||'').toUpperCase().slice(0,9)):'—';
+const ringLabel=ringS?(isFlashSumm(ringS)?(ringS.kind==='hexflash'?'HEX':'FLASH'):String(ringS.name||ringS.slug||'').toUpperCase().slice(0,9)):'—';
 const chips=(p.spells||[]).map(s=>{
 const cd=s.cd||0,isP=s.spell==='P',isR=s.spell==='R',k=`${P}|${s.spell}`;
 const tr=cd&&liveTracks[k];
@@ -627,18 +736,18 @@ const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]
 const val=tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${cd?fmtCD(cd):'—'}</span>`;
 const head=spellBadge(s,'qi')||`<b>${esc(s.spell)}</b>`;
 if(isP&&!(cd>0))return `<div class="qchip pchip" data-tip="${tip}">${head}</div>`;
-if(cd)return `<button type="button" class="qchip ${isP?'pchip':isR?'rchip':''}${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" data-tip="${tip}">${head}${val}</button>`;
+if(cd)return `<button type="button" class="qchip ${isP?'pchip':isR?'rchip':''}${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" data-pid="${esc(P)}" data-tip="${tip}">${head}${val}</button>`;
 return `<div class="qchip" data-tip="${tip}">${head}${val}</div>`}).join('');
 const others=(p.summoners||[]).map((s,si)=>{if(si===ringSi)return'';const k=`${P}|S${si}`,tr=liveTracks[k],cd=summCD(p,s);
-return `<button type="button" class="qchip${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" title="${esc(s.name||s.slug)} · CD ${mmss(cd)} · clique quand il l'utilise">${s.slug?`<img src="${summIcon(s.slug)}" alt="">`:'<b>S</b>'}${tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${mmss(cd)}</span>`}</button>`}).join('');
-const ciChip=`<button type="button" class="qchip ci${ciSet.has(P)?' on':''}" data-ci="${esc(P)}" title="Cosmic Insight : +18 haste sorts d'invocateur"><b>CI</b><span class="qval">+18</span></button>`;
+return `<button type="button" class="qchip${tr?' tracking':''}" data-track="${esc(k)}" data-cd="${cd}" data-pid="${esc(P)}" title="${esc(s.name||s.slug)} · CD ${mmss(cd)} · clique quand il l'utilise">${summImg(s)?`<img src="${summImg(s)}" alt="">`:'<b>S</b>'}${tr?`<span class="qval" data-end="${tr.end}">…</span>`:`<span class="qval">${mmss(cd)}</span>`}</button>`}).join('');
+const ciChip=p.cosmicKnown?'':`<button type="button" class="qchip ci${ciSet.has(P)?' on':''}" data-ci="${esc(P)}" title="Cosmic Insight : +18 haste sorts d'invocateur"><b>CI</b><span class="qval">+18</span></button>`;
 const items=(p.items||[]).map(id=>`<img src="${itemIcon(id)}" alt="" loading="lazy">`).join('');
 const tag=(ally?(p.isMe?'MOI':'ALLIÉ'):`ENNEMI ${i+1}`)+(POS[p.position]?' · '+POS[p.position]:'');
 const deadEnd=p.isDead?(gameNow()+p.respawn):0;
 const who=playerLabel(p);
 const nameHtml=(!p.hidden&&p.deeplol)?`<a class="deeplol" href="${esc(p.deeplol)}" target="_blank" rel="noopener noreferrer">${esc(who)}</a>`:esc(who);
 const subChamp=(!p.hidden&&p.champion&&p.champion!==who)?esc(p.champion)+' · ':'';
-const scout=scoutBits(p);const pills=tagPills(p);return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${runeIcons(p,'tile-runes')}${nameHtml}</div><div class="tile-sub">${subChamp}${scout?scout+' · ':''}Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div>${pills?`<div class="tile-tags">${pills}</div>`:''}</div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait ${tierClass(p.tier)}" src="${iconUrl(p)}" alt="">${rankCrest(p,'ring-crest')}<div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
+const scout=scoutBits(p);const pills=tagPills(p);return `<article class="tile${ally?' ally':''}${p.isMe?' me':''}${p.isDead?' dead':''}"><div><div class="tile-tag">${tag}</div><div class="tile-name"${sc&&sc.window?` title="${esc(sc.window)}"`:''}>${runeIcons(p,'tile-runes')}${nameHtml}</div><div class="tile-sub">${subChamp}${scout?scout+' · ':''}Nv ${p.level} · ${p.kills}/${p.deaths}/${p.assists} · ${p.cs} CS · ${p.abilityHaste} AH</div>${pills?`<div class="tile-tags">${pills}</div>`:''}</div><button type="button" class="ring-wrap idle" data-rkey="${esc(ringKey)}" data-rcd="${ringCd}" data-pid="${esc(P)}" data-slabel="${esc(ringLabel)}" data-respawn-end="${deadEnd}" title="${esc(ringLabel)} · CD ${mmss(ringCd)} · clique quand il l'utilise"><svg viewBox="0 0 128 128"><circle class="ring-bg" cx="64" cy="64" r="61"/><circle class="ring-fg" cx="64" cy="64" r="61" stroke-dasharray="${RING_C}" stroke-dashoffset="0"/></svg><img class="ring-portrait ${tierClass(p.tier)}" src="${iconUrl(p)}" alt="">${rankCrest(p,'ring-crest')}<div class="ring-center"><strong>—</strong><small>—</small></div></button><div class="chips">${chips}${others}${ciChip}</div><div class="items-row">${items}</div></article>`}
 function renderLive(){
 if(HUDMODE)return renderHud();
 if(document.body.classList.contains('quiz-on')||document.body.classList.contains('idea-on'))return;
@@ -650,12 +759,12 @@ $('hero-title').textContent='En jeu · '+mmss(gameNow());
 $('hero-copy').textContent=window.__liveDemo?'Démo HUD — clique Flash / R / CI, graphes d\'or. Reclique le bouton pour fermer.':'Anneaux Flash cliquables, CD réels estimés, or par lane.';
 const objs=liveState.objectives||{};
 const pill=(k,cls)=>{const o=objs[k];if(!o)return'';const note=k==='dragon'&&(o.order||o.chaos)?`${o.order||0}–${o.chaos||0}${o.note?' · '+o.note:''}`:(o.note||'');return `<div class="obj ${cls}${o.gone?' gone':''}"><span class="oname">${esc(o.label).toUpperCase()}${note?` <small>${esc(note)}</small>`:''}</span><strong data-obj-next="${o.nextAt}"${o.gone?' data-gone="1"':''}>…</strong></div>`};
-$('obj-bar').innerHTML=pill('grubs','obj-grubs')+pill('dragon','obj-dragon')+pill('herald','obj-herald')+pill('baron','obj-baron')+'<div class="obj clock"><strong id="live-time">—</strong></div>';
+$('obj-bar').innerHTML=pill('grubs','obj-grubs')+pill('dragon','obj-dragon')+pill('herald','obj-herald')+pill('baron','obj-baron')+'<div class="obj clock"><strong id="live-time">—</strong></div>'+liveBuffBarHTML();
 $('live-cards').innerHTML=(liveState.enemies||[]).map((p,i)=>liveTile(p,i,false)).join('');
 const allies=liveState.allies||[];$('live-ally-count').textContent=allies.length?`${allies.length} joueurs`:'—';
 $('live-allies').innerHTML=allies.map((p,i)=>liveTile(p,i,true)).join('');
-document.querySelectorAll('#live .ring-wrap').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.rkey,+el.dataset.rcd));
-document.querySelectorAll('#live [data-track]').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.track,+el.dataset.cd));
+document.querySelectorAll('#live .ring-wrap').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.rkey,+el.dataset.rcd,liveByPid(el.dataset.pid)));
+document.querySelectorAll('#live [data-track]').forEach(el=>el.onclick=()=>toggleTrack(el.dataset.track,+el.dataset.cd,liveByPid(el.dataset.pid)));
 document.querySelectorAll('#live [data-ci]').forEach(el=>el.onclick=()=>{const id=el.dataset.ci;ciSet.has(id)?ciSet.delete(id):ciSet.add(id);pushTracks();renderLive()});
 renderGold(liveState.gold);
 tickLive()}
@@ -699,13 +808,14 @@ document.querySelectorAll('#live [data-end]').forEach(el=>{
 const rest=+el.dataset.end-now,tr=el.closest('[data-track]');
 el.textContent=(tr&&!/\|S\d+$/.test(tr.dataset.track||''))?fmtCDTick(rest):mmss(rest)});
 document.querySelectorAll('#live [data-obj-next]').forEach(el=>{if(el.dataset.gone){el.textContent='PARTI';return}const r=+el.dataset.objNext-now;el.textContent=r>0?mmss(r):'en vie';el.parentElement.classList.toggle('soon',r>0&&r<60)});
+document.querySelectorAll('#live .obj-buff[data-until]').forEach(el=>{const s=el.querySelector('strong'),r=+el.dataset.until-now;if(s)s.textContent=r>0?mmss(r):'—'});
 const lt=$('live-time');if(lt)lt.textContent=mmss(now);
 $('hero-title').textContent=(window.__liveDemo?'Démo · ':'En jeu · ')+mmss(now);
 checkAlerts(now);checkVoices()}
 // ---- Alertes d'objectif : anticipations fournies par le serveur (objectives[].leads) ----
 let soundOn=true,alertTimer=null,actx=null,firedAlerts=new Set();
 const HUD_OPT_KEY='cdscout.hudopt';
-const HUD_OPT_DEF={objs:true,tabE:true,tabA:true,banners:true,items:true,ganks:true,sound:true,voices:true};
+const HUD_OPT_DEF={menu:false,objs:true,tabE:true,tabA:true,tabSpells:true,tabSums:true,buffs:true,banners:true,items:true,ganks:true,sound:true,voices:true};
 let hudOpt={...HUD_OPT_DEF};
 function hudOptOn(k){return hudOpt[k]!==false}
 function loadHudOpt(){
@@ -713,9 +823,9 @@ let raw=null,vis={};
 try{raw=JSON.parse(localStorage.getItem(HUD_OPT_KEY)||'null')}catch(_){}
 try{vis=JSON.parse(localStorage.getItem('cdscout.hudvis')||'{}')||{}}catch(_){vis={}}
 hudOpt={...HUD_OPT_DEF};
-if(raw&&typeof raw==='object')Object.assign(hudOpt,raw);
+if(raw&&typeof raw==='object'){Object.assign(hudOpt,raw);if(raw.tabSpells==null)hudOpt.tabSpells=hudOpt.tabE!==false||hudOpt.tabA!==false;if(raw.tabSums==null)hudOpt.tabSums=hudOpt.tabE!==false||hudOpt.tabA!==false}
 else{
-hudOpt.objs=vis.objs!==false;hudOpt.tabE=vis.tabE!==false;hudOpt.tabA=vis.tabA!==false;
+hudOpt.objs=vis.objs!==false;hudOpt.tabE=vis.tabE!==false;hudOpt.tabA=vis.tabA!==false;hudOpt.tabSpells=vis.tabE!==false||vis.tabA!==false;hudOpt.tabSums=vis.tabE!==false||vis.tabA!==false;
 hudOpt.banners=vis.alert!==false;hudOpt.items=vis.item!==false;
 hudOpt.sound=localStorage.getItem('cdscout.sound')!=='0'}
 for(const k of Object.keys(HUD_OPT_DEF))if(typeof hudOpt[k]!=='boolean')hudOpt[k]=HUD_OPT_DEF[k];
@@ -862,20 +972,49 @@ const apply=()=>{const fr=pick();if(fr)u.voice=fr;u.onend=done;u.onerror=done;sp
 if(pick())apply();else{const t=setTimeout(()=>{speechSynthesis.removeEventListener('voiceschanged',onV);apply()},400);
 function onV(){clearTimeout(t);speechSynthesis.removeEventListener('voiceschanged',onV);apply()}
 speechSynthesis.addEventListener('voiceschanged',onV)}}
+let planState=null,planId='',planSpeaking=false,planParts=[],planPartI=0,planHeard={},planWantAuto=false,planLoadT=0,planQuery='';
+const planVoice=()=>speechSynthesis.getVoices().find(x=>/^fr(-|_|$)/i.test(x.lang));
+async function refreshPlan(opts){if(HUDMODE)return;if(opts&&opts.auto)planWantAuto=true;try{const p=await(await fetch('/api/plan'+planQuery)).json();renderPlan(p,{auto:planWantAuto});if(p&&p.ready)planWantAuto=false}catch(_){}}
+function renderPlan(p,opts){
+const el=$('game-plan');if(!el)return;
+if(!p||(!p.ready&&!p.wait&&!p.title)){el.classList.add('hidden');return}
+el.classList.remove('hidden');el.classList.toggle('compact',!!liveOn());
+const note=$('plan-note');if(note)note.textContent=p.ready?(p.role||'LANE'):(p.status==='loading'?'Rédaction…':(p.status==='nollm'?'LLM':'…'));
+const title=$('plan-title');if(title)title.textContent=p.title||'Plan de jeu';
+const face=a=>a&&a.icon?`<img class="plan-face" src="${dd('champion/'+encodeURIComponent(a.icon))}" alt="${esc(a.name||'')}">`:'';
+const vs=$('plan-vs');if(vs)vs.innerHTML=`${face(p.me)}<span>vs</span>${face(p.them)}`;
+const cfg=a=>[a&&a.keystone,...((a&&a.sums)||[])].filter(Boolean).join(' · ');
+const cfgEl=$('plan-cfg');if(cfgEl)cfgEl.textContent=p.ready?[cfg(p.me),cfg(p.them)].filter(Boolean).join('  vs  '):(p.wait||'');
+const body=$('plan-body');
+if(body){if(!p.ready){let extra='';if(p.status==='error'||p.status==='nollm')extra=` <button type="button" class="secondary" id="plan-retry" style="height:36px;margin-top:8px">${p.status==='nollm'?'Réessayer':'Réessayer'}</button>`;body.innerHTML=`<p class="plan-wait">${esc(p.wait||'')}</p>${extra}`;const rb=$('plan-retry');if(rb)rb.onclick=()=>{const q=planQuery?(planQuery+(planQuery.includes('?')?'&':'?')+'retry=1'):'?retry=1';fetch('/api/plan'+q).then(r=>r.json()).then(x=>renderPlan(x,{auto:planWantAuto})).catch(()=>{})}}
+else body.innerHTML=(p.sections||[]).map(s=>`<article class="plan-sec"><h4>${esc(s.title)}</h4>${esc(s.body).split(/\n\n+/).map(t=>`<p>${t.replace(/\n/g,'<br>')}</p>`).join('')}</article>`).join('')}
+const play=$('plan-play');if(play){play.disabled=!p.speak;play.classList.toggle('live',!!planSpeaking);play.textContent=planSpeaking?'Stop':'Écouter'}
+const changed=!!(p.id&&p.id!==planId);if(p.id)planId=p.id;planState=p;
+clearTimeout(planLoadT);if(p.status==='loading')planLoadT=setTimeout(()=>refreshPlan({}),800);
+if(opts&&opts.auto&&p.ready&&p.speak&&changed&&!planHeard[p.id]&&localStorage.getItem('cdscout.planauto')!=='0')startPlanSpeak()}
+function planChunks(text){const bits=String(text||'').split(/(?<=[.!?…])\s+/).filter(Boolean);const out=[];let cur='';for(const b of bits){if(cur&&(cur+' '+b).length>190){out.push(cur);cur=b}else cur=cur?cur+' '+b:b}if(cur)out.push(cur);return out}
+function startPlanSpeak(){if(!planState||!planState.speak||!window.speechSynthesis)return;if(planSpeaking){stopPlanSpeak();return}planSpeaking=true;planHeard[planState.id]=1;const b=$('plan-play');if(b){b.textContent='Stop';b.classList.add('live')}try{speechSynthesis.cancel()}catch(_){}planParts=planChunks(planState.speak);planPartI=0;speakPlanChunk()}
+function stopPlanSpeak(){planSpeaking=false;planParts=[];planPartI=0;try{speechSynthesis.cancel()}catch(_){}const b=$('plan-play');if(b){b.textContent='Écouter';b.classList.remove('live')}}
+function speakPlanChunk(){if(!planSpeaking)return;if(planPartI>=planParts.length){stopPlanSpeak();return}const u=new SpeechSynthesisUtterance(planParts[planPartI]);u.lang='fr-FR';u.rate=1.04;u.volume=1;const fr=planVoice();if(fr)u.voice=fr;u.onend=()=>{planPartI++;speakPlanChunk()};u.onerror=()=>{planPartI++;speakPlanChunk()};if(!fr&&!window.__planVoices){window.__planVoices=1;speechSynthesis.addEventListener('voiceschanged',()=>{if(planSpeaking){try{speechSynthesis.cancel()}catch(_){}speakPlanChunk()}},{once:true});setTimeout(()=>{if(planSpeaking)speechSynthesis.speak(u)},350);return}speechSynthesis.speak(u)}
+const planPlayBtn=$('plan-play');if(planPlayBtn)planPlayBtn.onclick=()=>startPlanSpeak();
 // ---- HUD canvas (mode ?hud=1) : widgets indépendants ----
 const OBJ_ORDER=[['grubs','o-grubs'],['dragon','o-dragon'],['herald','o-herald'],['baron','o-baron']];
-const OBJ_ICON={grubs:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/grub.png',dragon:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/dragon.png',herald:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/riftherald.png',baron:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/baron.png'};
+const OBJ_ICON={grubs:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/grub.png',dragon:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/dragon.png',herald:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/riftherald.png',baron:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/baron.png',elder:'https://raw.communitydragon.org/latest/game/assets/ux/minimap/icons/dragon.png'};
 let hudPinned=true,hudNoFocus=true,inputSeq=0,tabUntil=0;
 // Layout Tab League (même constantes que overlay_geom.go) — baseline 1080p, scale = innerHeight/1080.
-const TAB_ROWS=5,TAB_ROW_H_1080=52,TAB_HEADER_H_1080=56,TAB_BOARD_W_1080=920,TAB_CARD_W=280,TAB_CARD_GAP=8;
-const HUD_WIDGET_IDS=['menu','objs','alert','item','tabE','tabA'];
-const HUD_EL={menu:'hud-w-menu',objs:'hud-w-objs',alert:'hud-w-alert',item:'hud-w-item',tabE:'hud-w-tab-enemies',tabA:'hud-w-tab-allies'};
+const TAB_ROWS=5,TAB_ROW_H_1080=52,TAB_HEADER_H_1080=56,TAB_BOARD_W_1080=920,TAB_CARD_W=280,TAB_CARD_GAP=8,TAB_SPELL_W=240,TAB_SUM_W=80,TAB_PAIR_GAP=4;
+const HUD_TAB_SP_IDS=['spE0','spE1','spE2','spE3','spE4','spA0','spA1','spA2','spA3','spA4'];
+const HUD_TAB_SUM_IDS=['sumE0','sumE1','sumE2','sumE3','sumE4','sumA0','sumA1','sumA2','sumA3','sumA4'];
+const HUD_WIDGET_IDS=['menu','objs','alert','item','cds','buffs'].concat(HUD_TAB_SP_IDS,HUD_TAB_SUM_IDS);
+const HUD_EL={menu:'hud-w-menu',objs:'hud-w-objs',alert:'hud-w-alert',item:'hud-w-item',cds:'hud-w-cds',buffs:'hud-w-buffs'};
+HUD_TAB_SP_IDS.forEach(id=>HUD_EL[id]='hud-w-'+id);
+HUD_TAB_SUM_IDS.forEach(id=>HUD_EL[id]='hud-w-'+id);
 const HUD_OPACITY_KEY='cdscout.hudopacity';
 const HUD_WOP_KEY='cdscout.hudwopacity';
-const HUD_WOP_IDS=['menu','objs','alert','item','tabE','tabA'];
-const HUD_OPT_WIDGETS=['objs','tabE','tabA'];
-const HUD_OPT_MENU=[{lab:'Widgets',items:[{name:'Barre',wop:'menu'},{id:'objs',name:'Objectifs',wop:'objs'},{id:'tabE',name:'CD ennemis',wop:'tabE'},{id:'tabA',name:'CD alliés',wop:'tabA'}]},{lab:'Alertes',items:[{id:'banners',name:'Bannières',wop:'alert'},{id:'items',name:'Achats',wop:'item'},{id:'ganks',name:'Notifs gank jgl'}]},{lab:'Audio',items:[{id:'sound',name:'Sons'},{id:'voices',name:'Voix jungle'}]}];
-let hudGeom={},hudGeomKeep=false;
+const HUD_WOP_IDS=HUD_WIDGET_IDS.slice();
+const HUD_OPT_WIDGETS=['menu','objs','buffs'];
+const HUD_OPT_MENU=[{lab:'Widgets',items:[{name:'CD actifs',wop:'cds'},{id:'menu',name:'Barre Flash',wop:'menu'},{id:'objs',name:'Objectifs',wop:'objs'},{id:'tabSpells',name:'Lignes sorts',wopG:HUD_TAB_SP_IDS},{id:'tabSums',name:'Paires invocs',wopG:HUD_TAB_SUM_IDS},{id:'buffs',name:'Nash / Ancestral',wop:'buffs'}]},{lab:'Alertes',items:[{id:'banners',name:'Bannières',wop:'alert'},{id:'items',name:'Achats',wop:'item'},{id:'ganks',name:'Notifs gank jgl'}]},{lab:'Audio',items:[{id:'sound',name:'Sons'},{id:'voices',name:'Voix jungle'}]}];
+let hudGeom={};
 const ULT_C=(2*Math.PI*9).toFixed(2);
 function tabMetrics(){
 const sh=innerHeight||1080,sw=innerWidth||1920;
@@ -890,10 +1029,19 @@ const leftX=Math.max(0,boardLeft-TAB_CARD_W-TAB_CARD_GAP);
 const rightX=Math.max(0,Math.min(sw-TAB_CARD_W,boardLeft+boardW+TAB_CARD_GAP));
 document.documentElement.style.setProperty('--tab-row-h',rowH+'px');
 return {rowH,rowsTop,leftX,rightX,sw,sh}}
-const HUD_MENU_W=520,HUD_OBJS_W=158,HUD_ALERT_W=420,HUD_ITEM_W=260,HUD_ITEM_H=96;
+const HUD_MENU_W=184,HUD_MENU_H=248,HUD_OBJS_W=158,HUD_ALERT_W=420,HUD_ITEM_W=260,HUD_ITEM_H=96,HUD_CDS_W=320,HUD_CDS_H=168,HUD_BUFFS_W=168,HUD_BUFFS_H=88;
 function hudDefaultGeom(){
 const m=tabMetrics(),pad=16,sw=m.sw,sh=m.sh;
-return {menu:{x:Math.max(0,sw-HUD_MENU_W-pad),y:pad,scale:1},objs:{x:Math.max(0,sw-HUD_OBJS_W-pad),y:pad+320,scale:1},alert:{x:Math.max(0,sw-HUD_ALERT_W-pad),y:Math.round(sh/6),scale:1},item:{x:Math.max(0,sw-HUD_ITEM_W-pad),y:Math.max(pad,sh-HUD_ITEM_H-pad),scale:1},tabE:{x:m.leftX,y:m.rowsTop,scale:1},tabA:{x:m.rightX,y:m.rowsTop,scale:1}}}
+const playW=Math.min(sw,Math.round(sh*16/9)),playX=Math.round((sw-playW)/2);
+const menuY=Math.max(pad,Math.round((sh-HUD_MENU_H)/2));
+const objsX=Math.max(0,sw-HUD_OBJS_W-pad);
+const buffsX=Math.max(pad,objsX-8-HUD_BUFFS_W);
+const g={cds:{x:Math.max(0,sw-HUD_CDS_W-pad),y:pad,scale:1},menu:{x:playX+pad,y:menuY,scale:1},objs:{x:objsX,y:pad+320,scale:1},buffs:{x:buffsX,y:pad+320,scale:1},alert:{x:Math.max(0,sw-HUD_ALERT_W-pad),y:Math.round(sh/6),scale:1},item:{x:Math.max(0,sw-HUD_ITEM_W-pad),y:Math.max(pad,sh-HUD_ITEM_H-pad),scale:1}};
+const sumOff=TAB_SPELL_W+TAB_PAIR_GAP;
+for(let i=0;i<TAB_ROWS;i++){const y=m.rowsTop+i*m.rowH;
+g['spA'+i]={x:m.leftX,y,scale:1};g['sumA'+i]={x:m.leftX+sumOff,y,scale:1};
+g['spE'+i]={x:m.rightX,y,scale:1};g['sumE'+i]={x:m.rightX+sumOff,y,scale:1}}
+return g}
 function hudWidgetPos(id){const g=hudGeom[id]||hudDefaultGeom()[id]||{x:16,y:16,scale:1};return {x:g.x|0,y:g.y|0,scale:g.scale>0?g.scale:1}}
 function applyHudWidget(id,g){
 const el=$(HUD_EL[id]);if(!el||!g)return;
@@ -904,21 +1052,28 @@ function keepHudWidgetsOnScreen(){
 if(!HUDMODE||document.querySelector('.hud-grip-on'))return;
 const sw=innerWidth||1920,sh=innerHeight||1080,pad=6;
 let moved=false;
-for(const id of HUD_WIDGET_IDS){
-const el=$(HUD_EL[id]);if(!el||el.classList.contains('hidden')||el.classList.contains('hud-off'))continue;
+document.querySelectorAll('#hud .hud-widget[data-hud]').forEach(el=>{
+const id=el.dataset.hud;if(!id||!HUD_EL[id]||el.classList.contains('hidden')||el.classList.contains('hud-off'))return;
 const g=hudWidgetPos(id),w=el.offsetWidth,h=el.offsetHeight;
-if(!(w>8&&h>8))continue;
+if(!(w>8&&h>8))return;
 const visW=w*g.scale,visH=h*g.scale;
 let x=g.x,y=g.y;
 if(x+visW>sw-pad)x=Math.max(0,Math.round(sw-pad-visW));
 if(y+visH>sh-pad)y=Math.max(0,Math.round(sh-pad-visH));
 if(x<0)x=0;if(y<0)y=0;
-if(x===g.x&&y===g.y)continue;
-applyHudWidget(id,{x,y,scale:g.scale});moved=true}
+if(x===g.x&&y===g.y)return;
+applyHudWidget(id,{x,y,scale:g.scale});moved=true});
 if(moved)reportHudHits()}
+let hudGeomSide='blue';
+function hudGeomLayout(g){
+const side=(g&&g.side)==='red'?'red':'blue';
+let lay=g&&g[side];
+if(!(lay&&lay.widgets)&&g&&g.widgets)lay={keep:g.keep,widgets:g.widgets};
+return {side,keep:!!(lay&&lay.keep),widgets:(lay&&lay.widgets)||null}}
 function applyHudGeom(g){
-hudGeomKeep=!!(g&&g.keep);
-if(g&&g.widgets)hudGeom=g.widgets;
+const lay=hudGeomLayout(g);
+hudGeomSide=lay.side;
+if(lay.widgets)hudGeom=lay.widgets;
 const def=hudDefaultGeom();
 for(const id of HUD_WIDGET_IDS)applyHudWidget(id,hudGeom[id]||def[id]);
 applyHudVis();
@@ -927,9 +1082,7 @@ reportHudHits()}
 window.__hudMove=function(p){if(!p||!p.id)return;applyHudWidget(p.id,{x:p.x,y:p.y,scale:p.scale});reportHudHits()};
 window.__hudApplyGeom=function(g){applyHudGeom(g)};
 function resetHudLayout(){
-fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>applyHudGeom({v:5,widgets:hudDefaultGeom()}))}
-function keepHudLayout(){
-fetch('/api/hud/keep',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>{})}
+fetch('/api/hud/reset',{method:'POST'}).then(r=>r.json()).then(g=>applyHudGeom(g)).catch(()=>applyHudGeom({v:10,side:hudGeomSide,widgets:hudDefaultGeom()}))}
 function closeHudOverlay(){
 try{navigator.sendBeacon&&navigator.sendBeacon('/api/hud/close');fetch('/api/hud/close',{method:'POST',keepalive:true}).catch(()=>{})}catch(_){}
 window.close()}
@@ -939,16 +1092,20 @@ function loadHudWOp(){
 let legacy=1;
 try{const g=parseFloat(localStorage.getItem(HUD_OPACITY_KEY));if(g>=0.25&&g<=1)legacy=g}catch(_){}
 hudWOp={};for(const id of HUD_WOP_IDS)hudWOp[id]=legacy;
-try{const raw=JSON.parse(localStorage.getItem(HUD_WOP_KEY)||'null');if(raw&&typeof raw==='object'){for(const id of HUD_WOP_IDS){const n=parseFloat(raw[id]);if(n>=0.25&&n<=1)hudWOp[id]=clampHudWOp(n)}}}catch(_){}}
+try{const raw=JSON.parse(localStorage.getItem(HUD_WOP_KEY)||'null');if(raw&&typeof raw==='object'){for(const id of HUD_WOP_IDS){let n=parseFloat(raw[id]);if(!(n>=0.25&&n<=1)){if(/E\d$/.test(id))n=parseFloat(raw.tabE);else if(/A\d$/.test(id))n=parseFloat(raw.tabA)}if(n>=0.25&&n<=1)hudWOp[id]=clampHudWOp(n)}}}catch(_){}}
 function saveHudWOp(){try{localStorage.setItem(HUD_WOP_KEY,JSON.stringify(hudWOp))}catch(_){}}
 function applyHudWOp(save){
 const root=document.documentElement;
 for(const id of HUD_WOP_IDS){const v=clampHudWOp(hudWOp[id]);hudWOp[id]=v;root.style.setProperty('--hud-op-'+id,String(v))}
 if(save)saveHudWOp()}
 function setHudWOp(id,v){if(!HUD_WOP_IDS.includes(id))return;hudWOp[id]=clampHudWOp(v);applyHudWOp(true)}
+function setHudWOpGroup(ids,v){v=clampHudWOp(v);for(const id of ids){if(HUD_WOP_IDS.includes(id))hudWOp[id]=v}applyHudWOp(true)}
 loadHudWOp();
 function applyHudVis(){
 for(const id of HUD_OPT_WIDGETS){const el=$(HUD_EL[id]);if(el)el.classList.toggle('hud-off',!hudOptOn(id))}
+const spOn=hudOptOn('tabSpells'),suOn=hudOptOn('tabSums');
+for(const id of HUD_TAB_SP_IDS){const el=$(HUD_EL[id]);if(el)el.classList.toggle('hud-off',!spOn)}
+for(const id of HUD_TAB_SUM_IDS){const el=$(HUD_EL[id]);if(el)el.classList.toggle('hud-off',!suOn)}
 syncHudSoundBtn();
 const m=$('hud-vis-menu');
 if(m&&!m.classList.contains('hidden'))renderHudVisMenu();
@@ -1016,19 +1173,20 @@ for(const sec of HUD_OPT_MENU){
 html+=`<div class="hud-vis-lab">${esc(sec.lab)}</div>`;
 for(const it of sec.items){
 const hasOpt=!!(it.id&&Object.prototype.hasOwnProperty.call(HUD_OPT_DEF,it.id));
-const hasWop=!!it.wop;
+const gIds=it.wopG;
+const hasWop=!!it.wop||!!(gIds&&gIds.length);
 const on=!hasOpt||hudOptOn(it.id);
 if(hasWop){
 html+=`<div class="hud-vis-row hud-vis-widget"><div class="hud-vis-head"><span>${esc(it.name)}</span>`;
 if(hasOpt)html+=`<button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button>`;
-const n=Math.round(clampHudWOp(hudWOp[it.wop])*100);
-html+=`</div><div class="hud-vis-opac-line"><input type="range" data-wop="${it.wop}" min="25" max="100" step="5" value="${n}" ${on?'':'disabled'} aria-valuemin="25" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div></div>`}
+const n=Math.round(clampHudWOp((gIds?hudWOp[gIds[0]]:hudWOp[it.wop]))*100);
+html+=gIds?`</div><div class="hud-vis-opac-line"><input type="range" data-wop-g="${gIds.join(',')}" min="25" max="100" step="5" value="${n}" ${on?'':'disabled'} aria-valuemin="25" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div></div>`:`</div><div class="hud-vis-opac-line"><input type="range" data-wop="${it.wop}" min="25" max="100" step="5" value="${n}" ${on?'':'disabled'} aria-valuemin="25" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div></div>`}
 else{
 html+=`<div class="hud-vis-row"><span>${esc(it.name)}</span><button type="button" class="hud-sw${on?' on':''}" data-opt="${it.id}" role="switch" aria-checked="${on}" title="${on?'Désactiver':'Activer'}"></button></div>`}}
 if(sec.lab==='Audio'){for(const v of HUD_VOL_SLIDERS){const n=Math.round(hudVol01(v.id)*100);
 html+=`<div class="hud-vis-row hud-vis-opac"><span>${esc(v.name)}</span><input type="range" data-vol="${v.id}" min="0" max="100" step="5" value="${n}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${n}"><b>${n} %</b></div>`}}
 }
-html+=`<div class="hud-vis-lab">Overlay</div><div class="hud-vis-btns"><button type="button" data-hud-act="keep"${hudGeomKeep?' class="on"':''}>${hudGeomKeep?'Sauvé ✓':'Sauver dispo'}</button><button type="button" data-hud-act="reset">Reset dispo</button></div><div class="hud-vis-hint">Sauver : tes positions survivent aux mises à jour.</div><div class="hud-vis-btns"><button type="button" class="hud-vis-quit" data-hud-act="close">Quitter</button></div>`;
+html+=`<div class="hud-vis-lab">Overlay</div><div class="hud-vis-btns"><button type="button" data-hud-act="reset">Reset dispo</button></div><div class="hud-vis-hint">Positions enregistrées toutes seules. L'autre côté (blue/red) reprend le miroir tant que tu ne l'as pas bougé.</div><div class="hud-vis-btns"><button type="button" class="hud-vis-quit" data-hud-act="close">Quitter</button></div>`;
 if(hudForceUI){
 const fr=!!hudStudio.freeze;
 html+=`<div class="hud-vis-lab">Studio</div><div class="hud-vis-row"><span>Figer</span><button type="button" class="hud-sw${fr?' on':''}" data-studio="freeze" role="switch" aria-checked="${fr}" title="Garder bannière / achat à l'écran"></button></div><div class="hud-vis-btns"><button type="button" data-studio="banner">Bannière</button><button type="button" data-studio="item">Achat</button><button type="button" data-studio="hide">Masquer</button></div><div class="hud-vis-hint">Bannière cycle les PNG. Figer coupe l'anim et le timer.</div>`}
@@ -1041,11 +1199,11 @@ else if(a==='banner')previewStudioBanner();
 else if(a==='item')previewStudioItem();
 else if(a==='hide'){hideHudAlert();hideHudItem();reportHudHits()}});
 m.querySelectorAll('[data-hud-act]').forEach(b=>b.onclick=e=>{e.preventDefault();e.stopPropagation();
-if(b.dataset.hudAct==='keep')keepHudLayout();
-else if(b.dataset.hudAct==='reset')resetHudLayout();
+if(b.dataset.hudAct==='reset')resetHudLayout();
 else if(b.dataset.hudAct==='close')closeHudOverlay()});
 m.querySelectorAll('[data-vol]').forEach(sl=>sl.oninput=()=>{setHudVol(sl.dataset.vol,+sl.value);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)});
-m.querySelectorAll('[data-wop]').forEach(sl=>sl.oninput=()=>{setHudWOp(sl.dataset.wop,(+sl.value)/100);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)})}
+m.querySelectorAll('[data-wop]').forEach(sl=>sl.oninput=()=>{setHudWOp(sl.dataset.wop,(+sl.value)/100);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)});
+m.querySelectorAll('[data-wop-g]').forEach(sl=>sl.oninput=()=>{setHudWOpGroup((sl.dataset.wopG||'').split(','),(+sl.value)/100);const lab=sl.parentElement&&sl.parentElement.querySelector('b');if(lab)lab.textContent=sl.value+' %';sl.setAttribute('aria-valuenow',sl.value)})}
 function closeHudVisMenu(){
 const m=$('hud-vis-menu'),b=$('hud-vis-btn');
 if(m)m.classList.add('hidden');
@@ -1080,27 +1238,33 @@ const cd=s.cd||0,isP=s.spell==='P',isR=s.spell==='R',k=`${P}|${s.spell}`;
 const note=((liveScout[p.key]&&liveScout[p.key].important)||[]).find(x=>x.spell===s.spell&&x.note);
 const hint=cd?(isR?`Clic${ally?'':' ou Alt+Maj+'+(i+1)} quand il ult (re-clique pour annuler).`:'Clic quand il l\'utilise (re-clique pour annuler).'):'';
 const tip=spellTip(s,p.key,{cd:cd?fmtCD(cd):'',meta:isP?(cd?[`Nv ${p.level}`]:[]):[`Rang ${s.rank||'?'}`,`${p.abilityHaste} AH`],note:note?note.note:'',hint});
-const head0=spellBadge(s,'qi')||`<span class="qi"><b>${esc(s.spell)}</b></span>`;
-const head=head0.replace('</span>',cdSweep()+'<span class="hv"></span></span>');
-const cost=`<span class="hk">${esc(spellCostLabel(s))}</span>`;
+const ic=spellIcon(s),mana=spellCostNum(s);
+const letter=`<i>${esc(s.spell)}</i>`;
+const img=ic?`<span class="qi"><img src="${ic}" alt="">${cd?cdSweep():''}${letter}</span>`:`<span class="sk-key">${esc(s.spell)}</span>`;
+const cdEl=cd?`<span class="sk-cd hv">${Math.round(cd)}</span>`:'';
+const manaEl=mana?`<span class="sk-mana">${esc(mana)}</span>`:'';
+const meta=(cdEl||manaEl)?`<span class="sk-meta">${cdEl}${manaEl}</span>`:'';
 const cls='hr-sk cd-icon'+(isP?' hr-p':'')+(isR?' hr-r':'');
-if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${head0}${cost}</div>`;
-return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" data-tip="${tip}">${head}${cost}</button>`}
+if(!(cd>0))return `<div class="${cls}" data-tip="${tip}">${img}${meta}</div>`;
+return `<button type="button" class="${cls}" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-pid="${esc(P)}" data-kind="spell" data-tip="${tip}">${img}${meta}</button>`}
 function hudSumChip(s,si,p,P,ally,i){
-const k=`${P}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
+const k=`${P}|S${si}`,cd=summCD(p,s),isF=isFlashSumm(s);
 const hint=isF&&!ally?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
-const icon=s.slug?`<img class="hr-fi" src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
-return `<button type="button" class="hr-sk hr-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
+const u=summImg(s);
+const icon=u?`<img class="hr-fi" src="${u}" alt="">`:`<b>S</b>`;
+return `<button type="button" class="hr-sk hr-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-pid="${esc(P)}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
 function hudMenuSum(p,s,si,i){
-const k=`${pid(p)}|S${si}`,cd=summCD(p,s),isF=s.slug==='SummonerFlash';
+const k=`${pid(p)}|S${si}`,cd=summCD(p,s),isF=isFlashSumm(s);
 const hint=isF?`Clic ou Alt+${i+1}`:'Clic quand il l\'utilise';
-const icon=s.slug?`<img src="${summIcon(s.slug)}" alt="">`:`<b>S</b>`;
-return `<button type="button" class="hf-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
+const u=summImg(s);
+const icon=u?`<img src="${u}" alt="">`:`<b>S</b>`;
+return `<button type="button" class="hf-sum cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-pid="${esc(pid(p))}" data-kind="summ" title="${esc(s.name||s.slug||'')} — ${hint}">${icon}${cdSweep()}<span class="hv"></span></button>`}
 function hudUltChip(p,i){
 const r=(p.spells||[]).find(s=>s.spell==='R');if(!r)return '';
 const k=`${pid(p)}|R`,cd=r.cd||0,ic=spellIcon(r);
-return `<button type="button" class="hf-ult cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}">${ic?`<img src="${ic}" alt="">`:'<b>R</b>'}${cdSweep()}<span class="hv"></span></button>`}
+return `<button type="button" class="hf-ult cd-icon" data-track="${esc(k)}" data-cd="${cd}" data-tm="${esc(k)}" data-base="${cd}" data-pid="${esc(pid(p))}" data-kind="spell" title="Ulti${cd?' · Alt+Maj+'+(i+1):''}">${ic?`<img src="${ic}" alt="">`:'<b>R</b>'}${cdSweep()}<span class="hv"></span></button>`}
 function hudCIChip(p){
+if(p.cosmicKnown)return '';
 const P=pid(p),on=ciSet.has(P)||!!p.cosmicInsight;
 return `<button type="button" class="hr-sk hr-ci${on?' on':''}" data-ci="${esc(P)}" title="Cosmic Insight : +18 haste sorts d'invocateur">CI</button>`}
 function hudMenuChip(p,i){
@@ -1108,56 +1272,166 @@ const dead=p.isDead?(gameNow()+p.respawn):0;
 const sums=(p.summoners||[]).map((s,si)=>hudMenuSum(p,s,si,i)).join('');
 const tc=tierClass(p.tier);
 return `<div class="hf${tc?' '+tc:''}" data-slot="${i+1}" data-dead="${dead}" title="${esc(playerLabel(p))}"><div class="hf-top">${rankPic(p,'hf-pic')}${hudUltChip(p,i)}</div><div class="hf-spells">${sums}</div></div>`}
-function hudTabRow(p,i,ally){
+function hudTabRowClass(p,ally){
+const tc=tierClass(p.tier);
+return `hud-tab-row hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}`}
+function hudTabSpellInner(p,i,ally){
 const P=pid(p);
 const spells=(p.spells||[]).map(s=>hudSpellChip(s,p,P,ally,i)).join('');
-const sums=(p.summoners||[]).map((s,si)=>hudSumChip(s,si,p,P,ally,i)).join('');
-const tc=tierClass(p.tier);
-return `<div class="hud-tab-row hr${ally?' ally':''}${p.isMe?' me':''}${tc?' '+tc:''}" data-hud-hit data-slot="${i+1}" data-dead="${p.isDead?(gameNow()+p.respawn):0}" title="${esc(playerLabel(p))}"><div class="hr-spells">${spells}${sums}${hudCIChip(p)}</div></div>`}
+return `<div class="hr-spells">${spells}</div>`}
+function hudTabSumInner(p,i,ally){
+const P=pid(p);
+return `<div class="hr-spells">${(p.summoners||[]).map((s,si)=>hudSumChip(s,si,p,P,ally,i)).join('')}</div>`}
+function fillHudTabSlot(id,html,cls,hide,slot,dead,title){
+const w=$(HUD_EL[id]);if(!w)return;
+w.classList.toggle('hidden',!!hide);
+const row=w.querySelector('.hud-tab-row');if(!row)return;
+if(hide){row.innerHTML='';row.removeAttribute('data-slot');row.removeAttribute('data-dead');return}
+row.className=cls;row.innerHTML=html;row.dataset.slot=String(slot);row.dataset.dead=String(dead||0);row.title=title||'';row.setAttribute('data-hud-hit','')}
+function fillHudTabWidgets(){
+const fill=(list,ally)=>{
+const side=ally?'A':'E';
+for(let i=0;i<TAB_ROWS;i++){
+const p=(list||[])[i],sp='sp'+side+i,su='sum'+side+i;
+if(!p){fillHudTabSlot(sp,'','',true);fillHudTabSlot(su,'','',true);continue}
+const cls=hudTabRowClass(p,ally),dead=p.isDead?(gameNow()+p.respawn):0,title=playerLabel(p);
+fillHudTabSlot(sp,hudTabSpellInner(p,i,ally),cls,false,i+1,dead,title);
+fillHudTabSlot(su,hudTabSumInner(p,i,ally),cls,false,i+1,dead,title)}};
+fill(liveState.enemies,false);fill(liveState.allies,true);
+const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');
+if(te)te.innerHTML='';if(ta)ta.innerHTML=''}
+function clearHudTabWidgets(){
+for(const id of HUD_TAB_SP_IDS.concat(HUD_TAB_SUM_IDS))fillHudTabSlot(id,'','',true);
+const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');
+if(te)te.innerHTML='';if(ta)ta.innerHTML=''}
+function mountHudTabWidgets(){
+const hud=$('hud');if(!hud||$('hud-w-spE0'))return;
+const add=(id,kind)=>{
+const d=document.createElement('div');
+d.className='hud-widget hud-tab hud-tab-'+kind+' hidden';
+d.id='hud-w-'+id;d.dataset.hud=id;
+d.innerHTML=`<div class="hud-grip" data-hud-hit><button type="button" class="hud-drag" data-hud-drag="${id}" title="Déplacer">⠿</button><button type="button" class="hud-resize" data-hud-resize="${id}" title="Redimensionner (ratio)">⤡</button></div><div class="hud-tab-row" data-hud-hit></div>`;
+hud.appendChild(d)};
+for(const id of HUD_TAB_SP_IDS)add(id,'sp');
+for(const id of HUD_TAB_SUM_IDS)add(id,'sum')}
+if(HUDMODE)mountHudTabWidgets();
 function syncHudExpand(){
 const tab=!!tabUntil&&Date.now()<tabUntil;
+const was=document.documentElement.classList.contains('hud-tab-on');
 document.documentElement.classList.toggle('hud-tab-on',tab);
 document.body.classList.toggle('hud-tab-on',tab);
 document.documentElement.classList.toggle('idle',!liveOn());
 document.body.classList.toggle('idle',!liveOn());
+if(tab&&!was)requestAnimationFrame(keepHudWidgetsOnScreen);
 reportHudHits()}
 function bindHudTracks(){
-document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd)});
+document.querySelectorAll('#hud [data-track]').forEach(el=>el.onclick=e=>{e.preventDefault();toggleTrack(el.dataset.track,+el.dataset.cd,liveByPid(el.dataset.pid)||liveByPid(pidFromTrack(el.dataset.track)))});
 document.querySelectorAll('#hud [data-ci]').forEach(el=>el.onclick=e=>{e.preventDefault();e.stopPropagation();const id=el.dataset.ci;ciSet.has(id)?ciSet.delete(id):ciSet.add(id);pushTracks();hudRosterSig='';renderHud()})}
 function liveRosterSig(){
-const pack=p=>[pid(p),p.level,p.isDead?1:0,p.abilityHaste,p.summHaste,(ciSet.has(pid(p))||p.cosmicInsight)?1:0,(p.spells||[]).map(s=>`${s.spell}:${Math.round((s.cd||0)*10)}:${s.rank||''}`).join(','),(p.summoners||[]).map(s=>`${s.slug}:${Math.round(summCD(p,s)*10)}`).join(',')].join('/');
+const pack=p=>[pid(p),p.level,p.isDead?1:0,Math.round(p.deathAt||0),p.abilityHaste,p.summHaste,(ciSet.has(pid(p))||p.cosmicInsight)?1:0,p.cosmicKnown?1:0,(p.spells||[]).map(s=>`${s.spell}:${Math.round((s.cd||0)*10)}:${s.rank||''}`).join(','),(p.summoners||[]).map(s=>`${s.slug}:${s.kind||''}:${Math.round(summCD(p,s)*10)}`).join(','),(p.items||[]).join('.'),(p.buffs||[]).map(b=>`${b.kind}:${Math.round(b.until||0)}`).join(',')].join('/');
 const obj=liveState.objectives||{};
 const ok=Object.keys(obj).sort().map(k=>k+':'+(obj[k].gone?1:0)+':'+Math.round(obj[k].nextAt||0)+':'+(obj[k].note||'')+':'+(obj[k].kind||'')).join('|');
 return (liveState.enemies||[]).map(pack).join(';')+'#'+(liveState.allies||[]).map(pack).join(';')+'#'+ok}
 let hudRosterSig='';
 function refreshHudDead(now){
 const apply=(list,root)=>{if(!root)return;(list||[]).forEach((p,i)=>{const dead=p.isDead?(now+p.respawn):0;root.querySelectorAll('[data-slot="'+(i+1)+'"]').forEach(el=>{el.dataset.dead=dead})})};
-apply(liveState.enemies,$('hud-flashes'));apply(liveState.enemies,$('hud-tab-enemies'));apply(liveState.allies,$('hud-tab-allies'))}
+apply(liveState.enemies,$('hud-flashes'));
+const side=(list,letter)=>{(list||[]).forEach((p,i)=>{const dead=p.isDead?(now+p.respawn):0;['sp','sum'].forEach(k=>{const w=$(HUD_EL[k+letter+i]);if(!w)return;w.querySelectorAll('[data-slot]').forEach(el=>{el.dataset.dead=dead})})})};
+side(liveState.enemies,'E');side(liveState.allies,'A')}
+function fillHudCds(now){
+const el=$('hud-cds-list'),wrap=$('hud-w-cds');
+if(!el)return;
+now=now||gameNow();
+const rows=[];
+const visit=p=>{
+const P=pid(p),chips=[];
+const add=(k,prio,label,icon,cd)=>{
+const tr=liveTracks[k];if(!tr)return;
+const rest=tr.end-now;if(!(rest>0.05))return;
+chips.push({k,prio,rest,label,icon,cd:tr.total||cd||0})};
+(p.summoners||[]).forEach((s,si)=>{
+let prio=4;
+if(isFlashSumm(s))prio=0;
+else if(s.kind==='smite'||/smite/i.test(s.slug||''))prio=2;
+add(`${P}|S${si}`,prio,summShort(s),summImg(s),summCD(p,s))});
+(p.spells||[]).forEach(s=>{
+add(`${P}|${s.spell}`,s.spell==='R'?1:5,s.spell,spellIcon(s),s.cd||0)});
+if(!chips.length)return;
+chips.sort((a,b)=>a.prio-b.prio||b.rest-a.rest);
+rows.push({p,chips:chips.slice(0,3)})};
+if(liveOn()){
+for(const p of liveState.enemies||[])visit(p);
+for(const p of liveState.allies||[])visit(p)}
+const html=rows.map(r=>`<div class="cds-row" data-hud-hit><img class="cds-pic" src="${iconUrl(r.p)}" alt=""><div class="cds-chips">${r.chips.map(c=>`<button type="button" class="cds-chip cd-icon" data-track="${esc(c.k)}" data-cd="${c.cd}" data-tm="${esc(c.k)}" data-base="${c.cd}" data-pid="${esc(pid(r.p))}">${c.icon?`<img src="${c.icon}" alt="">`:''}<span class="sk-key">${esc(c.label)}</span><span class="sk-cd hv"></span></button>`).join('')}</div></div>`).join('');
+const empty=!rows.length||!liveOn();
+const wasEmpty=el.classList.contains('hidden');
+if(wrap)wrap.classList.remove('hidden');
+el.classList.toggle('hidden',empty);
+if(wasEmpty!==empty)requestAnimationFrame(keepHudWidgetsOnScreen);
+if(el.dataset.sig===html)return;
+el.innerHTML=html;el.dataset.sig=html;
+el.querySelectorAll('[data-track]').forEach(b=>b.onclick=e=>{e.preventDefault();toggleTrack(b.dataset.track,+b.dataset.cd,liveByPid(b.dataset.pid))});
+reportHudHits()}
+function liveBuffGroups(now){
+now=now||gameNow();
+const g={baron:[],elder:[]};
+const vis=(p,ally)=>{if(p&&p.isDead)return;
+for(const b of p.buffs||[]){if((b.kind==='baron'||b.kind==='elder')&&b.until>now+0.05)g[b.kind].push({p,ally,until:b.until})}};
+if(liveOn()){for(const p of liveState.enemies||[])vis(p,false);for(const p of liveState.allies||[])vis(p,true)}
+return g}
+function buffRowHTML(kind,list,cls){
+if(!list||!list.length)return'';
+const until=list[0].until,ic=OBJ_ICON[kind]||OBJ_ICON.dragon;
+const pics=list.map(x=>`<img class="${x.ally?'ally':'enemy'}" src="${iconUrl(x.p)}" alt="${esc(playerLabel(x.p))}" title="${esc((x.ally?'Allié':'Ennemi')+' · '+playerLabel(x.p))}">`).join('');
+return `<div class="${cls} b-${kind}" data-until="${until}" data-hud-hit><img class="hb-kind" src="${ic}" alt=""><strong class="hb-t">…</strong><div class="hb-pics">${pics}</div></div>`}
+function fillHudBuffs(now){
+const el=$('hud-buffs-list'),wrap=$('hud-w-buffs');
+if(!el)return;
+const g=liveBuffGroups(now);
+const html=buffRowHTML('baron',g.baron,'hb-row')+buffRowHTML('elder',g.elder,'hb-row');
+const empty=!html||!liveOn();
+const wasHidden=!wrap||wrap.classList.contains('hidden');
+if(wrap)wrap.classList.toggle('hidden',empty);
+if(wasHidden!==empty)requestAnimationFrame(keepHudWidgetsOnScreen);
+if(el.dataset.sig===html)return;
+el.innerHTML=html;el.dataset.sig=html;
+reportHudHits()}
+function liveBuffBarHTML(now){
+const g=liveBuffGroups(now);
+const row=(kind,list)=>{if(!list.length)return'';
+const until=list[0].until,ic=OBJ_ICON[kind]||OBJ_ICON.dragon,lab=kind==='baron'?'Nash':'Ancestral';
+const pics=list.map(x=>`<img class="${x.ally?'ally':'enemy'}" src="${iconUrl(x.p)}" alt="" title="${esc(playerLabel(x.p))}">`).join('');
+return `<div class="obj-buff b-${kind}" data-until="${until}"><img class="ob-kind" src="${ic}" alt=""><span class="oname">${lab}</span><strong>…</strong><span class="ob-pics">${pics}</span></div>`};
+const inner=row('baron',g.baron)+row('elder',g.elder);
+return inner?`<div class="obj-buffs">${inner}</div>`:''}
 function renderHud(){
 const on=liveOn();
 $('hud-state').title=on?(window.__liveDemo?'DÉMO':'EN JEU'):'ATTENTE';
 $('hud-state').classList.toggle('on',on);
 if(!on){hudRosterSig='';$('hud-objs').innerHTML='';$('hud-flashes').innerHTML='';
-const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');if(te)te.innerHTML='';if(ta)ta.innerHTML='';
+clearHudTabWidgets();
+const cds=$('hud-cds-list'),cw=$('hud-w-cds');
+if(cds){cds.innerHTML='';cds.dataset.sig='';cds.classList.add('hidden')}if(cw)cw.classList.remove('hidden');
+const bf=$('hud-buffs-list'),bw=$('hud-w-buffs');
+if(bf){bf.innerHTML='';bf.dataset.sig=''}if(bw)bw.classList.add('hidden');
 markCallCopied(false);syncHudExpand();return}
 const sig=liveRosterSig();
 if(sig===hudRosterSig&&$('hud-flashes').children.length){tickHud();return}
 hudRosterSig=sig;
 $('hud-objs').innerHTML=OBJ_ORDER.map(([k,c])=>hudObj(k,c)).join('');
 $('hud-flashes').innerHTML=(liveState.enemies||[]).map((p,i)=>hudMenuChip(p,i)).join('');
-const hudAll=liveState.allies||[];
-const te=$('hud-tab-enemies'),ta=$('hud-tab-allies');
-if(te)te.innerHTML=(liveState.enemies||[]).map((p,i)=>hudTabRow(p,i,false)).join('');
-if(ta)ta.innerHTML=hudAll.map((p,i)=>hudTabRow(p,i,true)).join('');
+fillHudTabWidgets();
 bindHudTracks();
 tickHud();syncHudExpand();requestAnimationFrame(keepHudWidgetsOnScreen)}
 function tickHud(){
 syncHudExpand();
 const on=liveOn();
-if(!on){markCallCopied(false);return}
+if(!on){markCallCopied(false);fillHudCds(0);fillHudBuffs(0);return}
 const now=gameNow();
-if(pruneTracks(now)){hudRosterSig='';renderHud();return}
+pruneTracks(now);
 refreshHudDead(now);
+fillHudCds(now);
+fillHudBuffs(now);
 if(Date.now()>=copiedUntil)markCallCopied(false);
 document.querySelectorAll('#hud-objs .hobj').forEach(el=>{const s=el.querySelector('strong');
 if(el.dataset.gone){s.textContent='—';return}
@@ -1166,6 +1440,7 @@ s.textContent=rest>0?mmss(rest):'en vie';
 el.classList.toggle('live',rest<=0);
 el.classList.toggle('hot',rest>0&&rest<=45);
 el.classList.toggle('warn',rest>45&&rest<=120)});
+document.querySelectorAll('#hud-buffs-list .hb-row').forEach(el=>{const s=el.querySelector('.hb-t'),rest=+el.dataset.until-now;if(s)s.textContent=rest>0?mmss(rest):'—'});
 document.querySelectorAll('#hud .hr, #hud .hf').forEach(row=>{
 const dead=+row.dataset.dead||0,isDead=dead>now;
 row.classList.toggle('dead',isDead);
@@ -1175,9 +1450,9 @@ checkAlerts(now);checkVoices()}
 function applyHotkey(e){
 if(e.kind==='allsum'){copyEnemyCallout({ult:true,replace:true});return}
 const p=((liveState&&liveState.enemies)||[])[(e.slot||0)-1];if(!p)return;
-if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd);return}
-let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;
-const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s))}
+if(e.kind==='ult'){const r=(p.spells||[]).find(s=>s.spell==='R');if(r&&r.cd)toggleTrack(`${pid(p)}|R`,r.cd,p);return}
+let si=flashIdx(p);if(si<0)si=0;
+const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s),p)}
 let lastHudW=0,lastHudH=0;
 function reportHudSize(){if(!HUDMODE)return;
 const w=innerWidth||0,h=innerHeight||0;
@@ -1202,7 +1477,9 @@ add($('hud-flashes'));
 add($('hud-wait'));
 const vis=$('hud-vis-menu');if(vis&&!vis.classList.contains('hidden'))add(vis);
 add($('hud-objs'));
-document.querySelectorAll('#hud .hud-tab-row[data-hud-hit]').forEach(el=>add(el));
+document.querySelectorAll('#hud .hud-widget[data-hud]').forEach(el=>{const id=el.dataset.hud||'';if(id==='menu'||id==='objs'||id==='alert'||id==='item'||id==='cds'||id==='buffs'||id==='tabE'||id==='tabA')return;add(el)});
+add($('hud-cds-list'));
+add($('hud-buffs-list'));
 const al=$('alert');if(al&&!al.classList.contains('hidden'))add(al);
 const ip=$('item-pop');if(ip&&!ip.classList.contains('hidden'))add(ip);
 add($('sp-tip'));
@@ -1231,9 +1508,10 @@ if(s.tracks||s.ci){if(liveOn())tickHud()}
 if(s.drag&&s.drag.id)window.__hudMove(s.drag);
 if(!HUDTRACK)for(const e of s.events||[])applyHotkey(e)}catch(_){}}
 async function loadHudGeom(){
-try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:5,widgets:hudDefaultGeom()})}
+try{const g=await(await fetch('/api/hud/geom')).json();applyHudGeom(g)}catch(_){applyHudGeom({v:10,side:hudGeomSide,widgets:hudDefaultGeom()})}
 reportHudSize()}
 if(HUDMODE){
+mountHudTabWidgets();
 applyHudWOp(false);applyHudVis();
 loadHudForceUI().then(()=>{syncHudFreezeClass();if($('hud-vis-menu')&&!$('hud-vis-menu').classList.contains('hidden'))renderHudVisMenu()});
 bindHudDrag();
@@ -1243,7 +1521,7 @@ document.addEventListener('click',e=>{if(!$('hud-vis')||$('hud-vis').contains(e.
 setInterval(async()=>{try{if((await fetch('/api/status',{cache:'no-store'})).ok)return}catch(_){}
 window.close()},2500);
 $('hud-call').onclick=()=>{copyEnemyCallout({ult:false});if(liveOn())tickHud()};
-$('hud-demo').onclick=()=>startLiveDemo();
+$('hud-demo').onclick=()=>startLiveDemo('blue');
 window.addEventListener('resize',()=>reportHudSize());
 loadHudGeom();
 pollInput();setInterval(pollInput,140);syncHudExpand();setInterval(reportHudHits,800)}
@@ -1257,18 +1535,18 @@ try{const st=await(await fetch('/api/hud')).json();if(!st.supported||st.window)r
 function stopLiveDemo(){window.__liveDemo=false;liveState=null;liveTracks={};ciSet=new Set();liveSkipAuto={};firedAlerts=new Set();stopVoices();setDemoLiveActive(false);fetch('/api/demo',{method:'DELETE'}).catch(()=>{});renderLive()}
 function parseSpellCD(s){const t=String(s||'');if(!t||t==='—'||t==='auto')return 0;const m=t.match(/(\d+(?:[.,]\d+)?)/);if(!m)return 0;let v=parseFloat(m[1].replace(',','.'));if(/min/i.test(t))v*=60;return v}
 function demoMkSpells(card,cds){const by={};for(const s of(card&&card.important)||[])by[s.spell]=s;
-const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||'',range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
+const p=by.P,qwer=['Q','W','E','R'].map((k,i)=>{const b=by[k]||{};return{spell:k,name:b.name||k,icon:b.icon||'',desc:b.desc||'',cost:b.cost||({Q:'65',W:'80',E:'50',R:'100'}[k]||''),range:b.range||'',cd:cds[i],rank:k==='R'?'2':'≤4',est:k!=='R'}});
 return (p?[{spell:'P',name:p.name||'Passif',icon:p.icon||'',desc:p.desc||'',cost:'',range:'',cd:parseSpellCD(p.cd),rank:'P'}]:[]).concat(qwer)}
 function demoMkGold(tEnd,metas){const bias=[t=>-t*.55-180*Math.sin(t/210),t=>420+820*Math.sin(t/380)+(t>620?350:0),t=>90*Math.sin(t/95)+(t>740?480:-80),t=>t*1.35+220*Math.sin(t/190),t=>70*Math.sin(t/150)+t*.12];const hist=[];for(let t=0;t<=tEnd;t+=10){const roles=bias.map((f,i)=>{const d=Math.round(f(t)+((i*41+t)%19-9)*14),base=500+t*8.4;return[Math.max(0,Math.round(base+d/2)),Math.max(0,Math.round(base-d/2))]});hist.push({t,ally:roles.reduce((s,p)=>s+p[0],0),enemy:roles.reduce((s,p)=>s+p[1],0),roles})}return{estimated:true,roles:metas,history:hist}}
-async function startLiveDemo(){if(!version){try{const s=await(await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version}catch(_){}}
+async function startLiveDemo(side){if(!version){try{const s=await(await fetch('/api/status')).json();version=s.version||version;$('patch').textContent=version}catch(_){}}
 let cards=[];try{cards=await fetchCards(demoLiveIds)}catch(_){}
 const by=Object.fromEntries(cards.map(c=>[c.key,c]));for(const c of cards)liveScout[c.key]=c;
-const mk=(id,pos,riot,o)=>{const c=by[id],fb=demoLiveFb[id]||[String(id),'Aatrox.png'];const champ=(c&&c.name)||fb[0];const hidden=!!o.hidden||!riot||String(riot).split('#')[0].toLowerCase()===champ.toLowerCase();const name=hidden?champ:riot;const deeplol=hidden?'':(o.deeplol||`https://www.deeplol.gg/summoner/euw/${encodeURIComponent(String(riot).replace('#','-'))}`);return{riotId:riot,name,hidden,rank:o.rank||'',tier:o.tier||'',wr:o.wr,games:o.games||0,ai:o.ai,tags:o.tags||[],deeplol,isMe:!!o.me,champion:champ,key:id,icon:(c&&c.icon)||fb[1],position:pos,level:o.lv,isDead:!!o.dead,respawn:o.respawn||0,kills:o.k,deaths:o.d,assists:o.a,cs:o.cs,abilityHaste:o.ah,summHaste:o.sh||0,items:o.items,spells:demoMkSpells(c,o.cds),summoners:o.sums,runes:o.runes||DEMO_RUNES[id]}};
+const mk=(id,pos,riot,o)=>{const c=by[id],fb=demoLiveFb[id]||[String(id),'Aatrox.png'];const champ=(c&&c.name)||fb[0];const hidden=!!o.hidden||!riot||String(riot).split('#')[0].toLowerCase()===champ.toLowerCase();const name=hidden?champ:riot;const deeplol=hidden?'':(o.deeplol||`https://www.deeplol.gg/summoner/euw/${encodeURIComponent(String(riot).replace('#','-'))}`);return{riotId:riot,name,hidden,rank:o.rank||'',tier:o.tier||'',wr:o.wr,games:o.games||0,ai:o.ai,tags:o.tags||[],deeplol,isMe:!!o.me,champion:champ,key:id,icon:(c&&c.icon)||fb[1],position:pos,level:o.lv,isDead:!!o.dead,respawn:o.respawn||0,deathAt:o.deathAt||0,kills:o.k,deaths:o.d,assists:o.a,cs:o.cs,abilityHaste:o.ah,summHaste:o.sh||0,cosmicInsight:!!o.ci,cosmicKnown:!!o.ck,items:o.items,spells:demoMkSpells(c,o.cds),summoners:o.sums,runes:o.runes||DEMO_RUNES[id]}};
 const RK=(id,name,icon)=>({id,name,icon});
 const DEMO_RUNES={
 266:{keystone:RK(8010,'Conquérant','perk-images/Styles/Precision/Conqueror/Conqueror.png'),secondary:RK(8400,'Volonté','perk-images/Styles/7204_Resolve.png')},
 64:{keystone:RK(8010,'Conquérant','perk-images/Styles/Precision/Conqueror/Conqueror.png'),secondary:RK(8300,'Inspiration','perk-images/Styles/7203_Whimsy.png')},
-103:{keystone:RK(8112,'Électrocution','perk-images/Styles/Domination/Electrocute/Electrocute.png'),secondary:RK(8200,'Sorcellerie','perk-images/Styles/7202_Sorcery.png')},
+103:{keystone:RK(8112,'Électrocution','perk-images/Styles/Domination/Electrocute/Electrocute.png'),secondary:RK(8200,'Sorcellerie','perk-images/Styles/7202_Sorcery.png'),major:[RK(8347,'Cosmic Insight','perk-images/Styles/Inspiration/CosmicInsight/CosmicInsight.png')]},
 222:{keystone:RK(8008,'Tempo mortel','perk-images/Styles/Precision/LethalTempo/LethalTempoTemp.png'),secondary:RK(8200,'Sorcellerie','perk-images/Styles/7202_Sorcery.png')},
 89:{keystone:RK(8439,'Après-coup','perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png'),secondary:RK(8300,'Inspiration','perk-images/Styles/7203_Whimsy.png')},
 58:{keystone:RK(8010,'Conquérant','perk-images/Styles/Precision/Conqueror/Conqueror.png'),secondary:RK(8400,'Volonté','perk-images/Styles/7204_Resolve.png')},
@@ -1277,13 +1555,18 @@ const DEMO_RUNES={
 51:{keystone:RK(8021,'Jeux de jambes','perk-images/Styles/Precision/FleetFootwork/FleetFootwork.png'),secondary:RK(8200,'Sorcellerie','perk-images/Styles/7202_Sorcery.png')},
 53:{keystone:RK(8439,'Après-coup','perk-images/Styles/Resolve/VeteranAftershock/VeteranAftershock.png'),secondary:RK(8300,'Inspiration','perk-images/Styles/7203_Whimsy.png')}
 };
-const F=(cd=300)=>({slug:'SummonerFlash',name:'Flash',cd});
-const allies=[mk(266,'TOP','Toplaner#EUW',{lv:13,k:2,d:3,a:1,cs:141,ah:25,rank:'E1',tier:'emerald',wr:54,games:105,ai:52,tags:[{id:'early-',label:'Early −',tone:'bad',hint:'AI-score 15 min faible'}],items:[3071,3047,3068,3053,1028],cds:[11,14,8,80],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(64,'JUNGLE','Jungler#EUW',{lv:12,k:4,d:2,a:6,cs:118,ah:20,rank:'D4',tier:'diamond',wr:51,games:88,ai:58,tags:[{id:'carry',label:'Carry',tone:'good'},{id:'early',label:'Early',tone:'good'}],items:[6692,3111,3814,3134,1036],cds:[8,12,9,70],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(103,'MIDDLE','Moi#EUW',{me:1,lv:13,k:5,d:2,a:4,cs:156,ah:40,sh:10,rank:'D2',tier:'diamond',wr:60,games:5,ai:61,tags:[{id:'ws',label:'2W',tone:'good',hint:'2 victoires d\'affilée'}],items:[3157,3020,4645,6655,1058],cds:[6,8,10,95],sums:[F(270),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(222,'BOTTOM','ADC#EUW',{lv:12,k:6,d:1,a:7,cs:172,ah:0,rank:'P2',tier:'platinum',wr:49,games:73,ai:45,tags:[{id:'ls',label:'2L',tone:'bad'}],items:[3031,3006,3085,3036,1038],cds:[7,9,5,70],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(89,'UTILITY','Support#EUW',{lv:11,k:1,d:4,a:9,cs:32,ah:30,rank:'G1',tier:'gold',wr:52,games:40,ai:50,tags:[{id:'cb',label:'Comeback',tone:'warn',hint:'Pas joué depuis 2 semaines'}],items:[3190,3111,3109,3067,1001],cds:[12,10,14,60],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
-const enemies=[mk(58,'TOP','Renek#EUW',{lv:13,k:3,d:2,a:2,cs:148,ah:20,rank:'D3',tier:'diamond',wr:53,games:210,ai:57,tags:[{id:'carry',label:'Carry',tone:'good'}],items:[3071,3047,3053,3068,1031],cds:[10,12,8,90],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(121,'JUNGLE','Kha#EUW',{lv:12,k:3,d:4,a:3,cs:110,ah:18,dead:1,respawn:22,rank:'E2',tier:'emerald',wr:48,games:64,ai:45,tags:[{id:'ls',label:'2L',tone:'bad'},{id:'mental-',label:'Mental −',tone:'bad'}],items:[3142,3111,3814,1036],cds:[5,8,7,80],sums:[F(),{slug:'SummonerSmite',name:'Smite',cd:15}]}),mk(238,'MIDDLE','Zed#EUW',{lv:13,k:4,d:5,a:2,cs:149,ah:24,rank:'Master 80',tier:'master',wr:55,games:120,ai:63,tags:[{id:'ws',label:'3W',tone:'good'},{id:'carry',label:'Carry',tone:'good'}],items:[3142,3020,3814,3134,1053],cds:[5,18,4,90],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(51,'BOTTOM','Cait#EUW',{lv:12,k:3,d:3,a:4,cs:165,ah:0,rank:'D2',tier:'diamond',wr:50,games:90,ai:54,tags:[{id:'cb',label:'Comeback',tone:'warn'}],items:[3031,3006,3094,1038,1042],cds:[8,10,12,80],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(53,'UTILITY','Blitzcrank',{hidden:1,lv:11,k:0,d:5,a:8,cs:28,ah:25,rank:'G3',tier:'gold',wr:47,games:31,ai:48,tags:[{id:'ls',label:'3L',tone:'bad'},{id:'afk',label:'AFK',tone:'bad'}],items:[3190,3111,3067,1028,1001],cds:[18,12,10,50],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
+const F=(cd=300)=>({slug:'SummonerFlash',name:'Flash',kind:'flash',cd,icon:'spell/SummonerFlash.png'});
+const HEX={slug:'SummonerHexflash',name:'Hexflash',kind:'hexflash',cd:20,icon:'perk-images/Styles/Inspiration/HextechFlashtraption/HextechFlashtraption.png'};
+const SMU={slug:'SummonerSmiteUnleashed',name:'Smite déchaîné',kind:'smite',cd:90,icon:'spell/SummonerSmite.png'};
+const allies=[mk(266,'TOP','Toplaner#EUW',{lv:13,k:2,d:3,a:1,cs:141,ah:25,rank:'E1',tier:'emerald',wr:54,games:105,ai:52,tags:[{id:'early-',label:'Early −',tone:'bad',hint:'AI-score 15 min faible'}],items:[3071,3047,3068,3053,1028],cds:[11,14,8,80],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(64,'JUNGLE','Jungler#EUW',{lv:12,k:4,d:2,a:6,cs:118,ah:20,rank:'D4',tier:'diamond',wr:51,games:88,ai:58,tags:[{id:'carry',label:'Carry',tone:'good'},{id:'early',label:'Early',tone:'good'}],items:[6692,3111,3814,3134,1036],cds:[8,12,9,70],sums:[F(),SMU]}),mk(103,'MIDDLE','Moi#EUW',{me:1,lv:13,k:5,d:2,a:4,cs:156,ah:40,sh:10,ci:1,ck:1,rank:'D2',tier:'diamond',wr:60,games:5,ai:61,tags:[{id:'ws',label:'2W',tone:'good',hint:'2 victoires d\'affilée'}],items:[3157,3020,4645,6655,1058],cds:[6,8,10,95],sums:[F(270),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(222,'BOTTOM','ADC#EUW',{lv:12,k:6,d:1,a:7,cs:172,ah:0,rank:'P2',tier:'platinum',wr:49,games:73,ai:45,tags:[{id:'ls',label:'2L',tone:'bad'}],items:[3031,3006,3085,3036,1038],cds:[7,9,5,70],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(89,'UTILITY','Support#EUW',{lv:11,k:1,d:4,a:9,cs:32,ah:30,rank:'G1',tier:'gold',wr:52,games:40,ai:50,tags:[{id:'cb',label:'Comeback',tone:'warn',hint:'Pas joué depuis 2 semaines'}],items:[3190,3111,3109,3067,1001],cds:[12,10,14,60],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]})];
+const enemies=[mk(58,'TOP','Renek#EUW',{lv:13,k:3,d:2,a:2,cs:148,ah:20,rank:'D3',tier:'diamond',wr:53,games:210,ai:57,tags:[{id:'carry',label:'Carry',tone:'good'}],items:[3071,3047,3053,3068,1031],cds:[10,12,8,90],sums:[F(),{slug:'SummonerTeleport',name:'TP',cd:264}]}),mk(121,'JUNGLE','Kha#EUW',{lv:12,k:3,d:4,a:3,cs:110,ah:18,dead:1,respawn:20,rank:'E2',tier:'emerald',wr:48,games:64,ai:45,tags:[{id:'ls',label:'2L',tone:'bad'},{id:'mental-',label:'Mental −',tone:'bad'}],items:[3142,3111,3814,1036],cds:[5,8,7,80],sums:[F(),{slug:'SummonerSmite',name:'Smite',kind:'smite',cd:90,icon:'spell/SummonerSmite.png'}]}),mk(238,'MIDDLE','Zed#EUW',{lv:13,k:4,d:5,a:2,cs:149,ah:24,rank:'Master 80',tier:'master',wr:55,games:120,ai:63,tags:[{id:'ws',label:'3W',tone:'good'},{id:'carry',label:'Carry',tone:'good'}],items:[3142,3020,3814,3134,1053],cds:[5,18,4,90],sums:[F(),{slug:'SummonerDot',name:'Ignite',cd:180}]}),mk(51,'BOTTOM','Cait#EUW',{lv:12,k:3,d:3,a:4,cs:165,ah:0,rank:'D2',tier:'diamond',wr:50,games:90,ai:54,tags:[{id:'cb',label:'Comeback',tone:'warn'}],items:[3031,3006,3094,1038,1042],cds:[8,10,12,80],sums:[F(),{slug:'SummonerHeal',name:'Heal',cd:240}]}),mk(53,'UTILITY','Blitzcrank',{hidden:1,lv:11,k:0,d:5,a:8,cs:28,ah:25,rank:'G3',tier:'gold',wr:47,games:31,ai:48,tags:[{id:'ls',label:'3L',tone:'bad'},{id:'afk',label:'AFK',tone:'bad'}],items:[3190,3111,3067,1028,1001],cds:[18,12,10,50],sums:[HEX,{slug:'SummonerDot',name:'Ignite',cd:180}]})];
 const t=1055,metas=[{label:'TOP',allyChamp:allies[0].champion,enemyChamp:enemies[0].champion},{label:'JGL',allyChamp:allies[1].champion,enemyChamp:enemies[1].champion},{label:'MID',allyChamp:allies[2].champion,enemyChamp:enemies[2].champion},{label:'BOT',allyChamp:allies[3].champion,enemyChamp:enemies[3].champion},{label:'SUPP',allyChamp:allies[4].champion,enemyChamp:enemies[4].champion}];
+const baronUntil=t+140,elderUntil=t+95;
+for(const p of enemies){if(!p.isDead)p.buffs=[{kind:'baron',until:baronUntil}]}
+for(const p of allies)p.buffs=[{kind:'elder',until:elderUntil}];
 window.__liveDemo=true;window.__manual=true;liveTracks={};ciSet=new Set([pid(enemies[4])]);firedAlerts=new Set();stopVoices();
 // 17:35 : larves déjà parties. Drake d'âme dans ~1:13 pour la bannière cartoon ; baron ~1:22 pour le SFX.
-liveState={active:true,gameTime:t,gameMode:'CLASSIC',enemies,allies,objectives:{
+liveState={active:true,side:side==='red'?'red':'blue',gameTime:t,gameMode:'CLASSIC',enemies,allies,objectives:{
 grubs:{nextAt:480,label:'Larves',gone:true},
 dragon:{nextAt:t+73,label:'Drake',order:3,chaos:1,note:'ÂME',kind:'soul',leads:[75]},
 herald:{nextAt:900,label:'Héraut'},
@@ -1291,16 +1574,23 @@ baron:{nextAt:t+82,label:'Baron',leads:[75]}},gold:demoMkGold(t,metas),voices:[
 {id:'demo-gank',kind:'gank',champion:"Kha'Zix",key:121,icon:'Khazix.png',title:"KHA'ZIX · PREMIER CRABE",sub:'fenêtre de gank typique — ward et recule',voice:true,hot:true},
 {id:'demo-item',kind:'item',champion:'Zed',key:238,icon:'Zed.png',itemId:3142,title:'ZED · ITEM',sub:'Youmuu, lame spectrale',speak:'Zed a complété Youmuu',hot:true}]};
 liveAt=Date.now();
-const zed=enemies[2],si=(zed.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');
+enemies[1].deathAt=gameNow()-8;enemies[1].respawn=20;
+const zed=enemies[2],si=(zed.summoners||[]).findIndex(isFlashSumm);
 liveTracks[`${pid(zed)}|S${si<0?0:si}`]={end:gameNow()+187,total:summCD(zed,zed.summoners[si<0?0:si])};
 const caitR=(enemies[3].spells||[]).find(s=>s.spell==='R');
 if(caitR)liveTracks[`${pid(enemies[3])}|R`]={end:gameNow()+38,total:caitR.cd};
+const lee=allies[1],smi=(lee.summoners||[]).findIndex(s=>s.kind==='smite'||/smite/i.test(s.slug||''));
+if(smi>=0)liveTracks[`${pid(lee)}|S${smi}`]={end:gameNow()+55,total:summCD(lee,lee.summoners[smi])};
+const blitz=enemies[4],hx=(blitz.summoners||[]).findIndex(s=>s.kind==='hexflash');
+if(hx>=0)liveTracks[`${pid(blitz)}|S${hx}`]={end:gameNow()+14,total:summCD(blitz,blitz.summoners[hx])};
 setDemoLiveActive(true);
 try{await fetch('/api/demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(liveState)})}catch(_){}
 pushTracks();
 $('dot').classList.add('on');$('status').textContent='Mode démo en jeu';$('phase').textContent='HUD sans partie';
 renderLive()}
-$('demo-live').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(ideaOn())closeIdea();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo()};
+$('demo-live').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(ideaOn())closeIdea();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo('blue')};
+$('demo-live-red')&&($('demo-live-red').onclick=()=>{closeDemoMenu();if(quizOn())closeQuiz();if(ideaOn())closeIdea();if(window.__liveDemo){stopLiveDemo();$('hero-title').textContent='Démo en jeu fermée';$('hero-copy').textContent='Relance la démo, une draft, ou une partie.';return}startLiveDemo('red')});
+$('demo-plan')&&($('demo-plan').onclick=async()=>{closeDemoMenu();if(quizOn())closeQuiz();if(typeof ideaOn==='function'&&ideaOn())closeIdea();window.__planDemo=true;planQuery='?demo=1';$('hero-title').textContent='Démo plan audio';$('hero-copy').textContent='Table de draft → Claude Max / ChatGPT+ → audio.';refreshPlan({auto:true})});
 const SKILLCAPPED='https://www.skill-capped.com/lol/browse/course';
 let trainOpen=false;
 function syncTrain(){
@@ -1364,10 +1654,12 @@ try{const s=await(await fetch('/api/live')).json();
 if(s.active){
 if(s.demo){if(!window.__liveDemo){liveState=s;liveAt=Date.now()}window.__liveDemo=true;setDemoLiveActive(true)}
 else{const was=liveOn()&&!window.__liveDemo;window.__liveDemo=false;setDemoLiveActive(false);liveState=s;liveAt=Date.now();if(!was){liveTracks={};ciSet=new Set();liveSkipAuto={};firedAlerts=new Set();stopVoices();pushTracks();maybeAutoHud()}}
-if(!HUDMODE){try{const t=await(await fetch('/api/tracks')).json();pullTracks(t)}catch(_){}}
+if(HUDMODE){const side=s.side==='red'?'red':'blue';if(side!==hudGeomSide)loadHudGeom()}
+if(s.tracks||Array.isArray(s.ci))pullTracks({tracks:s.tracks||{},ci:s.ci});
 syncRemainTracks();
 const missing=[...new Set([...(s.enemies||[]),...(s.allies||[])].map(p=>p.key).filter(k=>k&&!liveScout[k]))];
 if(missing.length){fetchCards(missing).then(list=>{for(const c of list)liveScout[c.key]=c;if(liveOn())renderLive()}).catch(()=>{})}
+if(!HUDMODE){if(!s.demo)planQuery='';refreshPlan({auto:(s.gameTime||0)<90})};
 }else if(window.__liveDemo)return;
 else{liveState=s;liveAt=Date.now();autoHudDone=false}
 }catch(_){if(!window.__liveDemo)liveState=null}
@@ -1398,7 +1690,7 @@ const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain${
 quizWait=true;const next=$('quiz-next');if(next)next.onclick=()=>{quizWait=false;a.done?renderQuizEnd(a):loadQuiz(false)};
 $('hero-copy').textContent='Score '+a.score+' / '+a.round+' · série '+a.streak}
 catch(e){quizLocked=false;const after=$('quiz-after');if(after)after.innerHTML=`<div class="quiz-explain bad">${esc(e.message||'erreur')}</div>`}}
-function openQuiz(){if(typeof closeIdea==='function')closeIdea();trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('quiz-on');const b=$('quiz-open');if(b){b.classList.add('active');b.textContent='Fermer quiz'}const p=$('hero-pill');if(p)p.textContent='QUIZ';$('hero-title').textContent='Quiz CD';$('hero-copy').textContent='Série de 10 · CD exacts, sorts, passifs · sans haste.';loadQuiz(true)}
+function openQuiz(){if(typeof stopPlanSpeak==='function')stopPlanSpeak();if(typeof closeIdea==='function')closeIdea();trainOpen=false;syncTrain();hlOpen=false;syncHighlights();document.body.classList.add('quiz-on');const b=$('quiz-open');if(b){b.classList.add('active');b.textContent='Fermer quiz'}const p=$('hero-pill');if(p)p.textContent='QUIZ';$('hero-title').textContent='Quiz CD';$('hero-copy').textContent='Série de 10 · CD exacts, sorts, passifs · sans haste.';loadQuiz(true)}
 function closeQuiz(){document.body.classList.remove('quiz-on');quizQ=null;quizLocked=false;quizWait=false;const b=$('quiz-open');if(b){b.classList.remove('active');b.textContent='Quiz'}const p=$('hero-pill');if(p)p.textContent='AUTO';$('hero-title').textContent='Quiz fermé';$('hero-copy').textContent='Relance le quiz, une draft, ou une partie.';if(liveOn())renderLive()}
 $('quiz-open')&&($('quiz-open').onclick=()=>{if(quizOn())closeQuiz();else openQuiz()});
 const ideaOn=()=>document.body.classList.contains('idea-on');
@@ -1417,7 +1709,7 @@ if(ideaOn()){if(e.key==='Escape'){e.preventDefault();closeIdea()}return}
 if(HUDMODE&&(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&'IJKCijkc'.includes(e.key))||(e.ctrlKey&&(e.key==='u'||e.key==='U')))){e.preventDefault();return}
 if(HUDMODE&&(e.key==='Tab'||e.code==='Tab')){e.preventDefault();tabUntil=Date.now()+450;syncHudExpand();return}
 const n=+e.key;if(!(n>=1&&n<=9))return;
-if(liveOn()){const p=(liveState.enemies||[])[n-1];if(!p)return;let si=(p.summoners||[]).findIndex(s=>s.slug==='SummonerFlash');if(si<0)si=0;const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s));return}
+if(liveOn()){const p=(liveState.enemies||[])[n-1];if(!p)return;let si=flashIdx(p);if(si<0)si=0;const s=(p.summoners||[])[si];if(s)toggleTrack(`${pid(p)}|S${si}`,summCD(p,s),p);return}
 const list=visibleCards();if(n<=list.length){focusKey=list[n-1].key;render()}};
 status();setInterval(status,2000);pollLive();setInterval(pollLive,HUDMODE?500:2000);setInterval(tickLive,300);
-if(new URLSearchParams(location.search).has('demo'))startLiveDemo(); // ?hud=1&demo=1 : vérifier le HUD sans partie</script></body></html>
+if(new URLSearchParams(location.search).has('demo'))startLiveDemo(new URLSearchParams(location.search).get('demo')==='red'?'red':'blue'); // ?hud=1&demo=1 : vérifier le HUD sans partie</script></body></html>

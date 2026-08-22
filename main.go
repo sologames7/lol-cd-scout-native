@@ -81,6 +81,8 @@ type teamMember struct {
 	ChampionID         int       `json:"championId"`
 	ChampionPickIntent int       `json:"championPickIntent"`
 	AssignedPosition   string    `json:"assignedPosition"`
+	Spell1ID           int       `json:"spell1Id"`
+	Spell2ID           int       `json:"spell2Id"`
 	SummonerID         flexInt64 `json:"summonerId"`
 	PUUID              string    `json:"puuid"`
 	NameVisibilityType string    `json:"nameVisibilityType"`
@@ -112,13 +114,17 @@ type lcuCreds struct {
 }
 
 type champIndexItem struct {
-	ID    string `json:"id"`
-	Key   string `json:"key"`
-	Name  string `json:"name"`
-	Title string `json:"title"`
+	ID    string   `json:"id"`
+	Key   string   `json:"key"`
+	Name  string   `json:"name"`
+	Title string   `json:"title"`
+	Tags  []string `json:"tags"`
 	Image struct {
 		Full string `json:"full"`
 	} `json:"image"`
+	Stats struct {
+		AttackRange float64 `json:"attackrange"`
+	} `json:"stats"`
 }
 
 type champIndexPayload struct {
@@ -1135,6 +1141,7 @@ func main() {
 	mux.HandleFunc("/api/open", apiOpen)
 	mux.HandleFunc("/api/quiz", apiQuiz)
 	mux.HandleFunc("/api/idea", apiIdea)
+	mux.HandleFunc("/api/plan", apiPlan)
 	ln, err := listenLocal()
 	if err != nil {
 		return

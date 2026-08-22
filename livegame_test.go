@@ -182,6 +182,115 @@ func TestObjectives(t *testing.T) {
 	}
 }
 
+func TestObjBuffs(t *testing.T) {
+	jgl := rawLivePlayer{SummonerName: "Jgl", Team: "ORDER", ChampionName: "LeeSin", Level: 12}
+	mid := rawLivePlayer{SummonerName: "Mid", Team: "ORDER", ChampionName: "Ahri", Level: 13}
+	ejgl := rawLivePlayer{SummonerName: "EnemyJgl", Team: "CHAOS", ChampionName: "Khazix", Level: 12}
+	emid := rawLivePlayer{SummonerName: "EnemyMid", Team: "CHAOS", ChampionName: "Zed", Level: 13}
+	raw := func(t float64, events ...struct {
+		n, k, v, d string
+		at         float64
+	}) *rawLive {
+		r := &rawLive{}
+		r.GameData.GameMode, r.GameData.MapNumber, r.GameData.GameTime = "CLASSIC", 11, t
+		r.AllPlayers = []rawLivePlayer{jgl, mid, ejgl, emid}
+		for _, e := range events {
+			r.Events.Events = append(r.Events.Events, struct {
+				EventName  string  `json:"EventName"`
+				EventTime  float64 `json:"EventTime"`
+				DragonType string  `json:"DragonType"`
+				KillerName string  `json:"KillerName"`
+				VictimName string  `json:"VictimName"`
+			}{EventName: e.n, EventTime: e.at, KillerName: e.k, VictimName: e.v, DragonType: e.d})
+		}
+		return r
+	}
+	has := func(buffs []LiveObjBuff, kind string, until float64) bool {
+		for _, b := range buffs {
+			if b.Kind == kind && b.Until == until {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Steal CHAOS à 1300 : vivants CHAOS recoivent Nash 180 s, ORDER non.
+	r := raw(1360, struct {
+		n, k, v, d string
+		at         float64
+	}{n: "BaronKill", k: "EnemyJgl", at: 1300})
+	if !has(objBuffsFor(r, ejgl), "baron", 1480) || !has(objBuffsFor(r, emid), "baron", 1480) {
+		t.Fatalf("steal Nash : CHAOS vivant doit avoir until 1480")
+	}
+	if len(objBuffsFor(r, jgl)) != 0 || len(objBuffsFor(r, mid)) != 0 {
+		t.Fatalf("steal Nash : ORDER ne doit pas avoir le buff")
+	}
+
+	// Mort après le take → plus de buff. Vivant au take, encore vivant → buff.
+	r = raw(1360,
+		struct {
+			n, k, v, d string
+			at         float64
+		}{n: "BaronKill", k: "EnemyJgl", at: 1300},
+		struct {
+			n, k, v, d string
+			at         float64
+		}{n: "ChampionKill", k: "Jgl", v: "EnemyMid", at: 1320})
+	deadMid := emid
+	deadMid.IsDead = true
+	if len(objBuffsFor(r, deadMid)) != 0 {
+		t.Fatalf("mort après Nash : plus de buff")
+	}
+	if !has(objBuffsFor(r, ejgl), "baron", 1480) {
+		t.Fatalf("coéquipier encore vivant garde Nash")
+	}
+
+	// Mort avant le take : pas de buff, même après respawn (IsDead=false).
+	r = raw(1360,
+		struct {
+			n, k, v, d string
+			at         float64
+		}{n: "ChampionKill", k: "EnemyJgl", v: "Mid", at: 1280},
+		struct {
+			n, k, v, d string
+			at         float64
+		}{n: "BaronKill", k: "Jgl", at: 1300})
+	if len(objBuffsFor(r, mid)) != 0 {
+		t.Fatalf("mort au take : pas de Nash au respawn")
+	}
+	if !has(objBuffsFor(r, jgl), "baron", 1480) {
+		t.Fatalf("allié vivant au take doit avoir Nash")
+	}
+
+	// Cadavre actuel : rien, même si le replay lui donne le buff.
+	deadJgl := jgl
+	deadJgl.IsDead = true
+	if len(objBuffsFor(r, deadJgl)) != 0 {
+		t.Fatalf("isDead actuel masque le buff")
+	}
+
+	// Expiré.
+	r = raw(1490, struct {
+		n, k, v, d string
+		at         float64
+	}{n: "BaronKill", k: "Jgl", at: 1300})
+	if len(objBuffsFor(r, jgl)) != 0 {
+		t.Fatalf("Nash expiré à 1480")
+	}
+
+	// Ancestral 150 s.
+	r = raw(1450, struct {
+		n, k, v, d string
+		at         float64
+	}{n: "DragonKill", k: "Jgl", d: "Elder", at: 1400})
+	if !has(objBuffsFor(r, jgl), "elder", 1550) || !has(objBuffsFor(r, mid), "elder", 1550) {
+		t.Fatalf("Ancestral 150 s sur ORDER vivant")
+	}
+	if len(objBuffsFor(r, ejgl)) != 0 {
+		t.Fatalf("Ancestral adverse ne doit pas passer")
+	}
+}
+
 func TestRuneTable(t *testing.T) {
 	tab := runeTable()
 	if len(tab) < 40 {

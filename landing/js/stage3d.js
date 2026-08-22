@@ -125,23 +125,27 @@ export async function makeLandingStage(scene) {
   logo.position.set(0, 0.34, T / 2 + 0.014);
   card.add(logo);
 
-  const wordTex = canvasTex(1024, 220, (ctx, w, h) => {
+  const wordTex = canvasTex(1024, 320, (ctx, w, h) => {
     ctx.clearRect(0, 0, w, h);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.shadowColor = '#3ee0c8';
-    ctx.shadowBlur = 28;
+    ctx.shadowBlur = 24;
     ctx.fillStyle = '#3ee0c8';
-    ctx.font = '700 96px "Space Grotesk", sans-serif';
-    ctx.fillText('CD SCOUT', w / 2, h / 2);
+    ctx.font = '700 86px "Space Grotesk", sans-serif';
+    ctx.fillText('CD SCOUT', w / 2, h * 0.36);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#eef6f4';
+    ctx.font = '600 34px "Space Grotesk", sans-serif';
+    ctx.fillText('Progresser. Apprendre.', w / 2, h * 0.72);
   });
   const word = new THREE.Mesh(
-    new THREE.PlaneGeometry(1.28, 0.28),
+    new THREE.PlaneGeometry(1.28, 0.4),
     new THREE.MeshBasicMaterial({
       map: wordTex, transparent: true, depthWrite: false, toneMapped: false,
     }),
   );
-  word.position.set(0, -0.36, T / 2 + 0.014);
+  word.position.set(0, -0.34, T / 2 + 0.014);
   card.add(word);
 
   const btn = new THREE.Group();
@@ -161,7 +165,7 @@ export async function makeLandingStage(scene) {
   );
   btnFace.position.z = btnT / 2 + 0.003;
   btn.add(btnBody, btnFace);
-  btn.position.set(0, -0.78, T / 2 + 0.036);
+  btn.position.set(0, -0.82, T / 2 + 0.036);
   btn.userData.href = HREF;
   btn.userData.clickable = true;
   card.userData.href = HREF;
@@ -176,27 +180,83 @@ export async function makeLandingStage(scene) {
   goldLight.position.set(0.35, 0.4, 0.45);
   card.add(goldLight);
 
+  const left = makeCopyPlaque(['Commence enfin', 'à progresser.']);
+  const right = makeCopyPlaque(['Et à apprendre', 'le jeu.']);
+  root.add(left, right);
+
   root.visible = false;
   const origin = new THREE.Vector3(0, -0.55, -4.55);
-  const rest = new THREE.Vector3(0, 0.18, -4.42);
+  const rest = new THREE.Vector3(0, 0.22, -4.42);
+  const leftRest = new THREE.Vector3(-1.78, 0.18, -4.12);
+  const rightRest = new THREE.Vector3(1.78, 0.18, -4.12);
 
   return {
-    root, cards: [], keys: [], cta: card, copy: card,
+    root, cards: [left, right], keys: [], cta: card, copy: left,
     update(dt, reveal) {
       root.visible = reveal > 0.02;
       glow.intensity = reveal * 2.1;
       goldLight.intensity = reveal * 0.85;
       const pop = 1 - Math.pow(1 - reveal, 2.2);
+      const t = performance.now();
+      const bob = Math.sin(t * 0.0012) * 0.04 * pop;
       card.position.set(
         lerp(origin.x, rest.x, pop),
-        lerp(origin.y, rest.y + Math.sin(performance.now() * 0.0012) * 0.04 * pop, pop),
+        lerp(origin.y, rest.y + bob, pop),
         lerp(origin.z, rest.z, pop),
       );
-      card.rotation.y = (1 - pop) * 0.85 + Math.sin(performance.now() * 0.0007) * 0.08 * pop;
-      card.rotation.x = Math.sin(performance.now() * 0.00055) * 0.03 * pop;
-      card.scale.setScalar(0.18 + pop * 0.82);
+      card.rotation.y = (1 - pop) * 0.85 + Math.sin(t * 0.0007) * 0.08 * pop;
+      card.rotation.x = Math.sin(t * 0.00055) * 0.03 * pop;
+      card.scale.setScalar(0.18 + pop * 0.78);
+
+      const sidePop = Math.max(0, (pop - 0.22) / 0.78);
+      const sideE = 1 - Math.pow(1 - sidePop, 2);
+      left.position.set(
+        lerp(origin.x, leftRest.x, sideE),
+        lerp(origin.y, leftRest.y + Math.sin(t * 0.00105) * 0.035 * sideE, sideE),
+        lerp(origin.z, leftRest.z, sideE),
+      );
+      right.position.set(
+        lerp(origin.x, rightRest.x, sideE),
+        lerp(origin.y, rightRest.y + Math.sin(t * 0.00115 + 1.2) * 0.035 * sideE, sideE),
+        lerp(origin.z, rightRest.z, sideE),
+      );
+      left.rotation.y = lerp(0.85, 0.38, sideE);
+      right.rotation.y = lerp(-0.85, -0.38, sideE);
+      left.scale.setScalar(0.12 + sideE * 0.88);
+      right.scale.setScalar(0.12 + sideE * 0.88);
     },
   };
+}
+
+function makeCopyPlaque(lines) {
+  const W = 1.28;
+  const H = 0.92;
+  const T = 0.08;
+  const g = makeCardBody(W, H, T);
+  const tex = canvasTex(1024, 640, (ctx, w, h) => {
+    ctx.clearRect(0, 0, w, h);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#3ee0c8';
+    ctx.shadowBlur = 16;
+    lines.forEach((ln, i) => {
+      const last = i === lines.length - 1;
+      ctx.fillStyle = last ? '#3ee0c8' : '#eef6f4';
+      ctx.font = last
+        ? '700 70px "Space Grotesk", sans-serif'
+        : '700 52px "Space Grotesk", sans-serif';
+      ctx.fillText(ln, w / 2, h * (0.38 + i * 0.24));
+    });
+  });
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(W * 0.9, H * 0.7),
+    new THREE.MeshBasicMaterial({
+      map: tex, transparent: true, depthWrite: false, toneMapped: false,
+    }),
+  );
+  face.position.z = T / 2 + 0.012;
+  g.add(face);
+  return g;
 }
 
 function lerp(a, b, t) {

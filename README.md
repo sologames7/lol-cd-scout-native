@@ -77,7 +77,7 @@ Stubs `*_other.go` = no-op hors Windows. Tests = `*_test.go` à côté.
 |---|---|---|
 | Draft | Champ select LCU | Cartes ennemis/alliés, counters, synergies, pick/ban |
 | Live (fenêtre) | Partie | Flash, P/Q/W/E/R, invocs, or, objectifs, DeepLoL |
-| HUD overlay | Partie (`?hud=1`) | Mini-barre ⠿ ⤡ **SUM** ⚙ + chips Flash ; Tab = cartes latérales ; bannières obj / gank / achat |
+| HUD overlay | Partie (`?hud=1`) | Mini-barre ⠿ ⤡ **SUM** ⚙ + CD encore down ; barre Flash optionnelle (off par défaut) ; Tab = cartes latérales ; bannières obj / gank / achat |
 
 HUD clavier : `Alt+1–5` Flash, `Alt+Maj+1–5` ult, Tab cartes. Croix = ferme le widget (`/api/hud/close`), pas l’app.
 

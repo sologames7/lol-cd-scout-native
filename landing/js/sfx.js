@@ -20,28 +20,33 @@ function env(gain, t, a, d, peak = 0.4) {
 export function playKnife() {
   const a = ac();
   const t = a.currentTime;
-  const n = a.createBuffer(1, a.sampleRate * 0.18, a.sampleRate);
+  const n = a.createBuffer(1, a.sampleRate * 0.28, a.sampleRate);
   const d = n.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  for (let i = 0; i < d.length; i++) {
+    const p = i / d.length;
+    d[i] = (Math.random() * 2 - 1) * (1 - p) * (0.45 + Math.sin(p * 18) * 0.55);
+  }
   const src = a.createBufferSource();
   src.buffer = n;
   const bp = a.createBiquadFilter();
   bp.type = 'bandpass';
-  bp.frequency.value = 1800;
+  bp.frequency.setValueAtTime(900, t);
+  bp.frequency.exponentialRampToValueAtTime(4200, t + 0.16);
+  bp.Q.value = 1.2;
   const g = a.createGain();
-  env(g, t, 0.01, 0.16, 0.35);
+  env(g, t, 0.012, 0.22, 0.42);
   src.connect(bp).connect(g).connect(a.destination);
   src.start(t);
 
   const osc = a.createOscillator();
   osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(420, t);
-  osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
+  osc.frequency.setValueAtTime(880, t);
+  osc.frequency.exponentialRampToValueAtTime(180, t + 0.18);
   const g2 = a.createGain();
-  env(g2, t, 0.005, 0.12, 0.12);
+  env(g2, t, 0.004, 0.16, 0.1);
   osc.connect(g2).connect(a.destination);
   osc.start(t);
-  osc.stop(t + 0.14);
+  osc.stop(t + 0.2);
 }
 
 export function playGun() {

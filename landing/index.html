@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>CD Scout — Je punis la draft en style S.</title>
+  <title>CD Scout — Commence enfin à progresser.</title>
+  <meta name="description" content="Overlay LoL local : timers Flash et sorts, draft, objectifs à 1:15, quiz CD. Pour enfin progresser — et apprendre le jeu." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600&family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/landing.css" />
   <script type="importmap">
     { "imports": { "three": "./vendor/three.module.js" } }
@@ -18,19 +19,274 @@
   <header class="nav">
     <a class="logo" href="#"><i></i> CD Scout</a>
     <ul class="nav-links">
-      <li><a href="#tarifs">Fonctionnalités</a></li>
+      <li><a href="#hud">HUD</a></li>
+      <li><a href="#features">Fonctionnalités</a></li>
       <li><a href="#tarifs">Tarifs</a></li>
       <li><a href="https://github.com/sologames7/lol-cd-scout-native/releases">Mises à jour</a></li>
-      <li><a href="https://github.com/sologames7/lol-cd-scout-native">Aide</a></li>
     </ul>
-    <a class="btn-ghost" href="https://github.com/sologames7/lol-cd-scout-native">GitHub</a>
+    <a class="btn-ghost" href="https://github.com/sologames7/lol-cd-scout-native/releases/latest">Télécharger</a>
   </header>
   <p id="scroll-hint"><kbd>E</kbd> Allumer la lanterne</p>
   <section id="cinematic"></section>
-  <section class="rest" id="tarifs">
-    <h2>Un exe. Pas de compte. Pas de cloud.</h2>
-    <p id="aide">CD Scout tourne en local sur Windows, lit le client League, et pose un HUD par-dessus. Scouting en draft, timers en jeu, alertes d'objectifs. Toi tu punis.</p>
-    <div class="price">
+
+  <section class="rest" id="produit">
+    <p class="eyebrow">Companion LoL · Windows · 100 % local</p>
+    <h1>Commence enfin à <em>progresser</em>.<br />Et à <em>apprendre le jeu</em>.</h1>
+    <p class="lede">Tu gagnes des LP au feeling, tu les perds sans savoir pourquoi. CD Scout te colle les CD, la draft et les objectifs sur l’écran — pour que chaque game t’apprenne quelque chose, pas juste te fatigue.</p>
+    <div class="cta-row">
+      <a class="btn-dl" href="https://github.com/sologames7/lol-cd-scout-native/releases/latest">
+        <img src="assets/btn-download.png" alt="Télécharger l'exe" width="320" height="84" />
+      </a>
+      <p class="cta-note">Gratuit. Pas de compte. Rien d’injecté dans League.</p>
+    </div>
+
+    <figure class="mk-bezel" id="hud">
+      <figcaption>
+        <span>HUD épinglé · 21:9</span>
+        <span>Click-through hors des blocs · fenêtré sans bordure</span>
+      </figcaption>
+      <div class="mk-rift" aria-label="Mockup du HUD CD Scout">
+        <div class="mk-w mk-cds">
+          <div class="mk-mini">
+            <span class="mk-hbtn">⠿</span>
+            <span class="mk-hbtn">⤡</span>
+            <span class="mk-hbtn mk-sum">SUM</span>
+            <span class="mk-clock" id="mk-clock">17:35</span>
+            <span class="mk-dot on" title="En jeu"></span>
+            <span class="mk-hbtn">⚙</span>
+          </div>
+          <div class="mk-cds-list">
+          <div class="mk-cds-row">
+            <img data-dd="img/champion/Aatrox.png" alt="" />
+            <span class="mk-chip mk-cd" data-cd="187"><img data-dd="img/spell/SummonerFlash.png" alt="" /><b class="hv">3:07</b></span>
+          </div>
+          <div class="mk-cds-row">
+            <img data-dd="img/champion/Ahri.png" alt="" />
+            <span class="mk-chip mk-cd" data-cd="48"><img data-dd="img/spell/AhriR.png" alt="" /><b class="hv">0:48</b></span>
+          </div>
+          <div class="mk-cds-row">
+            <img data-dd="img/champion/LeeSin.png" alt="" />
+            <span class="mk-chip mk-cd" data-cd="94"><img data-dd="img/spell/SummonerFlash.png" alt="" /><b class="hv">1:34</b></span>
+          </div>
+          </div>
+        </div>
+
+        <div class="mk-w mk-objs">
+          <div class="mk-hobj gone"><b>Larves</b><strong>—</strong></div>
+          <div class="mk-hobj o-dragon hot"><b>Drake</b><strong data-obj="78">1:18</strong></div>
+          <div class="mk-hobj o-herald"><b>Héraut</b><strong data-obj="132">2:12</strong></div>
+          <div class="mk-hobj o-baron"><b>Baron</b><strong data-obj="280">4:40</strong></div>
+        </div>
+
+        <div class="mk-w mk-alert">
+          <img src="assets/alert-dragon.png" alt="Drake dans 1:15 — stack de stats vers l'âme" />
+        </div>
+
+        <div class="mk-w mk-menu">
+          <div class="mk-flashes" id="mk-flashes">
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-diamond"><img data-dd="img/champion/Aatrox.png" alt="Aatrox" /></div>
+                <span class="mk-ult mk-cd" data-cd="42"><img data-dd="img/spell/AatroxR.png" alt="" /><i class="hv">42</i></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-cd" data-cd="187"><img data-dd="img/spell/SummonerFlash.png" alt="Flash" /><i class="hv">3:07</i></span>
+                <span class="mk-sumi"><img data-dd="img/spell/SummonerDot.png" alt="Ignite" /></span>
+              </div>
+            </div>
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-master"><img data-dd="img/champion/LeeSin.png" alt="Lee Sin" /></div>
+                <span class="mk-ult mk-up"><img data-dd="img/spell/LeeSinR.png" alt="" /></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-cd" data-cd="94"><img data-dd="img/spell/SummonerFlash.png" alt="Flash" /><i class="hv">1:34</i></span>
+                <span class="mk-sumi"><img data-dd="img/spell/SummonerSmite.png" alt="Smite" /></span>
+              </div>
+            </div>
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-emerald"><img data-dd="img/champion/Ahri.png" alt="Ahri" /></div>
+                <span class="mk-ult mk-cd" data-cd="48"><img data-dd="img/spell/AhriR.png" alt="" /><i class="hv">48</i></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-up"><img data-dd="img/spell/SummonerFlash.png" alt="Flash" /></span>
+                <span class="mk-sumi mk-cd" data-cd="210"><img data-dd="img/spell/SummonerTeleport.png" alt="TP" /><i class="hv">3:30</i></span>
+              </div>
+            </div>
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-plat"><img data-dd="img/champion/Jinx.png" alt="Jinx" /></div>
+                <span class="mk-ult mk-cd" data-cd="12"><img data-dd="img/spell/JinxR.png" alt="" /><i class="hv">12</i></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-up"><img data-dd="img/spell/SummonerFlash.png" alt="Flash" /></span>
+                <span class="mk-sumi"><img data-dd="img/spell/SummonerHeal.png" alt="Heal" /></span>
+              </div>
+            </div>
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-diamond"><img data-dd="img/champion/Thresh.png" alt="Thresh" /></div>
+                <span class="mk-ult mk-cd" data-cd="80"><img data-dd="img/spell/ThreshRPenta.png" alt="" /><i class="hv">80</i></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-cd" data-cd="201"><img data-dd="img/spell/SummonerFlash.png" alt="Flash" /><i class="hv">3:21</i></span>
+                <span class="mk-sumi"><img data-dd="img/spell/SummonerExhaust.png" alt="Exhaust" /></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mk-w mk-tab" aria-label="Ligne de sorts Tab">
+          <div class="mk-sk">
+            <span class="qi"><img data-dd="img/spell/AhriQ.png" alt="" /><i>Q</i></span>
+            <span class="sk-meta"><b class="sk-cd">7</b><b class="sk-mana">65</b></span>
+          </div>
+          <div class="mk-sk">
+            <span class="qi"><img data-dd="img/spell/AhriW.png" alt="" /><i>W</i></span>
+            <span class="sk-meta"><b class="sk-cd">9</b><b class="sk-mana">40</b></span>
+          </div>
+          <div class="mk-sk mk-cd" data-cd="14">
+            <span class="qi"><img data-dd="img/spell/AhriE.png" alt="" /><i>E</i></span>
+            <span class="sk-meta"><b class="sk-cd hv">14</b><b class="sk-mana">70</b></span>
+          </div>
+          <div class="mk-sk mk-cd" data-cd="48">
+            <span class="qi"><img data-dd="img/spell/AhriR.png" alt="" /><i>R</i></span>
+            <span class="sk-meta"><b class="sk-cd hv">48</b><b class="sk-mana">100</b></span>
+          </div>
+        </div>
+
+        <div class="mk-w mk-item">
+          <img class="mk-item-pic" data-dd="img/champion/Ahri.png" alt="Ahri" />
+          <img class="mk-item-ic" data-dd="img/item/3031.png" alt="Lame infinie" />
+          <div>
+            <b>Ahri</b>
+            <span>Lame infinie</span>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <section class="formes" id="features">
+      <article class="forme">
+        <div class="forme-copy">
+          <p class="kicker">Champ select</p>
+          <h2>La draft, avant qu’elle te mente.</h2>
+          <p>Pseudo, rang, WR, AI DeepLoL, counters et synergies. Streamer mode : le champion, pas le riotId. Les anonyms restent lisibles — tu scoutes ce que le client te donne, pas un fantôme.</p>
+        </div>
+        <div class="forme-visual">
+          <article class="mini-draft">
+            <div class="mk-rk t-diamond"><img data-dd="img/champion/Ahri.png" alt="Ahri" /></div>
+            <div>
+              <b>Ahri</b>
+              <span>Mid · D2 · 12W 9L</span>
+              <em>AI 72 · Carry</em>
+              <p>Dur vs Yasuo · Irelia · Galio</p>
+            </div>
+          </article>
+        </div>
+      </article>
+
+      <article class="forme flip">
+        <div class="forme-copy">
+          <p class="kicker">En jeu</p>
+          <h2>Tu vois le Flash. Tu punis.</h2>
+          <p>Clic sur le Flash ennemi — le timer tourne. Ult pareil. Alt+1–5, Alt+Maj+1–5. <strong>SUM</strong> colle l’heure de retour dans le chat League (<code>Zed F 15:32</code>), pas un compte à rebours que personne ne lit.</p>
+        </div>
+        <div class="forme-visual">
+          <div class="mini-flashes">
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-diamond"><img data-dd="img/champion/Zed.png" alt="Zed" /></div>
+                <span class="mk-ult mk-cd" data-cd="36"><img data-dd="img/spell/ZedR.png" alt="" /><i class="hv">36</i></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-cd" data-cd="142"><img data-dd="img/spell/SummonerFlash.png" alt="" /><i class="hv">2:22</i></span>
+                <span class="mk-sumi"><img data-dd="img/spell/SummonerDot.png" alt="" /></span>
+              </div>
+            </div>
+            <div class="mk-hf">
+              <div class="mk-hf-top">
+                <div class="mk-rk t-emerald"><img data-dd="img/champion/Ahri.png" alt="Ahri" /></div>
+                <span class="mk-ult mk-up"><img data-dd="img/spell/AhriR.png" alt="" /></span>
+              </div>
+              <div class="mk-hf-spells">
+                <span class="mk-sumi mk-up"><img data-dd="img/spell/SummonerFlash.png" alt="" /></span>
+                <span class="mk-sumi mk-cd" data-cd="88"><img data-dd="img/spell/SummonerTeleport.png" alt="" /><i class="hv">1:28</i></span>
+              </div>
+            </div>
+            <p class="mini-caption">5 chips ennemis. Portrait, ult, invocs. Le reste du jeu reste cliquable.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="forme">
+        <div class="forme-copy">
+          <p class="kicker">Tab</p>
+          <h2>Les sorts collés au scoreboard.</h2>
+          <p>Tab : P/Q/W/E/R alliés et ennemis, lettre or, CD or, mana bleu. Invocs à côté. Tu tags pendant qu’un joueur est mort — le chrono part de sa mort, pas de ton clic. Widget permanent <strong>CD actifs</strong> : uniquement ce qui est encore down, portrait + chips + menu ⚙. Barre Flash optionnelle, off par défaut.</p>
+        </div>
+        <div class="forme-visual">
+          <div class="mini-tab">
+            <div class="mk-sk">
+              <span class="qi"><img data-dd="img/spell/ZedQ.png" alt="" /><i>Q</i></span>
+              <span class="sk-meta"><b class="sk-cd">6</b><b class="sk-mana">50</b></span>
+            </div>
+            <div class="mk-sk">
+              <span class="qi"><img data-dd="img/spell/ZedW.png" alt="" /><i>W</i></span>
+              <span class="sk-meta"><b class="sk-cd">20</b><b class="sk-mana">40</b></span>
+            </div>
+            <div class="mk-sk mk-cd" data-cd="11">
+              <span class="qi"><img data-dd="img/spell/ZedE.png" alt="" /><i>E</i></span>
+              <span class="sk-meta"><b class="sk-cd hv">11</b><b class="sk-mana">50</b></span>
+            </div>
+            <div class="mk-sk mk-cd" data-cd="36">
+              <span class="qi"><img data-dd="img/spell/ZedR.png" alt="" /><i>R</i></span>
+              <span class="sk-meta"><b class="sk-cd hv">36</b><b class="sk-mana">100</b></span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="forme flip">
+        <div class="forme-copy">
+          <p class="kicker">Objectifs</p>
+          <h2>Plus jamais en retard au pit.</h2>
+          <p>Drake, larves, héraut, baron. Alerte unique à <strong>1:15</strong> : bannière cartoon + SFX du monstre. Âme, Ancestral, despawn des larves — le calendrier 2026, pas un timer générique.</p>
+        </div>
+        <div class="forme-visual">
+          <img class="forme-banner" src="assets/alert-dragon.png" alt="Alerte Drake dans 1:15" />
+        </div>
+      </article>
+
+      <article class="forme">
+        <div class="forme-copy">
+          <p class="kicker">Apprendre</p>
+          <h2>Le jeu, pas seulement les LP.</h2>
+          <p>Quiz CD / sorts / passifs — série de 10, difficile, <em>sans haste</em>. Voiceline du jungle adverse aux fenêtres de gank (niv.2, crabe, larves). Replays d’outplays. Tu arrêtes de jouer au feeling.</p>
+        </div>
+        <div class="forme-visual">
+          <div class="mini-quiz">
+            <p class="quiz-q">CD de l’œuf d’Anivia ?</p>
+            <ul>
+              <li>120 s</li>
+              <li class="ok">240 s</li>
+              <li>180 s</li>
+              <li>90 s</li>
+            </ul>
+            <p class="quiz-hint">Patch ddragon. Valeurs brutes. Pas de Cosmic Insight pour tricher.</p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <ul class="pills">
+      <li><b>Draft</b> Pseudo, rang, WR, AI DeepLoL, counters. Avant le loading.</li>
+      <li><b>Jungle</b> VO du jgl ennemi aux ganks récurrents. Spike d’or = shop.</li>
+      <li><b>Local</b> 127.0.0.1 · LCU · Live Client Data. Un exe. Pas de cloud.</li>
+    </ul>
+
+    <div class="price" id="tarifs">
       <article>
         <small>OUTIL PERSO</small>
         <p><strong>0 €</strong></p>
@@ -39,14 +295,16 @@
       <article>
         <small>STACK</small>
         <p><strong>LOCAL</strong></p>
-        <p>127.0.0.1 · LCU · Live Client Data. Rien n'est injecté dans League.</p>
+        <p>127.0.0.1 · LCU · Live Client Data. Rien n’est injecté dans League.</p>
       </article>
     </div>
   </section>
+
   <footer class="foot">
-    <span>CD Scout — companion LoL</span>
-    <span>Fenêtré sans bordure pour l'overlay</span>
+    <span>CD Scout — commence enfin à progresser.</span>
+    <span>Fenêtré sans bordure pour l’overlay</span>
   </footer>
   <script type="module" src="js/cinematic.js"></script>
+  <script type="module" src="js/mockup.js"></script>
 </body>
 </html>

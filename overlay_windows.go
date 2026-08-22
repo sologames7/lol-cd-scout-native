@@ -517,18 +517,27 @@ func hudSetBounds(_, _ int) {
 
 func hudResetPos() {
 	sw, sh := hudScreenSize()
-	g := hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(sw, sh)}
-	hudGeomReplace(g)
+	g := hudGeomSnapshot()
+	side := hudNormSide(g.Side)
+	g.Blue = &hudSideLayout{Keep: false, Widgets: hudDefaultWidgetsSide("blue", sw, sh)}
+	g.Red = &hudSideLayout{Keep: false, Widgets: hudDefaultWidgetsSide("red", sw, sh)}
+	g.Side = side
+	g.Keep = false
+	g.Widgets = hudDefaultWidgetsSide(side, sw, sh)
+	g.V = hudGeomVer
 	removeHudLayoutFile()
-	hudEvalGeom(g)
+	hudGeomReplace(g)
+	hudEvalGeom(hudGeomSnapshot())
 	if h := hudHWND(); windowAlive(h) {
 		procPostMessageW.Call(uintptr(h), wmHudBounds, 0, 0)
 	}
 }
 
 func hudKeepPos() {
+	sw, sh := hudScreenSize()
 	g := hudGeomSnapshot()
-	g.Keep = true
+	hudMarkSideSaved(&g)
+	hudSyncKeptSides(&g, sw, sh)
 	hudGeomReplace(g)
 	hudEvalGeom(hudGeomSnapshot())
 }
@@ -632,11 +641,14 @@ func hudWidgetsPut(id string, w hudWidgetGeom) {
 	sw, sh := hudScreenSize()
 	w = clampHudWidgetID(id, w, sw, sh)
 	hudWidgets.mu.Lock()
-	if hudWidgets.g.Widgets == nil {
-		hudWidgets.g.Widgets = map[string]hudWidgetGeom{}
-	}
-	hudWidgets.g.V = hudGeomVer
-	hudWidgets.g.Widgets[id] = w
+	g := hudWidgets.g
+	lay := hudActiveLayout(&g)
+	lay.Widgets[id] = w
+	lay.Keep = true
+	g.Keep = true
+	g.V = hudGeomVer
+	g.Widgets = lay.Widgets
+	hudWidgets.g = g
 	hudWidgets.mu.Unlock()
 	hudDragLive.mu.Lock()
 	hudDragLive.on = true
@@ -644,19 +656,52 @@ func hudWidgetsPut(id string, w hudWidgetGeom) {
 	hudDragLive.mu.Unlock()
 }
 
+func hudSetSide(side string) {
+	side = hudNormSide(side)
+	rememberLiveSide(side)
+	sw, sh := hudScreenSize()
+	hudWidgets.mu.Lock()
+	g := hudWidgets.g
+	loaded := (g.Blue != nil && g.Blue.Widgets != nil) || (g.Red != nil && g.Red.Widgets != nil) || len(g.Widgets) > 0
+	if !loaded {
+		g.Side = side
+		hudWidgets.g = g
+		hudWidgets.mu.Unlock()
+		return
+	}
+	if hudNormSide(g.Side) == side {
+		hudWidgets.mu.Unlock()
+		return
+	}
+	g.Side = side
+	g = hudGeomMerge(g, sw, sh)
+	hudSyncKeptSides(&g, sw, sh)
+	hudWidgets.g = g
+	hudWidgets.mu.Unlock()
+	saveHudGeomFile(g)
+	hudEvalGeom(g)
+}
+
 func loadHudGeomFile() hudGeomDisk {
 	sw, sh := hudScreenSize()
-	g := hudGeomDisk{V: hudGeomVer, Widgets: hudDefaultWidgets(sw, sh)}
+	g := hudGeomDisk{V: hudGeomVer, Side: "blue", Widgets: hudDefaultWidgets(sw, sh)}
 	if b, err := os.ReadFile(hudGeomPath()); err == nil {
 		var disk hudGeomDisk
 		if json.Unmarshal(b, &disk) == nil {
 			g = disk
 		}
 	}
-	if !g.Keep {
+	sideKeep := (g.Blue != nil && g.Blue.Keep) || (g.Red != nil && g.Red.Keep) || g.Keep
+	if !sideKeep {
 		if snap, ok := loadHudLayoutFile(); ok {
 			g.Widgets = snap.Widgets
 			g.Keep = true
+			if g.Blue == nil {
+				g.Blue = snap.Blue
+			}
+			if g.Red == nil {
+				g.Red = snap.Red
+			}
 			if g.V < 2 {
 				g.V = snap.V
 			}
@@ -665,7 +710,13 @@ func loadHudGeomFile() hudGeomDisk {
 			}
 		}
 	}
-	return hudGeomMerge(g, sw, sh)
+	g = hudGeomMerge(g, sw, sh)
+	if live := lastLiveSide(); live != "" {
+		g.Side = live
+		g = hudGeomMerge(g, sw, sh)
+	}
+	rememberLiveSide(g.Side)
+	return g
 }
 
 func saveHudGeomFile(g hudGeomDisk) {
@@ -675,7 +726,8 @@ func saveHudGeomFile(g hudGeomDisk) {
 		return
 	}
 	_ = os.WriteFile(hudGeomPath(), b, 0o644)
-	if g.Keep {
+	keep := g.Keep || (g.Blue != nil && g.Blue.Keep) || (g.Red != nil && g.Red.Keep)
+	if keep {
 		saveHudLayoutFile(g)
 	}
 }
@@ -686,7 +738,10 @@ func loadHudLayoutFile() (hudGeomDisk, bool) {
 		return hudGeomDisk{}, false
 	}
 	var g hudGeomDisk
-	if json.Unmarshal(b, &g) != nil || g.Widgets == nil {
+	if json.Unmarshal(b, &g) != nil {
+		return hudGeomDisk{}, false
+	}
+	if g.Widgets == nil && (g.Blue == nil || g.Blue.Widgets == nil) && (g.Red == nil || g.Red.Widgets == nil) {
 		return hudGeomDisk{}, false
 	}
 	return g, true
@@ -707,7 +762,13 @@ func removeHudLayoutFile() {
 }
 
 func saveHudGeom(_ syscall.Handle) {
-	saveHudGeomFile(hudGeomSnapshot())
+	sw, sh := hudScreenSize()
+	hudWidgets.mu.Lock()
+	g := hudGeomMerge(hudWidgets.g, sw, sh)
+	hudSyncKeptSides(&g, sw, sh)
+	hudWidgets.g = g
+	hudWidgets.mu.Unlock()
+	saveHudGeomFile(g)
 }
 
 func webview2Available() bool {
